@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Estoque e Produção</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'] },
+                    colors: {
+                        ios: {
+                            bg: '#000000', card: '#1c1c1e', cardHover: '#2c2c2e', blue: '#0a84ff',
+                            green: '#30d158', red: '#ff453a', orange: '#ff9f0a', text: '#ffffff',
+                            textMuted: 'rgba(235, 235, 245, 0.6)', border: '#38383a', input: '#2c2c2e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer components {
+            body { @apply bg-ios-bg text-ios-text font-sans antialiased; }
+            .card { @apply bg-ios-card p-6 rounded-2xl shadow-sm border border-ios-border; }
+            .title-lg { @apply text-3xl font-bold text-white mb-6 tracking-tight; }
+            .title-md { @apply text-xl font-semibold text-white mb-4 tracking-tight; }
+            .form-label { @apply block text-sm font-medium text-ios-textMuted mb-1; }
+            .form-input { @apply block w-full bg-ios-input text-white rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-ios-blue transition-all border border-ios-border/50; }
+            .btn-primary { @apply bg-ios-blue hover:opacity-90 text-white font-semibold py-3 px-5 rounded-xl transition-all flex items-center justify-center; }
+            .btn-secondary { @apply bg-ios-cardHover hover:bg-gray-700 text-white font-semibold py-3 px-5 rounded-xl transition-all border border-ios-border flex items-center justify-center; }
+            .btn-danger { @apply bg-ios-red hover:opacity-90 text-white font-semibold py-3 px-5 rounded-xl transition-all; }
+            .btn-success { @apply bg-ios-green hover:opacity-90 text-white font-semibold py-3 px-5 rounded-xl transition-all; }
+            .table-container { @apply overflow-x-auto rounded-xl border border-ios-border bg-ios-card; }
+            .base-table { @apply w-full text-sm text-left text-ios-textMuted; }
+            .base-thead { @apply text-xs uppercase bg-ios-cardHover text-gray-400 border-b border-ios-border; }
+            .base-tr { @apply border-b border-ios-border hover:bg-ios-cardHover transition-colors; }
+            .base-th { @apply px-5 py-4 font-semibold whitespace-nowrap; }
+            .base-td { @apply px-5 py-4; }
+            .stat-icon { @apply p-3 rounded-xl flex items-center justify-center w-12 h-12 text-xl; }
+            .modal-content { @apply bg-ios-card border border-ios-border rounded-3xl shadow-2xl p-6 w-full transform transition-all; }
+            .badge { @apply text-xs font-semibold px-2 py-1 rounded-md; }
+        }
+    </style>
+    <style>
+        .sidebar { transition: width 0.3s ease-in-out; }
+        .sidebar-text { transition: opacity 0.3s ease-in-out; }
+        .modal { display: none; position: fixed; z-index: 50; inset: 0; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); }
+        .table-header-sortable { cursor: pointer; user-select: none; }
+        .table-header-sortable:hover { color: #ffffff; }
+        
+        /* BUSCA INTELIGENTE (SMART SEARCH) FLUTUANTE */
+        .searchable-container { position: relative; width: 100%; }
+        .searchable-dropdown { 
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 9999; max-height: 280px; 
+            overflow-y: auto; background-color: #2c2c2e; border: 1px solid #38383a; 
+            border-radius: 0.75rem; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-top: 4px;
+        }
+        .searchable-item { padding: 0.85rem 1rem; cursor: pointer; color: #ffffff; border-bottom: 1px solid #38383a; transition: background-color 0.2s; }
+        .searchable-item:last-child { border-bottom: none; }
+        .searchable-item:hover { background-color: #0a84ff; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #636366; }
+
+        /* Estilo Checkbox OP */
+        .op-checkbox {
+            appearance: none; background-color: #2c2c2e; border: 2px solid #48484a; padding: 12px; rounded-md; cursor: pointer; display: inline-block; position: relative; border-radius: 6px; transition: all 0.2s;
+        }
+        .op-checkbox:checked { background-color: #0a84ff; border-color: #0a84ff; }
+        .op-checkbox:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 14px; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        /* Estilo Toggle Status Lote */
+        .toggle-status { appearance: none; width: 40px; height: 20px; background: #38383a; border-radius: 20px; position: relative; cursor: pointer; outline: none; transition: background 0.3s; }
+        .toggle-status::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.3s; }
+        .toggle-status:checked { background: #30d158; }
+        .toggle-status:checked::after { transform: translateX(20px); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <div id="loading-overlay" class="fixed inset-0 z-[101] flex flex-col items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm transition-opacity">
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-ios-cardHover border-t-ios-blue mb-4"></div>
+        <p class="text-ios-textMuted font-medium" id="loading-text">Sincronizando Banco de Dados...</p>
+    </div>
+
+    <div id="notification-modal" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[200] hidden py-3 px-6 rounded-full shadow-2xl font-semibold text-white transition-all text-sm backdrop-blur-md"></div>
+
+    <!-- Sidebar -->
+    <aside class="w-20 lg:w-64 bg-[#000000] border-r border-ios-border flex flex-col py-6 transition-all duration-300 z-40">
+        <div class="px-4 mb-8 flex items-center justify-center lg:justify-start">
+            <div class="w-10 h-10 rounded-xl bg-ios-blue flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-ios-blue/30"><i class="fa-solid fa-layer-group"></i></div>
+            <span class="ml-3 font-bold text-xl text-white hidden lg:block tracking-tight">Estoque OS</span>
+        </div>
+        <nav class="flex-1 w-full px-3 space-y-2 overflow-y-auto">
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="dashboard"><i class="fa-solid fa-chart-pie w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Visão Geral</span></a>
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="entry"><i class="fa-solid fa-box-open w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Entrada</span></a>
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="inventory"><i class="fa-solid fa-boxes-stacked w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Estoque</span></a>
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="recipes"><i class="fa-solid fa-book-bookmark w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Receitas</span></a>
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="production"><i class="fa-solid fa-hammer w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Produção</span></a>
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="requisitions"><i class="fa-solid fa-arrow-right-from-bracket w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Requisição</span></a>
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="adjustments"><i class="fa-solid fa-sliders w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Ajuste</span></a>
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="consumption"><i class="fa-solid fa-chart-line w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Consumo</span></a>
+        </nav>
+        <div class="mt-auto w-full px-3 pt-4 border-t border-ios-border">
+            <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="settings"><i class="fa-solid fa-gear w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Ajustes App</span></a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto bg-ios-bg relative z-0">
+        <!-- Dashboard -->
+        <div id="screen-dashboard" class="screen-panel">
+            <h1 class="title-lg">Visão Geral</h1>
+            <p class="text-ios-textMuted mb-6 italic">"Não se gerencia o que não se mede, e não há sucesso no que não se gerencia."</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+                <div class="card flex items-center">
+                    <div class="stat-icon bg-ios-blue/20 text-ios-blue"><i class="fa-solid fa-cube"></i></div>
+                    <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Itens Únicos</p><p id="stat-total-items" class="text-2xl font-bold text-white">0</p></div>
+                </div>
+                <div class="card flex items-center">
+                    <div class="stat-icon bg-ios-green/20 text-ios-green"><i class="fa-solid fa-boxes-packing"></i></div>
+                    <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Volume Físico</p><p id="stat-total-quantity" class="text-2xl font-bold text-white">0</p></div>
+                </div>
+                <div class="card flex items-center">
+                    <div class="stat-icon bg-ios-orange/20 text-ios-orange"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Estoque Baixo</p><p id="stat-low-stock" class="text-2xl font-bold text-white">0</p></div>
+                </div>
+                <div class="card flex items-center">
+                    <div class="stat-icon bg-ios-red/20 text-ios-red"><i class="fa-solid fa-clock"></i></div>
+                    <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Vencendo (30d)</p><p id="stat-expiring-soon" class="text-2xl font-bold text-white">0</p></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                <div class="card"><div class="flex justify-between mb-4"><h2 class="title-md mb-0">Consumo Hoje</h2></div><div class="h-64"><canvas id="daily-output-chart"></canvas></div></div>
+                <div class="card"><div class="flex justify-between mb-4"><h2 class="title-md mb-0">Previsto 48h</h2></div><div class="h-64"><canvas id="scheduled-output-chart"></canvas></div></div>
+            </div>
+            <div class="card"><h2 class="title-md">Curva ABC de Consumo</h2><div class="h-64"><canvas id="abc-curve-chart"></canvas></div></div>
+        </div>
+
+        <!-- Entrada -->
+        <div id="screen-entry" class="screen-panel hidden">
+            <h1 class="title-lg">Nova Entrada Físico</h1>
+            <div class="card max-w-3xl mx-auto">
+                <form id="entry-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="md:col-span-2">
+                            <label class="form-label">Nome do Produto</label>
+                            <input type="text" name="product-name" required class="form-input">
+                        </div>
+                        <div>
+                            <label class="form-label">Tipo de Produto</label>
+                            <select name="product-type" required class="form-input">
+                                <option value="insumo">Insumo (Matéria Prima / Embalagem)</option>
+                                <option value="semi_acabado">Semi-acabado (Massa, Recheio, Base)</option>
+                            </select>
+                        </div>
+                        <div><label class="form-label">Código (Opcional) <span class="text-xs text-ios-textMuted font-normal">- Use 8110 p/ Farinha de Trigo</span></label><input type="text" name="product-code" class="form-input"></div>
+                        <div class="md:col-span-2"><label class="form-label">Fornecedor</label><input type="text" name="supplier" required class="form-input" placeholder="Ex: Fornecedor X ou Produção Própria"></div>
+                        <div><label class="form-label">Quantidade FÍSICA</label><input type="number" name="quantity" required min="0.01" step="0.01" class="form-input text-ios-blue font-bold"></div>
+                        <div><label class="form-label">Data de Fabricação</label><input type="date" id="mfg-date" class="form-input"></div>
+                        <div><label class="form-label">Data de Recebimento</label><input type="date" id="receipt-date" required class="form-input"></div>
+                        <div><label class="form-label">Data de Validade</label><input type="date" id="expiry-date" class="form-input"></div>
+                    </div>
+                    <div class="mt-8 flex justify-end"><button type="submit" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Registrar no Estoque</button></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Estoque -->
+        <div id="screen-inventory" class="screen-panel hidden">
+            <h1 class="title-lg">Estoque Atual</h1>
+            <div class="card p-0 overflow-hidden border-none bg-transparent">
+                <div class="flex flex-wrap gap-3 mb-5 p-1">
+                    <input type="text" id="search-inventory" placeholder="Pesquisar itens..." class="form-input w-full md:w-64">
+                    <select id="type-filter" class="form-input w-auto">
+                        <option value="">Todos os Tipos</option>
+                        <option value="insumo">Insumos</option>
+                        <option value="semi_acabado">Semi-acabados</option>
+                    </select>
+                    <select id="supplier-filter" class="form-input w-auto"><option value="">Fornecedores</option></select>
+                    <button id="btn-export-excel" class="btn-secondary ml-auto"><i class="fa-solid fa-arrow-up-from-bracket mr-2"></i>Exportar</button>
+                </div>
+                <div class="table-container">
+                    <table class="base-table">
+                        <thead class="base-thead">
+                            <tr>
+                                <th class="base-th table-header-sortable" data-sort="name">Produto <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
+                                <th class="base-th">Tipo</th>
+                                <th class="base-th table-header-sortable" data-sort="supplier">Fornecedor <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
+                                <th class="base-th text-right table-header-sortable" data-sort="totalQuantity">Saldo Consolidado <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
+                                <th class="base-th table-header-sortable" data-sort="expiry">Próx. Validade <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receitas -->
+        <div id="screen-recipes" class="screen-panel hidden">
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                <h1 class="title-lg mb-0">Fichas Técnicas / Receitas</h1>
+                <div class="flex gap-3">
+                    <input type="text" id="search-recipe" placeholder="Buscar receita..." class="form-input w-64">
+                    <button id="btn-export-recipe-book" class="btn-secondary"><i class="fa-solid fa-file-pdf mr-2"></i>Livro PDF</button>
+                    <button id="btn-new-recipe" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Criar Receita</button>
+                </div>
+            </div>
+            <div class="flex flex-col xl:flex-row gap-6">
+                <div class="w-full xl:w-1/4 card self-start">
+                    <h2 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Linhas de Produção</h2>
+                    <ul id="recipe-categories-list" class="space-y-1"></ul>
+                </div>
+                <div id="recipes-grid" class="w-full xl:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-5 self-start"></div>
+            </div>
+        </div>
+
+        <!-- Produção -->
+        <div id="screen-production" class="screen-panel hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="title-lg mb-0">Ordens de Produção (OP)</h1>
+                <div class="flex gap-3">
+                    <button id="btn-confirm-production" class="btn-success"><i class="fa-solid fa-check-double mr-2"></i>Efetivar OPs Selecionadas</button>
+                    <button id="btn-new-production-order" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Nova OP</button>
+                </div>
+            </div>
+            <div class="card mb-5 flex flex-wrap gap-4 items-center">
+                <label class="text-sm font-medium text-ios-textMuted">Data da Produção:</label>
+                <input type="date" id="search-po-by-date" class="form-input w-auto py-2">
+            </div>
+            <div id="production-orders-list" class="grid grid-cols-1 xl:grid-cols-2 gap-5"></div>
+        </div>
+
+        <!-- Consumo Mensal -->
+        <div id="screen-consumption" class="screen-panel hidden">
+            <h1 class="title-lg">Relatório de Consumo</h1>
+            <div class="card p-0 bg-transparent border-none">
+                <div class="flex gap-3 mb-5">
+                    <select id="consumption-month-filter" class="form-input w-auto py-2"></select>
+                    <select id="consumption-year-filter" class="form-input w-auto py-2"></select>
+                    <input type="text" id="search-consumption" placeholder="Buscar produto..." class="form-input flex-1 py-2">
+                </div>
+                <div class="table-container">
+                    <table class="base-table">
+                        <thead class="base-thead"><tr><th class="base-th">Produto</th><th class="base-th text-right">Volume Consumido</th></tr></thead>
+                        <tbody id="consumption-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requisições -->
+        <div id="screen-requisitions" class="screen-panel hidden">
+            <h1 class="title-lg">Baixa Avulsa (Requisição)</h1>
+            <div class="card max-w-4xl mx-auto">
+                <div class="bg-ios-orange/10 border border-ios-orange/30 rounded-xl p-4 mb-6">
+                    <p class="text-sm text-ios-orange font-medium"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Atenção: O sistema bloqueará a requisição se não houver saldo físico suficiente nos lotes ou se os lotes estiverem bloqueados em quarentena.</p>
+                </div>
+                <form id="requisition-form">
+                    <div class="grid grid-cols-2 gap-5 mb-6">
+                        <div><label class="form-label">Destino / Motivo</label><input type="text" id="requisition-reason" required class="form-input" placeholder="Ex: Quebra, Teste, Refeição"></div>
+                        <div><label class="form-label">Solicitante</label><input type="text" id="requisition-responsible" required class="form-input" placeholder="Nome"></div>
+                    </div>
+                    <div class="border-t border-ios-border pt-4">
+                        <h3 class="title-md text-sm uppercase text-ios-textMuted mb-4">Itens da Requisição</h3>
+                        <div id="requisition-items-container" class="space-y-3 mb-5"></div>
+                        <button type="button" id="add-requisition-item-btn" class="text-ios-blue hover:text-blue-400 font-medium text-sm flex items-center"><i class="fa-solid fa-circle-plus mr-2 text-lg"></i>Adicionar Insumo</button>
+                    </div>
+                    <div class="mt-8 flex justify-end"><button type="submit" class="btn-primary">Confirmar Saída Avulsa</button></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ajustes -->
+        <div id="screen-adjustments" class="screen-panel hidden">
+            <h1 class="title-lg">Ajuste Manual de Lote</h1>
+            <div class="card max-w-2xl mx-auto">
+                <form id="adjustment-form" class="space-y-5">
+                    <div class="z-50 relative"><label class="form-label">Buscar Produto</label><div id="adjustment-searchable-container" class="searchable-container"></div></div>
+                    <div><label class="form-label">Selecionar Lote Físico</label><select id="adjustment-batch" required class="form-input"><option value="">Aguardando produto...</option></select></div>
+                    <div><label class="form-label">Nova Quantidade Real (Física)</label><input type="number" id="adjustment-new-quantity" required min="0" step="0.01" class="form-input text-lg font-bold text-ios-blue"></div>
+                    <div><label class="form-label">Motivo do Ajuste</label><input type="text" id="adjustment-reason" required class="form-input" placeholder="Ex: Recontagem de inventário"></div>
+                    <div><label class="form-label">Responsável</label><input type="text" id="adjustment-responsible" required class="form-input"></div>
+                    <div class="mt-8 flex justify-end"><button type="submit" class="btn-primary">Registrar Ajuste</button></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Configurações -->
+        <div id="screen-settings" class="screen-panel hidden">
+            <h1 class="title-lg">Ajustes do Aplicativo</h1>
+            <div class="card max-w-2xl mx-auto space-y-8 divide-y divide-ios-border">
+                <div class="pt-2">
+                    <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-down mr-2 text-ios-blue"></i>Exportar Backup</h2>
+                    <p class="text-sm text-ios-textMuted mb-4">Gera um arquivo seguro contendo toda a base de dados.</p>
+                    <button id="btn-download-backup" class="w-full btn-secondary text-ios-blue border-ios-blue/30 bg-ios-blue/10">Baixar JSON</button>
+                </div>
+                <div class="pt-8">
+                    <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-up mr-2 text-ios-orange"></i>Restaurar Banco</h2>
+                    <p class="text-sm text-ios-textMuted mb-3">Carrega um arquivo de backup anterior. <strong>Isso substituirá as informações atuais.</strong></p>
+                    <div class="mb-4 p-3 bg-ios-bg rounded-lg border border-ios-border text-xs text-ios-textMuted">
+                        Última restauração: <span id="last-restore-date" class="font-bold text-white">Nunca</span>
+                    </div>
+                    <button id="btn-upload-backup" class="w-full btn-secondary text-ios-orange border-ios-orange/30 bg-ios-orange/10">Selecionar Arquivo</button>
+                    <input type="file" id="backup-file-input" class="hidden" accept=".json">
+                </div>
+                <div class="pt-8">
+                    <h2 class="title-md text-ios-red mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo</h2>
+                    <p class="text-sm text-ios-textMuted mb-4">Ação irreversível.</p>
+                    <button id="btn-reset-database" class="w-full btn-danger bg-ios-red/20 text-ios-red border border-ios-red border-opacity-50 hover:bg-ios-red hover:text-white">Formatar Sistema</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Receita -->
+    <div id="recipe-modal" class="modal">
+        <div class="modal-content max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6"><h2 id="recipe-modal-title" class="title-md mb-0">Nova Receita</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="recipe-modal">&times;</button></div>
+            <form id="recipe-form" class="space-y-5">
+                <input type="hidden" id="edit-recipe-id">
+                
+                <div><label class="form-label">Nome da Ficha Técnica / Receita</label><input type="text" id="recipe-name" required class="form-input font-semibold text-lg" placeholder="Ex: Massa de Coxinha ou Bolo de Cenoura"></div>
+                
+                <div>
+                    <label class="form-label">Linha Produtiva</label>
+                    <input type="text" id="recipe-category" list="category-options" required class="form-input" placeholder="Selecione ou digite uma nova linha (ex: Salgado, Pães...)">
+                    <datalist id="category-options">
+                        <option value="Salgado"></option>
+                        <option value="Pães"></option>
+                        <option value="Confeitaria"></option>
+                        <option value="Bases"></option>
+                    </datalist>
+                </div>
+                
+                <div class="p-5 bg-ios-blue/10 border border-ios-blue/30 rounded-xl">
+                    <label class="flex items-center space-x-3 cursor-pointer mb-2">
+                        <input type="checkbox" id="recipe-is-semi" class="w-5 h-5 text-ios-blue bg-ios-input border-ios-border rounded focus:ring-ios-blue">
+                        <span class="text-sm font-semibold text-white">Esta receita gera um produto Semi-Acabado</span>
+                    </label>
+                    <p class="text-xs text-ios-textMuted mb-4">Se marcado, a receita entra no estoque como Insumo (Massa, Base, etc). Se NÃO marcado, é classificada como Consumo Direto/Acabado (Não acumula estoque na OP).</p>
+                    
+                    <div id="yield-wrapper" class="hidden pt-4 border-t border-ios-blue/20">
+                        <label class="form-label text-ios-blue font-bold">Rendimento (Quantidade FÍSICA que entra no estoque ao processar 1 receita)</label>
+                        <input type="number" id="recipe-yield" min="0.001" step="0.001" value="1" class="form-input text-ios-blue font-bold text-lg" placeholder="Ex: 2.5">
+                    </div>
+                </div>
+                
+                <div class="pt-2">
+                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Composição (Ingredientes)</h3>
+                    <div id="ingredients-container" class="space-y-3 mb-4"></div>
+                    <button type="button" id="add-ingredient-btn" class="text-ios-blue font-medium text-sm flex items-center"><i class="fa-solid fa-circle-plus mr-1"></i>Adicionar Ingrediente</button>
+                </div>
+                <div class="mt-6 flex justify-end"><button type="submit" class="btn-primary" id="save-recipe-btn">Salvar Ficha Técnica</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal OP -->
+    <div id="production-order-modal" class="modal">
+        <div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6"><h2 id="production-order-modal-title" class="title-md mb-0">Gerar Ordem de Produção (OP)</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="production-order-modal">&times;</button></div>
+            <form id="production-order-form">
+                <input type="hidden" id="edit-po-id">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-ios-bg border border-ios-border p-5 rounded-2xl mb-6 shadow-inner items-start relative z-50">
+                    <div class="md:col-span-2 relative">
+                        <label class="form-label">Receita / Produto a Fabricar</label>
+                        <div id="po-recipe-searchable-container" class="searchable-container"></div>
+                    </div>
+                    <div><label class="form-label">Multiplicador (Qtd Receitas)</label><input type="number" id="po-quantity" value="1" min="0.01" step="0.01" required class="form-input text-ios-blue font-bold text-lg"></div>
+                    
+                    <div class="md:col-span-2 mt-2"><label class="form-label">Data Agendada</label><input type="date" id="po-date" required class="form-input"></div>
+                    
+                    <div id="po-output-fields" class="col-span-1 md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-4 border-t border-ios-border hidden">
+                        <div><label class="form-label">Total Gerado (Entrada Físico)</label><input type="text" id="po-total-output" readonly class="form-input bg-gray-800 text-ios-green font-bold text-lg border-none" value="0.0000" title="Calculado = Rendimento x Multiplicador"></div>
+                        <div><label class="form-label">Lote Sugerido (Saída)</label><input type="text" id="po-output-batch" class="form-input"></div>
+                        <div><label class="form-label">Validade Lote Gerado</label><input type="date" id="po-output-expiry" class="form-input"></div>
+                    </div>
+                </div>
+                <h3 class="title-md text-sm uppercase text-ios-textMuted mb-3">Previsão de Consumo</h3>
+                <div class="table-container mb-6">
+                    <table class="base-table">
+                        <thead class="base-thead"><tr><th class="base-th">Insumo</th><th class="base-th">Estoque Atual</th><th class="base-th">Qtd a Descontar</th><th class="base-th">Lotes Reservados</th></tr></thead>
+                        <tbody id="po-ingredients-body"></tbody>
+                    </table>
+                </div>
+                <div class="flex justify-end"><button type="submit" class="btn-primary">Salvar OP na Fila</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes Item -->
+    <div id="item-details-modal" class="modal">
+        <div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="title-md flex items-center mb-1 text-2xl tracking-tight"><span id="details-product-name"></span></h2>
+                    <span id="details-product-type-badge" class="badge bg-ios-cardHover text-ios-textMuted border border-ios-border"></span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="btn-edit-item" class="text-ios-blue bg-ios-blue/10 p-3 rounded-full hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-pen"></i></button>
+                    <button id="btn-delete-item" class="text-ios-red bg-ios-red/10 p-3 rounded-full hover:bg-ios-red/20 transition-colors"><i class="fa-solid fa-trash"></i></button>
+                    <button class="text-ios-textMuted hover:text-white text-3xl ml-2 close-modal" data-target="item-details-modal">&times;</button>
+                </div>
+            </div>
+            
+            <div id="item-details-view" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-ios-bg p-5 rounded-2xl mb-6 shadow-inner border border-ios-border">
+                <div><span class="text-ios-textMuted block mb-1">Código</span><span id="details-product-code" class="text-white font-medium"></span></div>
+                <div><span class="text-ios-textMuted block mb-1">Fornecedor</span><span id="details-supplier" class="text-white font-medium"></span></div>
+                <div class="md:col-span-2"><span class="text-ios-textMuted block mb-1">Estoque Consolidado Físico</span><span id="details-total-quantity" class="text-ios-green font-bold text-xl"></span></div>
+            </div>
+            
+            <div id="item-details-edit" class="hidden mb-6 bg-ios-bg p-5 rounded-2xl border border-ios-border shadow-inner">
+                <form id="edit-item-form" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <input type="hidden" id="edit-item-id">
+                    <div class="md:col-span-3">
+                        <label class="form-label">Classificação</label>
+                        <select id="edit-product-type" required class="form-input">
+                            <option value="insumo">Insumo</option>
+                            <option value="semi_acabado">Semi-acabado</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-3"><label class="form-label">Nome</label><input type="text" id="edit-product-name" required class="form-input"></div>
+                    <div><label class="form-label">Cód</label><input type="text" id="edit-product-code" class="form-input"></div>
+                    <div class="md:col-span-2"><label class="form-label">Forn.</label><input type="text" id="edit-supplier" class="form-input"></div>
+                    <div class="md:col-span-3 flex justify-end gap-3 mt-2"><button type="button" id="btn-cancel-edit" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Salvar Edição</button></div>
+                </form>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Lotes Físicos na Prateleira</h3>
+                    <div class="table-container mb-8 max-h-96 overflow-y-auto">
+                        <table class="base-table">
+                            <thead class="base-thead"><tr><th class="base-th">Lote</th><th class="base-th">Status</th><th class="base-th">Volume</th><th class="base-th">Validade</th><th class="base-th text-center">Gestão</th></tr></thead>
+                            <tbody id="details-batches-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3 flex justify-between items-center">
+                        Extrato de Movimentação
+                        <button id="btn-clear-hist-filters" class="text-xs text-ios-blue hover:text-blue-300 font-normal underline hidden">Limpar Filtros</button>
+                    </h3>
+                    <div class="flex flex-wrap gap-2 mb-3 bg-ios-bg p-3 rounded-xl border border-ios-border shadow-inner">
+                        <div class="w-full text-xs text-ios-textMuted font-medium mb-1">Filtrar por Período:</div>
+                        <input type="date" id="hist-filter-start" class="form-input py-1 px-2 text-xs w-auto border-ios-border">
+                        <span class="text-ios-textMuted flex items-center text-xs">até</span>
+                        <input type="date" id="hist-filter-end" class="form-input py-1 px-2 text-xs w-auto border-ios-border">
+                        <select id="hist-filter-type" class="form-input py-1 px-2 text-xs w-auto border-ios-border ml-auto">
+                            <option value="">Todas Movimentações</option>
+                            <option value="entrada">Entradas (Todas)</option>
+                            <option value="saída">Saídas / Consumo</option>
+                            <option value="requisição">Requisição Avulsa</option>
+                            <option value="ajuste">Ajustes</option>
+                        </select>
+                    </div>
+                    <div class="table-container max-h-72 overflow-y-auto bg-ios-bg p-2" id="details-history-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Lote Específico -->
+    <div id="edit-batch-modal" class="modal z-[60]">
+        <div class="modal-content max-w-sm">
+            <h2 class="title-md mb-4">Editar Lote</h2>
+            <form id="edit-batch-form" class="space-y-4">
+                <input type="hidden" id="edit-batch-id">
+                <input type="hidden" id="edit-batch-product-id">
+                <div><label class="form-label">Código do Lote</label><input type="text" id="edit-batch-code" required class="form-input bg-ios-bg border-ios-border"></div>
+                <div><label class="form-label">Quantidade</label><input type="number" step="0.001" id="edit-batch-qty" required class="form-input text-ios-blue font-bold bg-ios-bg border-ios-border"></div>
+                <div><label class="form-label">Validade</label><input type="date" id="edit-batch-expiry" class="form-input bg-ios-bg border-ios-border"></div>
+                <div class="flex justify-end gap-2 mt-2"><button type="button" class="btn-secondary close-modal" data-target="edit-batch-modal">Cancelar</button><button type="submit" class="btn-primary">Salvar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Seletor Manual de Lotes (PEPS override) -->
+    <div id="batch-selector-modal" class="modal z-[60]">
+        <div class="modal-content max-w-xl">
+            <h2 id="batch-selector-title" class="title-md mb-4">Descontar de quais lotes?</h2>
+            <div class="bg-ios-bg border border-ios-border p-4 rounded-xl flex justify-between mb-5 items-center">
+                <span class="text-ios-textMuted text-sm">Alvo: <span id="batch-selector-needed" class="text-white font-semibold"></span></span>
+                <span class="text-ios-textMuted text-sm">Marcado: <span id="batch-selector-selected" class="font-bold text-lg text-ios-blue"></span></span>
+            </div>
+            <div id="batch-selector-list" class="max-h-64 overflow-y-auto mb-6 pr-2 space-y-2"></div>
+            <div class="flex justify-end gap-3"><button class="btn-secondary close-modal" data-target="batch-selector-modal">Cancelar</button><button id="confirm-batch-selection" class="btn-primary">Aplicar Seleção</button></div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmação Base -->
+    <div id="confirm-action-modal" class="modal z-[9999]">
+        <div class="modal-content max-w-md text-center flex flex-col items-center">
+            <div class="w-16 h-16 rounded-full bg-ios-cardHover border border-ios-border flex items-center justify-center mb-5"><i class="fa-solid fa-circle-question text-3xl text-ios-blue"></i></div>
+            <h3 id="confirm-title" class="title-md mb-2"></h3>
+            <p id="confirm-message" class="text-ios-textMuted text-sm mb-8 leading-relaxed"></p>
+            <div class="flex gap-3 w-full justify-center">
+                <button id="cancel-action-btn" class="btn-secondary flex-1">Cancelar</button>
+                <button id="confirm-action-btn" class="btn-primary flex-1">Sim, Continuar</button>
+            </div>
+        </div>
+    </div>
+    
+<script type="module">
+    const id = n => document.getElementById(n);
+    const show = el => { if(el) el.style.display = 'flex'; el.classList.remove('hidden'); };
+    const hide = el => { if(el) el.style.display = 'none'; el.classList.add('hidden'); };
+
+    // --- DB (IndexedDB) ---
+    const DB = (() => {
+        let dbInstance;
+        const init = () => new Promise((resolve, reject) => {
+            const req = indexedDB.open('estoqueOS', 6);
+            req.onerror = () => reject();
+            req.onupgradeneeded = e => {
+                const db = e.target.result;
+                if(!db.objectStoreNames.contains('inventory')) db.createObjectStore('inventory', {keyPath: 'id', autoIncrement: true}).createIndex('code', 'code', {unique: false});
+                if(!db.objectStoreNames.contains('batches')) db.createObjectStore('batches', {keyPath: 'id', autoIncrement: true}).createIndex('productId', 'productId', {unique: false});
+                if(!db.objectStoreNames.contains('history')) db.createObjectStore('history', {keyPath: 'id', autoIncrement: true});
+                if(!db.objectStoreNames.contains('recipes')) db.createObjectStore('recipes', {keyPath: 'id', autoIncrement: true});
+                if(!db.objectStoreNames.contains('productionOrders')) db.createObjectStore('productionOrders', {keyPath: 'id', autoIncrement: true});
+                if(!db.objectStoreNames.contains('monthlyConsumption')) db.createObjectStore('monthlyConsumption', {keyPath: 'id', autoIncrement: true}).createIndex('period', 'period', {unique: false});
+            };
+            req.onsuccess = e => resolve(dbInstance = e.target.result);
+        });
+        const op = async (store, mode, method, data) => {
+            if(!dbInstance) await init();
+            return new Promise((res, rej) => {
+                const req = dbInstance.transaction(store, mode).objectStore(store)[method](data);
+                req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
+            });
+        };
+        const restoreBackupAtomic = async (data) => {
+            if(!dbInstance) await init();
+            return new Promise((resolve, reject) => {
+                const stores = ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption'];
+                const tx = dbInstance.transaction(stores, 'readwrite');
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+                tx.onabort = () => reject(tx.error);
+                for(const s of stores) {
+                    const os = tx.objectStore(s);
+                    os.clear(); 
+                    if(data[s] && Array.isArray(data[s])) {
+                        for(const item of data[s]) os.put(item); 
+                    }
+                }
+            });
+        };
+        return {
+            getDB: init, add: (s, d) => op(s, 'readwrite', 'add', d), update: (s, d) => op(s, 'readwrite', 'put', d),
+            remove: (s, k) => op(s, 'readwrite', 'delete', k), get: (s, k) => op(s, 'readonly', 'get', k),
+            getAll: (s) => op(s, 'readonly', 'getAll'), clear: (s) => op(s, 'readwrite', 'clear'),
+            restoreBackup: restoreBackupAtomic,
+            getByIndex: async (s, idx, val) => {
+                if(!dbInstance) await init();
+                return new Promise((res, rej) => {
+                    const req = dbInstance.transaction(s, 'readonly').objectStore(s).index(idx).get(val);
+                    req.onsuccess = () => res(req.result); req.onerror = () => rej();
+                });
+            }
+        };
+    })();
+
+    // --- ESTADO GLOBAL ---
+    let localInventory=[], localBatches=[], localHistory=[], localRecipes=[], localProductionOrders=[], localMonthlyConsumption=[];
+    let dailyChart=null, schedChart=null, abcChart=null, currentRecipeCategory='Todos';
+    let currentBatchTarget=null;
+    let invSort = { col: 'name', asc: true };
+    let currentHistoryProductId = null;
+
+    const typeLabels = { insumo: 'Insumo', semi_acabado: 'Semi-acabado' };
+
+    // --- EVENT LISTENERS GERAIS ---
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => { hide(id(btn.dataset.target)); });
+    });
+
+    const screens = ['dashboard','entry','inventory','recipes','production','requisitions','adjustments','consumption','settings'];
+    function navTo(target) {
+        screens.forEach(s => { id('screen-'+s).classList.add('hidden'); });
+        document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('bg-ios-card', 'text-white'); n.classList.add('text-ios-textMuted'); });
+        const screenEl = id('screen-'+target); if(screenEl) screenEl.classList.remove('hidden');
+        const activeLink = document.querySelector(`.nav-item[data-target="${target}"]`);
+        if(activeLink) { activeLink.classList.remove('text-ios-textMuted'); activeLink.classList.add('bg-ios-card', 'text-white'); }
+        
+        if(target==='adjustments') {
+            createSearchableSelect(id('adjustment-searchable-container'), localInventory, 'Buscar produto inteligente...', p => {
+                id('adjustment-batch').innerHTML = '<option value="">Selecione Lote...</option>' + localBatches.filter(b=>b.productId===p.id && b.quantity>0).map(b=>`<option value="${b.id}">${b.code}</option>`).join('');
+            });
+        }
+        if(target==='requisitions') { 
+            id('requisition-items-container').innerHTML=''; 
+            addIngRowReq(id('requisition-items-container')); 
+        }
+    }
+    document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', e => { e.preventDefault(); navTo(link.dataset.target); }); });
+
+    function showNotif(msg, isErr=false) {
+        const notif = id('notification-modal');
+        notif.innerHTML = isErr ? `<i class="fa-solid fa-circle-exclamation mr-2"></i> ${msg}` : `<i class="fa-solid fa-circle-check mr-2"></i> ${msg}`;
+        notif.className = `fixed top-6 left-1/2 transform -translate-x-1/2 z-[200] py-3 px-6 rounded-full shadow-2xl shadow-black/50 font-medium text-white transition-all text-sm backdrop-blur-md border ${isErr ? 'bg-ios-red/90 border-ios-red' : 'bg-ios-green/90 border-ios-green'}`;
+        notif.style.display = 'block'; setTimeout(() => notif.style.display = 'none', 4000);
+    }
+
+    function showConfirmationModal(title, message, onConfirm) {
+        id('confirm-title').textContent = title;
+        id('confirm-message').innerHTML = message;
+        id('confirm-action-modal').style.display = 'flex';
+        const cancelBtn = id('cancel-action-btn'); const confirmBtn = id('confirm-action-btn');
+        const cleanup = () => { id('confirm-action-modal').style.display='none'; confirmBtn.replaceWith(confirmBtn.cloneNode(true)); cancelBtn.replaceWith(cancelBtn.cloneNode(true)); };
+        cancelBtn.addEventListener('click', cleanup, { once: true });
+        confirmBtn.addEventListener('click', () => { onConfirm(); cleanup(); }, { once: true });
+    }
+
+    // Busca Inteligente Dinâmica Z-Index
+    function createSearchableSelect(container, items, placeholder, onSelect) {
+        container.innerHTML = `
+            <div class="searchable-container">
+                <input type="text" class="form-input bg-ios-input text-white border-ios-border w-full" placeholder="${placeholder}" autocomplete="off">
+                <div class="searchable-dropdown hidden"></div>
+            </div>`;
+        const input = container.querySelector('input');
+        const dropdown = container.querySelector('.searchable-dropdown');
+        
+        const renderList = (searchTerm) => {
+            let filtered = items;
+            if(searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filtered = filtered.filter(i => (i.searchName || i.name).toLowerCase().includes(term) || (i.code && i.code.toLowerCase().includes(term)));
+            }
+            
+            if(filtered.length) {
+                dropdown.innerHTML = filtered.map(i => `<div class="searchable-item flex justify-between items-center" data-id="${i.id}">
+                    <span class="font-medium">${i.searchName || i.name}</span>
+                    ${i.type ? `<span class="text-xs text-ios-textMuted bg-black/30 px-2 py-1 rounded">${typeLabels[i.type]||''}</span>` : ''}
+                </div>`).join('');
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.innerHTML = `<div class="p-3 text-ios-textMuted text-sm">Nenhum resultado...</div>`;
+                dropdown.classList.remove('hidden');
+            }
+        };
+
+        input.addEventListener('focus', () => renderList(input.value));
+        input.addEventListener('input', () => renderList(input.value));
+        
+        dropdown.addEventListener('click', e => {
+            const row = e.target.closest('.searchable-item');
+            if(row) {
+                const item = items.find(i => i.id == row.dataset.id);
+                input.value = item.searchName || item.name; 
+                input.dataset.selectedId = item.id;
+                dropdown.classList.add('hidden');
+                if(onSelect) onSelect(item);
+            }
+        });
+        document.addEventListener('click', e => { if(!container.contains(e.target)) dropdown.classList.add('hidden'); });
+    }
+
+    // Gerador universal de Plano PEPS (BLOQUEIA LOTES NÃO LIBERADOS)
+    function getFIFOPlan(productId, qtyNeeded) {
+        // Pega todos os lotes que tem quantidade > 0 E estão liberados (isReleased !== false previne bloqueio em dados antigos sem essa prop)
+        const batches = localBatches.filter(b => b.productId === productId && b.quantity > 0 && b.isReleased !== false)
+                                    .sort((a,b) => new Date(a.expiryDate || '9999-01-01') - new Date(b.expiryDate || '9999-01-01'));
+        let remaining = qtyNeeded;
+        let plan = [];
+        for (let b of batches) {
+            if (remaining <= 0) break;
+            const take = Math.min(b.quantity, remaining);
+            plan.push({ batchId: b.id, batchCode: b.code, quantity: take });
+            remaining -= take;
+        }
+        return { plan, isSufficient: remaining <= 0.0001 };
+    }
+
+    // --- REFRESH E AUTO-SYNC CORE ---
+    async function refreshData() {
+        try {
+            [localInventory, localBatches, localHistory, localRecipes, localProductionOrders, localMonthlyConsumption] = await Promise.all([
+                DB.getAll('inventory'), DB.getAll('batches'), DB.getAll('history'), DB.getAll('recipes'), DB.getAll('productionOrders'), DB.getAll('monthlyConsumption')
+            ]);
+            
+            let changed = false;
+            
+            // Limpar lotes fantasmas gerados em versoes anteriores e sincronizar as quantidades com o MUNDO FÍSICO (LOTES)
+            const ghostBatches = localBatches.filter(b => b.code === 'AJUSTE-SYS');
+            for(let gb of ghostBatches) {
+                await DB.remove('batches', gb.id);
+                changed = true;
+            }
+            if(changed) localBatches = await DB.getAll('batches');
+            
+            for(let i of localInventory) {
+                if(!i.type || i.type === 'acabado') { i.type = 'insumo'; changed = true; } 
+                
+                const batches = localBatches.filter(b => b.productId === i.id);
+                const batchSum = batches.reduce((sum, b) => sum + Math.max(0, b.quantity), 0);
+                
+                if (Math.abs((i.totalQuantity || 0) - batchSum) > 0.001) {
+                    i.totalQuantity = batchSum; // Força o saldo total bater com a soma das prateleiras (lotes)
+                    await DB.update('inventory', i);
+                    changed = true;
+                }
+            }
+
+            if(changed) {
+                localInventory = await DB.getAll('inventory');
+                localBatches = await DB.getAll('batches');
+            }
+
+            populateFilters();
+            renderInv(); renderRecipes(); renderPO(); renderDash(); renderConsum();
+            if(currentHistoryProductId) renderItemDetailsHistory(); // Atualiza extrato aberto
+        } catch(e) { showNotif('Erro ao carregar dados offline', true); }
+    }
+
+    function populateFilters() {
+        const curSup = id('supplier-filter').value;
+        const suppliers = [...new Set(localInventory.map(i=>i.supplier))].filter(Boolean).sort();
+        id('supplier-filter').innerHTML = '<option value="">Fornecedores</option>' + suppliers.map(s=>`<option value="${s}">${s}</option>`).join('');
+        id('supplier-filter').value = curSup;
+        
+        const cy = id('consumption-year-filter').value || new Date().getFullYear().toString();
+        const cm = id('consumption-month-filter').value || (new Date().getMonth()+1).toString();
+        const cYears = [...new Set(localMonthlyConsumption.map(c=>c.period.substring(0,4)))].filter(Boolean).sort((a,b)=>b-a);
+        if(!cYears.includes(cy)) cYears.push(cy);
+        id('consumption-year-filter').innerHTML = cYears.map(y=>`<option value="${y}">${y}</option>`).join('');
+        const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        id('consumption-month-filter').innerHTML = months.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+        id('consumption-year-filter').value = cy; id('consumption-month-filter').value = cm;
+    }
+
+    // --- ESTOQUE E ORDENAÇÃO ---
+    ['search-inventory', 'supplier-filter', 'type-filter'].forEach(el => id(el).addEventListener('input', renderInv));
+
+    document.querySelectorAll('#screen-inventory .table-header-sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            if (invSort.col === th.dataset.sort) {
+                invSort.asc = !invSort.asc;
+            } else {
+                invSort.col = th.dataset.sort;
+                invSort.asc = true;
+            }
+            renderInv();
+        });
+    });
+
+    function renderInv() {
+        const tbody = id('inventory-table-body');
+        const term = id('search-inventory').value.toLowerCase();
+        const sup = id('supplier-filter').value;
+        const typ = id('type-filter').value;
+
+        // Atualizar Icones de Sort
+        document.querySelectorAll('#screen-inventory .table-header-sortable').forEach(th => {
+            const icon = th.querySelector('i');
+            if (th.dataset.sort === invSort.col) {
+                icon.className = invSort.asc ? 'fa-solid fa-sort-up ml-1 text-ios-blue' : 'fa-solid fa-sort-down ml-1 text-ios-blue';
+            } else {
+                icon.className = 'fa-solid fa-sort ml-1 text-ios-textMuted';
+            }
+        });
+
+        let list = localInventory.filter(i => 
+            i.name.toLowerCase().includes(term) &&
+            (!sup || i.supplier === sup) &&
+            (!typ || i.type === typ)
+        );
+
+        const getExp = item => localBatches.filter(bt=>bt.productId===item.id && bt.quantity>0 && bt.expiryDate).sort((x,y)=>new Date(x.expiryDate)-new Date(y.expiryDate))[0]?.expiryDate || '9999-12-31';
+
+        list.sort((a,b) => {
+            let valA, valB;
+            if(invSort.col === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); }
+            else if(invSort.col === 'supplier') { valA = (a.supplier||'').toLowerCase(); valB = (b.supplier||'').toLowerCase(); }
+            else if(invSort.col === 'totalQuantity') { valA = a.totalQuantity||0; valB = b.totalQuantity||0; }
+            else if(invSort.col === 'expiry') { valA = getExp(a); valB = getExp(b); }
+            
+            if(valA < valB) return invSort.asc ? -1 : 1;
+            if(valA > valB) return invSort.asc ? 1 : -1;
+            return 0;
+        });
+
+        if(!list.length) return tbody.innerHTML = `<tr><td colspan="5" class="base-td text-center text-ios-textMuted py-8">Nenhum item em estoque.</td></tr>`;
+        
+        tbody.innerHTML = list.map(item => {
+            const exp = getExp(item);
+            const expFormat = exp !== '9999-12-31' ? new Date(exp+'T00:00:00').toLocaleDateString('pt-BR') : '-';
+            const typeClass = item.type==='semi_acabado' ? 'bg-ios-orange/20 text-ios-orange border-ios-orange/30' : 'bg-gray-800 text-gray-300 border-gray-600';
+            return `<tr class="base-tr cursor-pointer" data-id="${item.id}">
+                <td class="base-td text-white font-medium">${item.name}</td>
+                <td class="base-td"><span class="badge border ${typeClass}">${typeLabels[item.type] || 'Insumo'}</span></td>
+                <td class="base-td text-ios-textMuted">${item.supplier || '-'}</td>
+                <td class="base-td text-right font-bold text-white">${(item.totalQuantity||0).toFixed(2)}</td>
+                <td class="base-td text-ios-textMuted">${expFormat}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    id('inventory-table-body').addEventListener('click', e => {
+        const row = e.target.closest('tr');
+        if(row && row.dataset.id) openDetails(parseInt(row.dataset.id));
+    });
+
+    // --- DETALHES, HISTÓRICO (EXTRATO) E LOTES ---
+    id('hist-filter-start').addEventListener('change', renderItemDetailsHistory);
+    id('hist-filter-end').addEventListener('change', renderItemDetailsHistory);
+    id('hist-filter-type').addEventListener('change', renderItemDetailsHistory);
+    id('btn-clear-hist-filters').addEventListener('click', () => {
+        id('hist-filter-start').value = '';
+        id('hist-filter-end').value = '';
+        id('hist-filter-type').value = '';
+        renderItemDetailsHistory();
+    });
+
+    function renderItemDetailsHistory() {
+        const pId = currentHistoryProductId;
+        if(!pId) return;
+
+        const p = localInventory.find(i=>i.id===pId);
+        if(!p) return;
+
+        let hist = localHistory.filter(h=>h.productId===pId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+        
+        const start = id('hist-filter-start').value;
+        const end = id('hist-filter-end').value;
+        const type = id('hist-filter-type').value;
+
+        if (start || end || type) show(id('btn-clear-hist-filters'));
+        else hide(id('btn-clear-hist-filters'));
+
+        if(start) hist = hist.filter(h => h.date >= start);
+        if(end) hist = hist.filter(h => h.date <= end);
+        if(type) {
+            if(type === 'entrada') hist = hist.filter(h => h.type.includes('entrada'));
+            else if(type === 'saída') hist = hist.filter(h => h.type === 'saída');
+            else hist = hist.filter(h => h.type === type);
+        }
+
+        if(!hist.length) {
+            id('details-history-container').innerHTML = '<div class="py-5 text-center text-ios-textMuted text-xs">Nenhuma movimentação no período.</div>';
+            return;
+        }
+
+        id('details-history-container').innerHTML = hist.map(h=>`
+            <div class="py-3 border-b border-ios-border text-sm flex justify-between items-center hover:bg-ios-card transition-colors px-2 rounded">
+                <div>
+                    <span class="font-bold text-xs uppercase ${h.type.includes('entrada')?'text-ios-green':h.type==='saída'||h.type==='requisição'?'text-ios-red':'text-ios-blue'}">
+                        ${h.type}
+                    </span>
+                    <p class="text-xs text-ios-textMuted mt-1 w-48 truncate" title="${h.reason||'Movimentação'}">${h.reason||'Movimentação'}</p>
+                </div>
+                <div class="text-right">
+                    <span class="font-bold text-white ${h.type.includes('entrada')?'':'text-ios-red'}">${h.type.includes('entrada')?'+':'-'} ${h.quantity.toFixed(2)}</span><br>
+                    <span class="text-xs text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>${new Date(h.date+'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function openDetails(pId) {
+        currentHistoryProductId = pId;
+        const p = localInventory.find(i=>i.id===pId);
+        if(!p) return;
+        
+        id('details-product-name').innerText = p.name;
+        id('details-product-type-badge').innerText = typeLabels[p.type||'insumo'];
+        id('details-product-code').innerText = p.code||'-';
+        id('details-supplier').innerText = p.supplier||'-';
+        id('details-total-quantity').innerText = (p.totalQuantity||0).toFixed(2);
+        
+        id('edit-item-id').value = p.id;
+        id('edit-product-name').value = p.name;
+        id('edit-product-type').value = p.type||'insumo';
+        id('edit-product-code').value = p.code||'';
+        id('edit-supplier').value = p.supplier||'';
+        
+        const is8110 = p.code === '8110'; // Regra Trigo
+
+        id('details-batches-table').innerHTML = localBatches.filter(b=>b.productId===pId && b.quantity>0).map(b=>{
+            let statusHtml = `<span class="text-xs text-ios-green font-bold"><i class="fa-solid fa-check mr-1"></i>Liberado</span>`;
+            
+            // Toggle de Quarentena para Farinha de Trigo
+            if(is8110) {
+                statusHtml = `
+                <div class="flex items-center gap-2" title="Lotes não liberados não entram em OP nem Requisição">
+                    <input type="checkbox" class="toggle-status toggle-release-batch" data-bid="${b.id}" ${b.isReleased?'checked':''}>
+                    <span class="text-xs font-bold ${b.isReleased?'text-ios-green':'text-ios-orange'} w-16">${b.isReleased?'Liberado':'Quarentena'}</span>
+                </div>`;
+            } else if (b.isReleased === false) { // Para qualquer outro que tenha sido bloqueado
+                 statusHtml = `
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" class="toggle-status toggle-release-batch" data-bid="${b.id}">
+                    <span class="text-xs font-bold text-ios-orange w-16">Bloqueado</span>
+                </div>`;
+            }
+
+            return `
+            <tr class="base-tr">
+                <td class="base-td font-medium text-white">${b.code}</td>
+                <td class="base-td">${statusHtml}</td>
+                <td class="base-td font-bold text-ios-blue">${b.quantity.toFixed(2)}</td>
+                <td class="base-td text-ios-textMuted">${b.expiryDate?new Date(b.expiryDate+'T00:00:00').toLocaleDateString('pt-BR'):'-'}</td>
+                <td class="base-td text-center">
+                    <button class="text-ios-blue hover:text-blue-400 p-2 edit-batch-btn bg-ios-bg rounded-lg border border-ios-border mr-1" data-id="${b.id}"><i class="fa-solid fa-pen"></i></button>
+                    <button class="text-ios-red hover:text-red-400 p-2 del-batch-btn bg-ios-bg rounded-lg border border-ios-border" data-id="${b.id}"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `}).join('');
+
+        renderItemDetailsHistory();
+        
+        show(id('item-details-view')); hide(id('item-details-edit')); id('item-details-modal').style.display='flex';
+    }
+
+    // Controle de Liberação (Toggle Quarentena)
+    id('details-batches-table').addEventListener('change', async e => {
+        if(e.target.classList.contains('toggle-release-batch')) {
+            const bId = parseInt(e.target.dataset.bid);
+            const b = await DB.get('batches', bId);
+            if(b) {
+                b.isReleased = e.target.checked;
+                await DB.update('batches', b);
+                showNotif(b.isReleased ? 'Lote de Insumo Liberado para Produção' : 'Lote Colocado em Quarentena (Bloqueado)', !b.isReleased);
+                await refreshData();
+                openDetails(parseInt(id('edit-item-id').value)); // Atualiza visual
+            }
+        }
+    });
+
+    id('details-batches-table').addEventListener('click', e => {
+        const delBtn = e.target.closest('.del-batch-btn');
+        if(delBtn) {
+            showConfirmationModal('Excluir Lote?', 'Atenção: Apagar o lote remove a quantidade do saldo total sem registrar no histórico de saídas.', async () => {
+                await DB.remove('batches', parseInt(delBtn.dataset.id)); await refreshData(); openDetails(parseInt(id('edit-item-id').value)); showNotif('Lote apagado');
+            });
+        }
+        const editBtn = e.target.closest('.edit-batch-btn');
+        if(editBtn) {
+            const b = localBatches.find(x => x.id === parseInt(editBtn.dataset.id));
+            if(b) {
+                id('edit-batch-id').value = b.id;
+                id('edit-batch-product-id').value = b.productId;
+                id('edit-batch-code').value = b.code;
+                id('edit-batch-qty').value = b.quantity;
+                id('edit-batch-expiry').value = b.expiryDate || '';
+                show(id('edit-batch-modal'));
+            }
+        }
+    });
+
+    id('edit-batch-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const bId = parseInt(id('edit-batch-id').value);
+        const pId = parseInt(id('edit-batch-product-id').value);
+        const b = await DB.get('batches', bId);
+        b.code = id('edit-batch-code').value;
+        b.quantity = parseFloat(id('edit-batch-qty').value);
+        b.expiryDate = id('edit-batch-expiry').value;
+        await DB.update('batches', b);
+        hide(id('edit-batch-modal'));
+        await refreshData();
+        openDetails(pId);
+        showNotif('Lote atualizado!');
+    });
+
+    id('btn-edit-item').addEventListener('click', () => { hide(id('item-details-view')); show(id('item-details-edit')); });
+    id('btn-cancel-edit').addEventListener('click', () => { show(id('item-details-view')); hide(id('item-details-edit')); });
+    id('edit-item-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const p = await DB.get('inventory', parseInt(id('edit-item-id').value));
+        p.name = id('edit-product-name').value; p.type = id('edit-product-type').value; 
+        p.code = id('edit-product-code').value; p.supplier = id('edit-supplier').value;
+        await DB.update('inventory', p);
+        showNotif('Produto atualizado!'); hide(id('item-details-edit')); show(id('item-details-view')); refreshData(); openDetails(p.id);
+    });
+    id('btn-delete-item').addEventListener('click', () => {
+        const pId = parseInt(id('edit-item-id').value);
+        showConfirmationModal('Excluir Produto?', 'Tem certeza absoluta? O histórico e lotes associados serão perdidos e quebrará OPs pendentes.', async () => {
+            await DB.remove('inventory', pId); refreshData(); id('item-details-modal').style.display='none'; showNotif('Excluído');
+        });
+    });
+
+    // --- ENTRADA AUTOMATIZADA (SEM COD LOTE) ---
+    id('entry-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        
+        // Geração Inteligente de Código de Lote (Data + Aleatório)
+        const autoBatch = 'LT-' + new Date().getTime().toString(36).toUpperCase();
+        
+        const data = {code:fd.get('product-code'), type:fd.get('product-type'), name:fd.get('product-name'), supplier:fd.get('supplier'), qtd:parseFloat(fd.get('quantity')), valid:id('expiry-date').value};
+        let p = await DB.getByIndex('inventory','code',data.code);
+        if(!p || !data.code) { p = {code:data.code, name:data.name, type:data.type, supplier:data.supplier, totalQuantity:0}; }
+        if(!p.id) p.id = await DB.add('inventory', p);
+        p.totalQuantity += data.qtd;
+        await DB.update('inventory', p);
+        
+        // Lógica de Quarentena: Se for 8110, já entra bloqueado pedindo teste
+        const isReleased = (p.code !== '8110');
+
+        await DB.add('batches', {productId:p.id, code:autoBatch, quantity:data.qtd, expiryDate:data.valid, isReleased: isReleased});
+        await DB.add('history', {productId:p.id, batchCode:autoBatch, type:'entrada', quantity:data.qtd, date:id('receipt-date').value, reason: `Recepção Forn. ${p.supplier}`});
+        
+        if(!isReleased) showNotif('Entrada Registrada! Lote de Farinha em Quarentena.', true);
+        else showNotif('Entrada Registrada!'); 
+        
+        e.target.reset(); refreshData();
+        id('receipt-date').value = new Date().toISOString().split('T')[0];
+    });
+
+    // --- RECEITAS E EXPORTAÇÃO DE PDF ---
+    id('search-recipe').addEventListener('input', renderRecipes);
+
+    function renderRecipes() {
+        const grid = id('recipes-grid');
+        const term = id('search-recipe').value.toLowerCase();
+
+        let f = localRecipes.filter(r => currentRecipeCategory==='Todos' || r.category===currentRecipeCategory);
+        if(term) f = f.filter(r => r.name.toLowerCase().includes(term) || r.category.toLowerCase().includes(term));
+
+        id('recipe-categories-list').innerHTML = ['Todos', ...new Set(localRecipes.map(r=>r.category))].map(c => 
+            `<li><a href="#" class="block p-3 rounded-lg text-sm text-ios-textMuted hover:bg-ios-card transition-colors ${c===currentRecipeCategory?'bg-ios-card text-white font-semibold':''}" data-cat="${c}">${c}</a></li>`
+        ).join('');
+        
+        grid.innerHTML = f.map(r => {
+            const isSemi = r.isSemi;
+            const ingredientsHTML = (r.ingredients || []).map(i=>`<li class="flex justify-between py-1 border-b border-ios-border/30 last:border-0"><span class="truncate pr-2">${localInventory.find(p=>p.id===i.productId)?.name||'?'}</span><span class="font-bold text-ios-blue bg-ios-bg px-2 rounded">${i.quantity}</span></li>`).join('');
+            return `
+            <div class="card relative flex flex-col border border-transparent ${isSemi ? 'hover:border-ios-orange/50' : 'hover:border-ios-cardHover'} transition-all">
+                <div class="absolute top-4 right-4 flex gap-2">
+                    <button class="edit-rec-btn text-ios-blue bg-ios-blue/10 p-2 w-8 h-8 rounded-full hover:bg-ios-blue/20 flex items-center justify-center" data-id="${r.id}"><i class="fa-solid fa-pen text-xs"></i></button>
+                    <button class="del-rec-btn text-ios-red bg-ios-red/10 p-2 w-8 h-8 rounded-full hover:bg-ios-red/20 flex items-center justify-center" data-id="${r.id}"><i class="fa-solid fa-trash text-xs"></i></button>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-1 pr-20 leading-tight">${r.name}</h3>
+                <div class="mb-4 mt-1 inline-flex">
+                    ${isSemi 
+                        ? `<span class="bg-ios-orange/10 border border-ios-orange/50 text-ios-orange text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-box mr-1"></i>Semi-Acabado (Rende: ${r.outputYield||1})</span>` 
+                        : `<span class="bg-gray-800 border border-gray-600 text-gray-300 text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-utensils mr-1"></i>Produto Acabado</span>`
+                    }
+                </div>
+                <div class="mt-auto border-t border-ios-border pt-4 bg-ios-bg -mx-6 -mb-6 px-6 pb-6 rounded-b-2xl">
+                    <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-3 tracking-wider"><i class="fa-solid fa-list-ul mr-1"></i> Ingredientes</p>
+                    <ul class="text-sm text-ios-textMuted">${ingredientsHTML}</ul>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    id('recipe-categories-list').addEventListener('click', e => {
+        if(e.target.tagName==='A') { e.preventDefault(); currentRecipeCategory = e.target.dataset.cat; renderRecipes(); }
+    });
+    id('recipes-grid').addEventListener('click', e => {
+        const delBtn = e.target.closest('.del-rec-btn');
+        const editBtn = e.target.closest('.edit-rec-btn');
+        if(delBtn) {
+            showConfirmationModal('Apagar Ficha?', 'Confirma a exclusão da receita?', async () => { await DB.remove('recipes', parseInt(delBtn.dataset.id)); refreshData(); showNotif('Excluída'); });
+        }
+        if(editBtn) { openEditRecipe(parseInt(editBtn.dataset.id)); }
+    });
+
+    id('recipe-is-semi').addEventListener('change', e => {
+        if(e.target.checked) show(id('yield-wrapper'));
+        else hide(id('yield-wrapper'));
+    });
+
+    function openEditRecipe(rId) {
+        const r = localRecipes.find(x => x.id === rId);
+        if(!r) return;
+        id('edit-recipe-id').value = r.id;
+        id('recipe-name').value = r.name;
+        id('recipe-category').value = r.category;
+        
+        id('recipe-is-semi').checked = !!r.isSemi;
+        if(r.isSemi) id('recipe-yield').value = r.outputYield || 1;
+        id('recipe-is-semi').dispatchEvent(new Event('change'));
+
+        id('ingredients-container').innerHTML = '';
+        (r.ingredients || []).forEach(ing => {
+            addIngRowReq(id('ingredients-container'), ing.productId, ing.quantity);
+        });
+        id('recipe-modal-title').innerText = 'Editar Receita';
+        id('recipe-modal').style.display='flex';
+    }
+
+    id('btn-new-recipe').addEventListener('click', () => {
+        id('recipe-form').reset(); id('edit-recipe-id').value=''; id('ingredients-container').innerHTML='';
+        id('recipe-is-semi').checked = false;
+        id('recipe-yield').value = 1;
+        id('recipe-is-semi').dispatchEvent(new Event('change'));
+
+        addIngRowReq(id('ingredients-container')); 
+        id('recipe-modal-title').innerText = 'Nova Receita';
+        id('recipe-modal').style.display='flex';
+    });
+    
+    // Exportação em PDF Elegante
+    id('btn-export-recipe-book').addEventListener('click', () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(22);
+        doc.setTextColor(10, 132, 255);
+        doc.text("Livro de Receitas - Fichas Técnicas", 14, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(150, 150, 150);
+        doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR') + " | Controle Interno de Produção", 14, 28);
+        doc.setLineWidth(0.5);
+        doc.line(14, 32, 196, 32);
+
+        let yPos = 40;
+        const categories = [...new Set(localRecipes.map(r => r.category))].sort();
+
+        categories.forEach((cat) => {
+            const recs = localRecipes.filter(r => r.category === cat).sort((a,b) => a.name.localeCompare(b.name));
+            if(recs.length === 0) return;
+
+            if (yPos > 260) { doc.addPage(); yPos = 20; }
+
+            // Título do Setor
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.setFillColor(240, 240, 245);
+            doc.rect(14, yPos-6, 182, 10, 'F');
+            doc.text("Setor: " + cat.toUpperCase(), 16, yPos+1);
+            yPos += 12;
+
+            recs.forEach(r => {
+                if (yPos > 240) { doc.addPage(); yPos = 20; }
+
+                doc.setFontSize(14);
+                doc.setTextColor(50, 50, 55);
+                doc.text(r.name, 14, yPos);
+                yPos += 6;
+
+                doc.setFontSize(10);
+                doc.setTextColor(120, 120, 120);
+                const tipo = r.isSemi ? `Semi-Acabado (Rende: ${r.outputYield || 1})` : "Produto Acabado";
+                doc.text(`Classificação: ${tipo}`, 14, yPos);
+                yPos += 4;
+
+                const tableData = (r.ingredients || []).map(i => {
+                    const pName = localInventory.find(p => p.id === i.productId)?.name || 'Desconhecido';
+                    return [pName, i.quantity];
+                });
+
+                doc.autoTable({
+                    startY: yPos,
+                    head: [['Ingrediente / Insumo', 'Quantidade Base']],
+                    body: tableData,
+                    theme: 'striped',
+                    headStyles: { fillColor: [44, 44, 46], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [248, 248, 250] },
+                    margin: { left: 14, right: 14 },
+                    styles: { fontSize: 9 }
+                });
+
+                yPos = doc.lastAutoTable.finalY + 12;
+            });
+            yPos += 5;
+        });
+
+        doc.save(`Livro_Receitas_${new Date().toISOString().split('T')[0]}.pdf`);
+        showNotif('PDF Gerado e baixado com sucesso!');
+    });
+    
+    // Construtor Universal de Linhas de Ingredientes/Insumos (Usado para Receita e Req)
+    function addIngRowReq(container, prefillId=null, prefillQty='') {
+        const div = document.createElement('div'); div.className='req-item flex flex-col gap-2 bg-ios-bg p-3 rounded-xl border border-ios-border z-50';
+        div.innerHTML = `
+            <div class="flex gap-3 items-center w-full">
+                <div class="searchable-container flex-1"></div>
+                <input type="number" step="0.0001" value="${prefillQty}" class="form-input w-24 py-2 text-center req-qty-input font-bold" placeholder="Qtd" required>
+                <button type="button" class="text-ios-red p-2 hover:bg-ios-red/20 rounded-lg transition-colors remove-ing"><i class="fa fa-times"></i></button>
+            </div>
+            <div class="flex justify-between items-center text-xs text-ios-textMuted px-1 req-plan-wrapper hidden mt-1 border-t border-ios-border pt-2">
+                <span class="plan-display font-medium"></span>
+                <button type="button" class="text-ios-blue open-batch-selector hidden bg-ios-card px-2 py-1 rounded"><i class="fa-solid fa-pen mr-1"></i> Mudar Lote</button>
+            </div>
+        `;
+        container.appendChild(div);
+        
+        const isRecipe = container.id === 'ingredients-container';
+        const planWrap = div.querySelector('.req-plan-wrapper');
+        const planDisplay = div.querySelector('.plan-display');
+        const editBtn = div.querySelector('.open-batch-selector');
+        const qtyInput = div.querySelector('.req-qty-input');
+        
+        if(!isRecipe) planWrap.classList.remove('hidden'); 
+
+        const updatePlan = () => {
+            if(isRecipe) return;
+            const pId = parseInt(div.querySelector('.searchable-container input').dataset.selectedId);
+            const qty = parseFloat(qtyInput.value);
+            if(pId && qty > 0) {
+                const { plan, isSufficient } = getFIFOPlan(pId, qty);
+                div.dataset.productId = pId;
+                div.dataset.plan = JSON.stringify(plan);
+                planDisplay.innerHTML = isSufficient ? '<i class="fa-solid fa-check mr-1"></i> Lotes Alocados: ' + plan.map(x => `<strong>${x.batchCode}</strong>(${x.quantity.toFixed(2)})`).join(', ') : '<i class="fa-solid fa-triangle-exclamation mr-1"></i> ALERTA: Físico Insuficiente ou Bloqueado!';
+                planDisplay.className = isSufficient ? 'plan-display text-ios-green' : 'plan-display text-ios-red';
+                if(isSufficient) show(editBtn); else hide(editBtn);
+            } else {
+                planDisplay.innerText = 'Aguardando produto e qtd...'; hide(editBtn);
+            }
+        };
+
+        createSearchableSelect(div.querySelector('.searchable-container'), localInventory, 'Buscar item...', item => { updatePlan(); });
+
+        qtyInput.addEventListener('input', updatePlan);
+        div.querySelector('.remove-ing').addEventListener('click', () => div.remove());
+
+        if(prefillId) {
+            const ingProd = localInventory.find(p => p.id === prefillId);
+            if(ingProd) { 
+                const inp = div.querySelector('.searchable-container input');
+                inp.value = ingProd.name; inp.dataset.selectedId = ingProd.id;
+                updatePlan();
+            }
+        }
+    }
+    id('add-ingredient-btn').addEventListener('click', () => addIngRowReq(id('ingredients-container')));
+    
+    id('recipe-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const rId = id('edit-recipe-id').value;
+        const isSemi = id('recipe-is-semi').checked;
+        const yieldQty = isSemi ? (parseFloat(id('recipe-yield').value) || 1) : null;
+        const recName = id('recipe-name').value.trim();
+        
+        let outId = null;
+
+        if (isSemi) {
+            let prod = localInventory.find(i => i.name.toLowerCase() === recName.toLowerCase() && i.type === 'semi_acabado');
+            if(!prod) {
+                outId = await DB.add('inventory', { name: recName, type: 'semi_acabado', totalQuantity: 0, code: '', supplier: 'Produção Interna' });
+            } else { outId = prod.id; }
+        } 
+
+        const ings = [...id('ingredients-container').children].map(r => ({
+            productId: parseInt(r.querySelector('input[type="text"]').dataset.selectedId),
+            quantity: parseFloat(r.querySelector('input[type="number"]').value)
+        }));
+        
+        const data = {name:recName, category:id('recipe-category').value, outputProductId:outId, outputYield: yieldQty, isSemi: isSemi, ingredients:ings};
+        if(rId) { await DB.update('recipes', { id: parseInt(rId), ...data }); showNotif('Ficha atualizada'); } 
+        else { await DB.add('recipes', data); showNotif('Ficha salva'); }
+        id('recipe-modal').style.display='none'; refreshData();
+    });
+
+    // --- SELETOR MANUAL DE LOTES (REUSÁVEL EM OP E REQUISIÇÃO) ---
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.open-batch-selector');
+        if(btn) {
+            currentBatchTarget = btn.closest('.req-item') || btn.closest('tr');
+            const pId = parseInt(currentBatchTarget.dataset.productId);
+            const qtyStr = currentBatchTarget.querySelector('input[type="number"]').value;
+            const qty = parseFloat(qtyStr) || 0;
+            const currentPlan = JSON.parse(currentBatchTarget.dataset.plan || '[]');
+            openBatchSelector(pId, qty, currentPlan);
+        }
+    });
+
+    function openBatchSelector(pId, qtyNeeded, currentPlan) {
+        id('batch-selector-needed').innerText = qtyNeeded.toFixed(4);
+        // Só permite selecionar lotes liberados na seleção manual tbm
+        const batches = localBatches.filter(b => b.productId === pId && b.quantity > 0 && b.isReleased !== false);
+        id('batch-selector-list').innerHTML = batches.map(b => {
+            const inPlan = currentPlan.find(p => p.batchId === b.id);
+            const val = inPlan ? inPlan.quantity : '';
+            return `<div class="flex justify-between items-center mb-3 bg-ios-input p-3 rounded-xl border border-ios-border">
+                <span class="text-white font-medium"><i class="fa-solid fa-box mr-2 text-ios-textMuted"></i>${b.code} <br><span class="text-xs text-ios-textMuted ml-6">Disponível Físico: ${b.quantity.toFixed(2)}</span></span>
+                <input type="number" class="form-input w-28 text-right batch-input font-bold" data-bid="${b.id}" data-bcode="${b.code}" max="${b.quantity + (inPlan?inPlan.quantity:0)}" value="${val}" placeholder="0">
+            </div>`;
+        }).join('');
+        updateBatchSelectorSum();
+        show(id('batch-selector-modal'));
+    }
+
+    id('batch-selector-list').addEventListener('input', updateBatchSelectorSum);
+    function updateBatchSelectorSum() {
+        if(event && event.target.classList.contains('batch-input')) {
+            const inputs = [...id('batch-selector-list').querySelectorAll('.batch-input')];
+            const sum = inputs.reduce((a, b) => a + (parseFloat(b.value) || 0), 0);
+            id('batch-selector-selected').innerText = sum.toFixed(4);
+            const needed = parseFloat(id('batch-selector-needed').innerText);
+            id('batch-selector-selected').className = Math.abs(sum - needed) < 0.001 ? 'font-bold text-xl text-ios-green' : 'font-bold text-xl text-ios-red';
+        }
+    }
+
+    id('confirm-batch-selection').addEventListener('click', () => {
+        if (!currentBatchTarget) return;
+        const needed = parseFloat(id('batch-selector-needed').innerText);
+        const sum = parseFloat(id('batch-selector-selected').innerText);
+        if(sum < needed - 0.001) return showNotif('A quantidade marcada é menor que a necessária!', true);
+        
+        const inputs = [...id('batch-selector-list').querySelectorAll('.batch-input')];
+        const newPlan = inputs.map(inp => ({
+            batchId: parseInt(inp.dataset.bid),
+            batchCode: inp.dataset.bcode,
+            quantity: parseFloat(inp.value) || 0
+        })).filter(p => p.quantity > 0);
+        
+        currentBatchTarget.dataset.plan = JSON.stringify(newPlan);
+        const planDisplay = currentBatchTarget.querySelector('.plan-display');
+        if(planDisplay) planDisplay.innerHTML = '<i class="fa-solid fa-hand mr-1"></i> Lotes Manuais: ' + newPlan.map(p => `<strong>${p.batchCode}</strong>(${p.quantity})`).join(', ');
+        
+        hide(id('batch-selector-modal'));
+    });
+
+    // --- LOGICA OP ---
+    id('search-po-by-date').addEventListener('change', renderPO);
+    function renderPO() {
+        const d = id('search-po-by-date').value;
+        const list = localProductionOrders.filter(po => po.date === d);
+        if(!list.length) return id('production-orders-list').innerHTML = `<div class="col-span-full text-center text-ios-textMuted py-10 bg-ios-card rounded-2xl border border-ios-border">A fila de produção está vazia para esta data.</div>`;
+        id('production-orders-list').innerHTML = list.map(po => `
+            <div class="card relative flex flex-col pl-14 border-l-4 ${po.status==='pendente'?'border-l-ios-orange':'border-l-ios-green'}">
+                <div class="absolute top-5 left-3">
+                    <input type="checkbox" class="op-checkbox po-select-checkbox" data-id="${po.id}" ${po.status!=='pendente'?'disabled':''}>
+                </div>
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="text-white font-bold text-lg">${po.recipeName} <span class="text-ios-blue">(${po.multiplier}x)</span></h3>
+                        <p class="text-xs text-ios-textMuted mt-1"><i class="fa-regular fa-calendar mr-1"></i>${new Date(po.date+'T00:00:00').toLocaleDateString('pt-BR')} ${po.quantityProduced ? `&nbsp;|&nbsp; Rende: <strong class="text-white">${po.quantityProduced} no lote ${po.outputBatch||'-'}</strong>` : ''}</p>
+                    </div>
+                    <span class="badge uppercase tracking-wider ${po.status==='pendente'?'bg-ios-orange/20 text-ios-orange':'bg-ios-green/20 text-ios-green'}">${po.status}</span>
+                </div>
+                <div class="bg-ios-bg rounded-lg p-3 mt-auto">
+                    <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-2">Desconto Físico Necessário</p>
+                    <ul class="text-sm text-gray-300 space-y-1">${(po.ingredients || []).map(i=>{
+                        const pName = localInventory.find(p=>p.id===i.productId)?.name||'?';
+                        const pLotes = (i.consumptionPlan||[]).map(x=>x.batchCode).join(', ') || 'PEPS Automático (Lotes Livres)';
+                        return `<li class="flex flex-col border-b border-ios-border/50 pb-2 mb-1 last:border-0 last:pb-0 last:mb-0">
+                            <div class="flex justify-between"><span class="truncate pr-2">${pName}</span><span class="font-bold text-ios-blue">${i.adjustedQuantity.toFixed(4)}</span></div>
+                            <span class="text-[10px] text-ios-textMuted mt-1"><i class="fa-solid fa-box mr-1"></i>${pLotes}</span>
+                        </li>`;
+                    }).join('')}</ul>
+                </div>
+                ${po.status==='pendente'?`<div class="absolute bottom-4 right-4 flex gap-2"><button class="del-po-btn text-ios-red bg-ios-red/10 w-8 h-8 rounded-full hover:bg-ios-red/20 flex items-center justify-center" data-id="${po.id}"><i class="fa-solid fa-trash text-xs"></i></button></div>`:''}
+            </div>`).join('');
+    }
+    id('production-orders-list').addEventListener('click', e => {
+        const delBtn = e.target.closest('.del-po-btn');
+        if(delBtn) { showConfirmationModal('Cancelar OP?', 'Remover a ordem da fila?', async () => { await DB.remove('productionOrders', parseInt(delBtn.dataset.id)); refreshData(); showNotif('OP Excluída'); }); }
+    });
+
+    function updatePOIngredients() {
+        const rId = parseInt(id('po-recipe-searchable-container').querySelector('input').dataset.selectedId);
+        const rec = localRecipes.find(r=>r.id===rId);
+        const mult = parseFloat(id('po-quantity').value) || 1;
+        if(!rec) {
+            id('po-ingredients-body').innerHTML = '';
+            id('po-total-output').value = '0.0000';
+            return;
+        }
+        
+        if (rec.isSemi) {
+            id('po-total-output').value = ((rec.outputYield || 1) * mult).toFixed(4);
+        } else { id('po-total-output').value = '-'; }
+        
+        id('po-ingredients-body').innerHTML = (rec.ingredients || []).map(i => {
+            const p = localInventory.find(x=>x.id===i.productId);
+            const reqQty = i.quantity * mult;
+            const { plan, isSufficient } = getFIFOPlan(i.productId, reqQty);
+            const planText = plan.map(x => `<strong>${x.batchCode}</strong>(${x.quantity.toFixed(2)})`).join(', ');
+
+            return `<tr class="base-tr" data-product-id="${i.productId}" data-plan='${JSON.stringify(plan)}'>
+                <td class="base-td font-medium text-white">${p?p.name:'?'}</td>
+                <td class="base-td">${(p?.totalQuantity||0).toFixed(2)}</td>
+                <td class="base-td"><input type="number" value="${reqQty.toFixed(4)}" class="form-input py-1 text-center font-bold text-ios-blue po-ing-qty bg-ios-bg border-ios-border" readonly></td>
+                <td class="base-td text-ios-textMuted text-xs">
+                    <div class="plan-display ${isSufficient ? 'text-ios-green' : 'text-ios-red font-bold'}">${isSufficient ? '<i class="fa-solid fa-check mr-1"></i>'+planText : '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Faltante/Bloqueado'}</div>
+                    ${isSufficient ? `<button type="button" class="text-ios-blue mt-2 open-batch-selector bg-ios-bg p-1 rounded border border-ios-border"><i class="fa-solid fa-pen mr-1"></i> Trocar Lote</button>` : ''}
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    id('po-quantity').addEventListener('input', updatePOIngredients);
+
+    id('btn-new-production-order').addEventListener('click', () => {
+        id('production-order-form').reset();
+        id('po-ingredients-body').innerHTML = '';
+        
+        const mappedRecipes = localRecipes.map(r => { return { ...r, searchName: `${r.name}` }; });
+
+        createSearchableSelect(id('po-recipe-searchable-container'), mappedRecipes, 'Busque pela receita...', r => {
+            if(r.isSemi) {
+                show(id('po-output-fields'));
+                const d = id('po-date').value.replace(/-/g,'').slice(2);
+                id('po-output-batch').value = `OP${d}-${r.id}`;
+            } else { hide(id('po-output-fields')); }
+            updatePOIngredients();
+        });
+        id('po-date').value = new Date().toISOString().split('T')[0];
+        hide(id('po-output-fields'));
+        id('production-order-modal').style.display='flex';
+    });
+    
+    id('production-order-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const rId = parseInt(id('po-recipe-searchable-container').querySelector('input').dataset.selectedId);
+        const rec = localRecipes.find(r=>r.id===rId);
+        if(!rec) return showNotif('Receita inválida', true);
+        
+        const mult = parseFloat(id('po-quantity').value);
+        const totalOut = rec.isSemi ? parseFloat(id('po-total-output').value) : null;
+
+        const ingredients = [...id('po-ingredients-body').children].map(tr => {
+            return { 
+                productId: parseInt(tr.dataset.productId), 
+                adjustedQuantity: parseFloat(tr.querySelector('.po-ing-qty').value), 
+                consumptionPlan: JSON.parse(tr.dataset.plan || '[]') 
+            };
+        });
+
+        // Verificação final antes de salvar a OP
+        for(const ing of ingredients) {
+            const sumPlan = ing.consumptionPlan.reduce((s, x) => s + x.quantity, 0);
+            if(sumPlan < ing.adjustedQuantity - 0.001) {
+                const prod = localInventory.find(p=>p.id===ing.productId);
+                return showNotif(`Impossível salvar. Insumo insuficiente ou Lotes Bloqueados para: ${prod?prod.name:'?'}`, true);
+            }
+        }
+
+        const op = {
+            recipeId: rId, recipeName: rec.name, date: id('po-date').value, multiplier: mult, quantityProduced: totalOut,
+            status: 'pendente', outputBatch: rec.isSemi ? id('po-output-batch').value : null, ingredients: ingredients
+        };
+        await DB.add('productionOrders', op);
+        showNotif('OP salva na fila!'); id('production-order-modal').style.display='none'; refreshData();
+    });
+
+    // --- BAIXA OP MESTRE ---
+    id('btn-confirm-production').addEventListener('click', async () => {
+        const checked = document.querySelectorAll('.po-select-checkbox:checked');
+        if(!checked.length) return showNotif('Selecione pelo menos uma OP marcando a caixinha!', true);
+        
+        const selectedIds = Array.from(checked).map(cb => parseInt(cb.dataset.id));
+        const pendentes = localProductionOrders.filter(po => selectedIds.includes(po.id) && po.status === 'pendente');
+        
+        if(!pendentes.length) return;
+        
+        showConfirmationModal('Executar Baixa', `Isso vai descontar as matérias-primas e gerar as entradas de <strong>${pendentes.length} OP(s)</strong> selecionadas. Deseja continuar?`, async () => {
+            show(id('loading-overlay'));
+            try {
+                // Validação Pré-Baixa para evitar Estoque Negativo
+                for(const op of pendentes) {
+                    for(const ing of op.ingredients) {
+                        const product = await DB.get('inventory', ing.productId);
+                        if(!product || (product.totalQuantity || 0) < ing.adjustedQuantity - 0.001) {
+                            throw new Error(`Sem saldo Total no estoque para: ${product ? product.name : 'Insumo Excluído'}.`);
+                        }
+                        for(const pl of ing.consumptionPlan) {
+                            const b = await DB.get('batches', pl.batchId);
+                            // Se o lote de trigo foi bloqueado APÓS colocar na fila de OP, barra a baixa.
+                            if(!b || b.quantity < pl.quantity - 0.001 || b.isReleased === false) throw new Error(`Lote ${pl.batchCode} bloqueado (quarentena) ou esgotado! Recalcule a OP.`);
+                        }
+                    }
+                }
+
+                // Processamento de Fato
+                for(const op of pendentes) {
+                    for(const ing of op.ingredients) {
+                        const product = await DB.get('inventory', ing.productId);
+                        
+                        for(const pl of ing.consumptionPlan) {
+                            const b = await DB.get('batches', pl.batchId);
+                            b.quantity -= pl.quantity;
+                            await DB.update('batches', b);
+                        }
+                        
+                        product.totalQuantity -= ing.adjustedQuantity;
+                        await DB.update('inventory', product);
+                        await DB.add('history', { productId: product.id, type: 'saída', quantity: ing.adjustedQuantity, date: op.date, reason: `Prod: OP-${op.id}` });
+                        
+                        const p = op.date.substring(0,7);
+                        let consumptions = await DB.getAll('monthlyConsumption');
+                        let record = consumptions.find(x => x.period === p && x.productId === product.id);
+                        if(record) { record.totalConsumed += ing.adjustedQuantity; await DB.update('monthlyConsumption', record); }
+                        else { await DB.add('monthlyConsumption', { period: p, productId: product.id, totalConsumed: ing.adjustedQuantity }); }
+                    }
+
+                    if(op.quantityProduced) {
+                        const rec = localRecipes.find(r => r.id === op.recipeId);
+                        if(rec && rec.outputProductId) {
+                            const outProduct = await DB.get('inventory', rec.outputProductId);
+                            if(outProduct) {
+                                outProduct.totalQuantity += op.quantityProduced;
+                                await DB.update('inventory', outProduct);
+                                
+                                const lote = op.outputBatch || `OP-${op.id}`;
+                                await DB.add('batches', { productId: rec.outputProductId, code: lote, quantity: op.quantityProduced, expiryDate: op.outputExpiry||null, isReleased: true });
+                                await DB.add('history', { productId: rec.outputProductId, batchCode: lote, type: 'entrada', quantity: op.quantityProduced, date: op.date, reason: `Gerado OP-${op.id}` });
+                            }
+                        }
+                    }
+                    op.status = 'concluído'; await DB.update('productionOrders', op);
+                }
+                showNotif('Sucesso! Movimentações registradas.'); 
+            } catch(e) { 
+                showNotif(e.message || 'Erro crítico nas baixas', true); 
+            } finally { 
+                hide(id('loading-overlay')); 
+                await refreshData(); 
+            }
+        });
+    });
+
+    // --- CHARTS E DASHBOARD ---
+    function renderDash() {
+        const invQtd = localInventory.reduce((s,i)=>s+(i.totalQuantity||0),0);
+        id('stat-total-items').innerText = localInventory.length;
+        id('stat-total-quantity').innerText = invQtd.toFixed(2);
+        id('stat-low-stock').innerText = localInventory.filter(i => (i.minStock||0)>0 && (i.totalQuantity||0)<i.minStock).length;
+        
+        const trintaDias = new Date(); trintaDias.setDate(trintaDias.getDate() + 30);
+        id('stat-expiring-soon').innerText = localBatches.filter(b => b.quantity>0 && b.expiryDate && new Date(b.expiryDate) <= trintaDias).length;
+
+        Chart.defaults.color = 'rgba(235, 235, 245, 0.6)'; Chart.defaults.borderColor = '#38383a';
+        if(dailyChart) dailyChart.destroy();
+        const ctxD = id('daily-output-chart');
+        if(ctxD) dailyChart = new Chart(ctxD, {type:'bar', data:{labels:['Consumos de Hoje'], datasets:[{label:'Qtd', data:[0], backgroundColor:'#0a84ff', borderRadius: 4}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}});
+        renderABC();
+    }
+    function renderABC() {
+        const ctx = id('abc-curve-chart');
+        if(abcChart) abcChart.destroy();
+        if(!ctx) return;
+        abcChart = new Chart(ctx, { type:'doughnut', data:{ labels:['Curva A','Curva B','Curva C'], datasets:[{data:[30,50,20], backgroundColor:['#0a84ff','#30d158','#ff9f0a'], borderColor:'#1c1c1e', borderWidth:4}] }, options:{ responsive:true, maintainAspectRatio:false, cutout: '75%' } });
+    }
+    function renderConsum() {
+        const p = `${id('consumption-year-filter').value}-${String(id('consumption-month-filter').value).padStart(2,'0')}`;
+        const term = id('search-consumption').value.toLowerCase();
+        let list = localMonthlyConsumption.filter(c => c.period === p);
+        if(term) list = list.filter(c => localInventory.find(i=>i.id===c.productId)?.name.toLowerCase().includes(term));
+        const tbody = id('consumption-table-body');
+        if(!list.length) return tbody.innerHTML = `<tr><td colspan="2" class="base-td text-center border-none py-10">Nada registrado.</td></tr>`;
+        tbody.innerHTML = list.map(c => `<tr class="base-tr"><td class="base-td text-white">${localInventory.find(i=>i.id===c.productId)?.name||'?'}</td><td class="base-td text-right font-bold text-ios-blue">${c.totalConsumed.toFixed(2)}</td></tr>`).join('');
+    }
+
+    // --- AJUSTES MANUAIS ---
+    id('adjustment-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const bId = parseInt(id('adjustment-batch').value);
+        const newQtd = parseFloat(id('adjustment-new-quantity').value);
+        if(isNaN(bId) || isNaN(newQtd)) return;
+        try {
+            const batch = await DB.get('batches', bId);
+            batch.quantity = newQtd;
+            await DB.update('batches', batch);
+            await DB.add('history', { productId: batch.productId, type: 'ajuste', quantity: newQtd, date: new Date().toISOString().split('T')[0], reason: id('adjustment-reason').value, responsible: id('adjustment-responsible').value });
+            showNotif('Lote ajustado com sucesso'); e.target.reset(); await refreshData();
+        } catch(err) { showNotif('Erro no ajuste', true); }
+    });
+
+    // --- REQUISICOES AVULSAS ---
+    id('add-requisition-item-btn').addEventListener('click', () => addIngRowReq(id('requisition-items-container'), null, ''));
+    id('requisition-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const reason = id('requisition-reason').value; const resp = id('requisition-responsible').value;
+        const ings = [...id('requisition-items-container').children].map(r => ({ productId: parseInt(r.dataset.productId), quantity: parseFloat(r.querySelector('.req-qty-input').value), plan: JSON.parse(r.dataset.plan || '[]') }));
+        if(ings.some(i=>!i.productId || isNaN(i.quantity) || !i.plan.length)) return showNotif('Preencha quantidades e verifique se há físico livre suficiente (sem bloqueio).', true);
+        show(id('loading-overlay'));
+        try {
+            for(const i of ings) {
+                const p = await DB.get('inventory', i.productId);
+                
+                let sumPlan = i.plan.reduce((s, x) => s + x.quantity, 0);
+                if(sumPlan < i.quantity - 0.001) throw new Error(`Sem saldo suficiente ou lote bloqueado de ${p.name}`);
+                
+                for(const pl of i.plan) {
+                    const b = await DB.get('batches', pl.batchId);
+                    b.quantity -= pl.quantity;
+                    await DB.update('batches', b);
+                }
+                p.totalQuantity -= i.quantity;
+                await DB.update('inventory', p);
+                
+                await DB.add('history', { productId: p.id, type: 'requisição', quantity: i.quantity, date: new Date().toISOString().split('T')[0], reason: reason, responsible: resp }); 
+            }
+            showNotif('Requisição processada!'); e.target.reset(); id('requisition-items-container').innerHTML=''; 
+            await refreshData();
+        } catch (err) {
+            showNotif(err.message, true);
+        } finally { hide(id('loading-overlay')); }
+    });
+
+    // --- BACKUP ---
+    id('btn-download-backup').addEventListener('click', async () => {
+        show(id('loading-overlay'));
+        const data = { inventory: await DB.getAll('inventory'), batches: await DB.getAll('batches'), history: await DB.getAll('history'), recipes: await DB.getAll('recipes'), productionOrders: await DB.getAll('productionOrders'), monthlyConsumption: await DB.getAll('monthlyConsumption') };
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+        a.download = `EstoqueOS_${new Date().toISOString().split('T')[0]}.json`;
+        a.click(); hide(id('loading-overlay')); showNotif('Salvo em Downloads');
+    });
+
+    id('btn-upload-backup').addEventListener('click', () => id('backup-file-input').click());
+    id('backup-file-input').addEventListener('change', e => {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async ev => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                const s = ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption'];
+                if(!s.some(k=>data[k])) return showNotif("Arquivo incompatível.", true);
+                showConfirmationModal('Restauração', 'Isso destruirá os dados atuais. Deseja aplicar o backup?', async () => {
+                    show(id('loading-overlay'));
+                    await DB.restoreBackup(data);
+                    const ds = new Date().toLocaleString('pt-BR'); localStorage.setItem('last_res', ds); id('last-restore-date').innerText = ds;
+                    await refreshData(); hide(id('loading-overlay')); showNotif('Restaurado!');
+                });
+            } catch(e) { showNotif('Erro na leitura', true); } finally { id('backup-file-input').value=''; }
+        }; reader.readAsText(file);
+    });
+    id('btn-reset-database').addEventListener('click', () => {
+        showConfirmationModal('Formatação', 'Apagar TUDO irreversivelmente?', async () => {
+            show(id('loading-overlay'));
+            for(const s of ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption']) await DB.clear(s);
+            localStorage.removeItem('last_res'); id('last-restore-date').innerText = 'Nunca';
+            await refreshData(); hide(id('loading-overlay')); showNotif('Formatado!');
+        });
+    });
+
+    // --- INIT ---
+    async function initApp() {
+        const t = new Date().toISOString().split('T')[0];
+        id('receipt-date').value = t; id('search-po-by-date').value = t; id('mfg-date').value = t;
+        const lr = localStorage.getItem('last_res'); if(lr) id('last-restore-date').innerText = lr;
+        navTo('dashboard');
+        try { await DB.getDB(); await refreshData(); } catch(e) { console.error(e); id('loading-text').innerText = "Erro Fatal no BD"; return; }
+        hide(id('loading-overlay'));
+    }
+    initApp();
+
+</script>
+</body>
+</html>
