@@ -464,12 +464,12 @@
                     </div>
                     <div class="pt-8">
                         <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-up mr-2 text-ios-orange"></i>Restaurar Banco Offline</h2>
-                        <p class="text-sm text-ios-textMuted mb-3">Faça o upload do arquivo <b>.json</b> para carregar os dados offline. <strong>Isso substituirá as informações atuais.</strong></p>
+                        <p class="text-sm text-ios-textMuted mb-3">Faça o upload do arquivo de backup (<b>.txt</b> ou <b>.json</b>) para carregar os dados offline. <strong>Isso substituirá as informações atuais.</strong></p>
                         <div class="mb-4 p-3 bg-ios-bg rounded-lg border border-ios-border text-xs text-ios-textMuted">
                             Última restauração local: <span id="last-restore-date" class="font-bold text-white">Nunca</span>
                         </div>
-                        <button id="btn-upload-backup" class="w-full btn-secondary text-ios-orange border-ios-orange/30 bg-ios-orange/10">Selecionar Arquivo .JSON</button>
-                        <input type="file" id="backup-file-input" class="hidden" accept=".json">
+                        <button id="btn-upload-backup" class="w-full btn-secondary text-ios-orange border-ios-orange/30 bg-ios-orange/10"><i class="fa-solid fa-file-import mr-2"></i>Selecionar Arquivo de Backup</button>
+                        <input type="file" id="backup-file-input" class="hidden" accept=".json, .txt, text/plain">
                     </div>
                     <div class="pt-8">
                         <h2 class="title-md text-ios-red mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo</h2>
@@ -2043,7 +2043,7 @@
         const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
         reader.onload = async ev => {
             try {
-                const data = JSON.parse(ev.target.result); const s = ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption'];
+                const data = JSON.parse(ev.target.result.trim()); const s = ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption'];
                 if(!s.some(k=>data[k])) return showNotif("Arquivo incompatível.", true);
                 showConfirmationModal('Restauração de Dados', 'Isso substituirá TODOS os dados atuais. Deseja aplicar o backup?', async () => {
                     show(id('loading-overlay')); 
@@ -2057,7 +2057,7 @@
                         console.error(err); showNotif('Erro fatal ao restaurar backup.', true);
                     } finally { hide(id('loading-overlay')); }
                 });
-            } catch(e) { showNotif('Erro na leitura do arquivo', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; }
+            } catch(e) { showNotif('Erro na leitura do arquivo. Certifique-se de que é um formato válido.', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; }
         }; reader.readAsText(file);
     });
 
