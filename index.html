@@ -74,24 +74,28 @@
         ::-webkit-scrollbar-thumb { background: #48484a; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #636366; }
 
-        .toggle-status { appearance: none; width: 40px; height: 20px; background: #38383a; border-radius: 20px; position: relative; cursor: pointer; outline: none; transition: background 0.3s; }
-        .toggle-status::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.3s; }
+        .toggle-status { appearance: none; width: 40px; height: 20px; background: #38383a; border-radius: 20px; position: relative; cursor: pointer; outline: none; transition: background 0.3s; margin: 0; }
+        .toggle-status::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         .toggle-status:checked { background: #30d158; }
         .toggle-status:checked::after { transform: translateX(20px); }
 
         .timer-active { color: #ff9f0a; animation: pulse-text 1.5s infinite; }
         @keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .slide-up-active { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        .check-nativo {
-            appearance: auto !important;
-            width: 1.5rem !important; 
-            height: 1.5rem !important; 
-            cursor: pointer;
-            accent-color: #30d158;
-            margin: 0;
-            padding: 0;
+        /* Checkbox Customizado Robusto (Substitui o Nativo) */
+        .ui-checkbox {
+            appearance: none; -webkit-appearance: none; background-color: #2c2c2e; border: 2px solid #48484a; 
+            width: 24px; height: 24px; border-radius: 6px; cursor: pointer; position: relative; transition: all 0.2s; display: inline-block; vertical-align: middle; margin: 0;
         }
-
+        .ui-checkbox:checked { background-color: #0a84ff; border-color: #0a84ff; }
+        .ui-checkbox:checked::after {
+            content: ''; position: absolute; left: 7px; top: 3px; width: 6px; height: 12px;
+            border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+        }
+        .ui-checkbox-success:checked { background-color: #30d158; border-color: #30d158; }
+        
         .form-input { transition: all 0.4s ease; }
     </style>
 </head>
@@ -125,7 +129,7 @@
                     <div class="bg-ios-orange/20 text-ios-orange p-2 rounded-full w-10 h-10 flex items-center justify-center animate-pulse"><i class="fa-solid fa-dolly"></i></div>
                     <div>
                         <h4 class="text-white font-bold text-sm" id="global-picking-title">Separação em Andamento</h4>
-                        <p class="text-xs text-ios-textMuted" id="global-picking-subtitle">Estoquista: João</p>
+                        <p class="text-xs text-ios-textMuted" id="global-picking-subtitle">Estoquista: -</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-6">
@@ -206,7 +210,6 @@
                         <div class="stat-icon bg-ios-orange/20 text-ios-orange"><i class="fa-solid fa-dolly"></i></div>
                         <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">OPs a Separar</p><p id="stat-pending-picking" class="text-2xl font-bold text-white">0</p></div>
                     </div>
-                    <!-- Card Clicável para Alertas -->
                     <div class="card flex items-center cursor-pointer hover:bg-ios-cardHover transition-colors border border-transparent hover:border-ios-red/50" id="card-stat-low-stock">
                         <div class="stat-icon bg-ios-red/20 text-ios-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
                         <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Estoque Baixo</p><p id="stat-low-stock" class="text-2xl font-bold text-white">0</p></div>
@@ -413,31 +416,31 @@
             </div>
 
             <!-- Configurações -->
-        <div id="screen-settings" class="screen-panel hidden">
-            <h1 class="title-lg">Ajustes do Aplicativo</h1>
-            <div class="card max-w-2xl mx-auto space-y-8 divide-y divide-ios-border">
-                <div class="pt-2">
-                    <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-down mr-2 text-ios-blue"></i>Exportar Backup</h2>
-                    <p class="text-sm text-ios-textMuted mb-4">Gera um arquivo seguro contendo toda a base de dados em Nuvem (JSON).</p>
-                    <button id="btn-download-backup" class="w-full btn-secondary text-ios-blue border-ios-blue/30 bg-ios-blue/10">Baixar Cópia</button>
-                </div>
-                <div class="pt-8">
-                    <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-up mr-2 text-ios-orange"></i>Restaurar Banco</h2>
-                    <p class="text-sm text-ios-textMuted mb-3">Carrega um arquivo de backup anterior. <strong>Isso substituirá as informações atuais.</strong></p>
-                    <div class="mb-4 p-3 bg-ios-bg rounded-lg border border-ios-border text-xs text-ios-textMuted">
-                        Última restauração: <span id="last-restore-date" class="font-bold text-white">Nunca</span>
+            <div id="screen-settings" class="screen-panel hidden">
+                <h1 class="title-lg">Ajustes do Aplicativo</h1>
+                <div class="card max-w-2xl mx-auto space-y-8 divide-y divide-ios-border">
+                    <div class="pt-2">
+                        <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-down mr-2 text-ios-blue"></i>Exportar Backup</h2>
+                        <p class="text-sm text-ios-textMuted mb-4">Gera um arquivo seguro contendo toda a base de dados em Nuvem (JSON).</p>
+                        <button id="btn-download-backup" class="w-full btn-secondary text-ios-blue border-ios-blue/30 bg-ios-blue/10">Baixar Cópia</button>
                     </div>
-                    <button id="btn-upload-backup" class="w-full btn-secondary text-ios-orange border-ios-orange/30 bg-ios-orange/10">Selecionar Arquivo</button>
-                    <input type="file" id="backup-file-input" class="hidden" accept=".json">
-                </div>
-                <div class="pt-8">
-                    <h2 class="title-md text-ios-red mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo</h2>
-                    <p class="text-sm text-ios-textMuted mb-4">Ação irreversível.</p>
-                    <button id="btn-reset-database" class="w-full btn-danger bg-ios-red/20 text-ios-red border border-ios-red border-opacity-50 hover:bg-ios-red hover:text-white">Formatar Sistema</button>
+                    <div class="pt-8">
+                        <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-up mr-2 text-ios-orange"></i>Restaurar Banco</h2>
+                        <p class="text-sm text-ios-textMuted mb-3">Carrega um arquivo de backup anterior. <strong>Isso substituirá as informações atuais da nuvem.</strong></p>
+                        <div class="mb-4 p-3 bg-ios-bg rounded-lg border border-ios-border text-xs text-ios-textMuted">
+                            Última restauração local: <span id="last-restore-date" class="font-bold text-white">Nunca</span>
+                        </div>
+                        <button id="btn-upload-backup" class="w-full btn-secondary text-ios-orange border-ios-orange/30 bg-ios-orange/10">Selecionar Arquivo</button>
+                        <input type="file" id="backup-file-input" class="hidden" accept=".json">
+                    </div>
+                    <div class="pt-8">
+                        <h2 class="title-md text-ios-red mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo</h2>
+                        <p class="text-sm text-ios-textMuted mb-4">Ação irreversível.</p>
+                        <button id="btn-reset-database" class="w-full btn-danger bg-ios-red/20 text-ios-red border border-ios-red border-opacity-50 hover:bg-ios-red hover:text-white">Formatar Sistema</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
     </div>
 
     <!-- Modal Picking (Separação Agrupada - REVISADO) -->
@@ -515,7 +518,7 @@
                 </div>
                 <div class="p-5 bg-ios-blue/10 border border-ios-blue/30 rounded-xl">
                     <label class="flex items-center space-x-3 cursor-pointer mb-2">
-                        <input type="checkbox" id="recipe-is-semi" class="check-nativo">
+                        <input type="checkbox" id="recipe-is-semi" class="ui-checkbox">
                         <span class="text-sm font-semibold text-white ml-1">Esta receita gera um produto Semi-Acabado</span>
                     </label>
                     <p class="text-xs text-ios-textMuted mb-4 mt-2">Se marcado, a receita entra no estoque como Insumo (Massa, Base, etc). Se NÃO marcado, é classificada como Consumo Direto/Acabado (Não acumula estoque na OP).</p>
@@ -551,7 +554,7 @@
                     
                     <div class="md:col-span-4 mt-2">
                         <label class="flex items-center gap-3 cursor-pointer bg-ios-orange/10 p-3 rounded-xl border border-ios-orange/30 w-max hover:bg-ios-orange/20 transition-colors">
-                            <input type="checkbox" id="po-is-extra" class="check-nativo">
+                            <input type="checkbox" id="po-is-extra" class="ui-checkbox">
                             <span class="text-sm font-bold text-ios-orange ml-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> OP Extra / Urgente (Menos de 48h)</span>
                         </label>
                     </div>
@@ -728,7 +731,7 @@
     </div>
     
 <script type="module">
-    // Helper functions com travões de segurança
+    // Helper functions
     const id = n => document.getElementById(n);
     const show = el => { if(el) { el.style.display = 'flex'; el.classList.remove('hidden'); } };
     const hide = el => { if(el) { el.style.display = 'none'; el.classList.add('hidden'); } };
@@ -738,12 +741,17 @@
         if(el) el.addEventListener(eventType, handler);
     };
 
+    const capitalize = (str) => {
+        if(!str) return '';
+        return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+    };
+
     // --- FIREBASE IMPORTS ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
     import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, deleteDoc, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-    // --- FIREBASE CONFIG (Usando a sua) ---
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyDev8spgKoKZi2pOohmk0r9SFLtLMcePa8",
         authDomain: "estoque-b50df.firebaseapp.com",
@@ -794,6 +802,26 @@
                 const batch = writeBatch(db);
                 qs.docs.forEach(d => batch.delete(d.ref));
                 await batch.commit();
+            },
+            // Função Segura para Restaurar JSON Baseada no Id antigo (Para manter relações do histórico)
+            restoreBackup: async (data) => {
+                const stores = ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption'];
+                for (const s of stores) {
+                    const qs = await getDocs(collection(db, s));
+                    for (const d of qs.docs) { await deleteDoc(d.ref); } // Limpeza Segura sem limite de Batch
+
+                    if (data[s] && Array.isArray(data[s])) {
+                        for (const item of data[s]) {
+                            const idStr = item.id ? String(item.id) : null;
+                            if (idStr) {
+                                await setDoc(doc(db, s, idStr), item);
+                            } else {
+                                const docRef = await addDoc(collection(db, s), item);
+                                await setDoc(docRef, { id: docRef.id }, { merge: true });
+                            }
+                        }
+                    }
+                }
             }
         };
     })();
@@ -828,6 +856,9 @@
         if(id('search-po-by-date')) id('search-po-by-date').value = t; 
         if(id('mfg-date')) id('mfg-date').value = t;
         navTo('dashboard');
+        
+        show(id('loading-overlay'));
+        refreshData().finally(() => hide(id('loading-overlay')));
     });
 
     addEvt('btn-sair', 'click', () => {
@@ -895,18 +926,6 @@
         if(target==='picking') { renderPickingScreen(); }
     }
     document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', e => { e.preventDefault(); navTo(link.dataset.target); }); });
-
-    function showConfirmationModal(title, message, onConfirm) {
-        const titleEl = id('confirm-title'); if(titleEl) titleEl.textContent = title; 
-        const msgEl = id('confirm-message'); if(msgEl) msgEl.innerHTML = message; 
-        const modal = id('confirm-action-modal'); if(modal) modal.style.display = 'flex';
-        
-        const cancelBtn = id('cancel-action-btn'); const confirmBtn = id('confirm-action-btn');
-        if(cancelBtn && confirmBtn && modal) {
-            const cleanup = () => { modal.style.display='none'; confirmBtn.replaceWith(confirmBtn.cloneNode(true)); cancelBtn.replaceWith(cancelBtn.cloneNode(true)); };
-            cancelBtn.addEventListener('click', cleanup, { once: true }); confirmBtn.addEventListener('click', () => { onConfirm(); cleanup(); }, { once: true });
-        }
-    }
 
     function createSearchableSelect(container, items, placeholder, onSelect) {
         if(!container) return;
@@ -1037,11 +1056,7 @@
             const startTime = parseInt(el.dataset.start);
             if(startTime && startTime > 0) {
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                const h = Math.floor(elapsed / 3600); const m = Math.floor((elapsed % 3600) / 60); const s = Math.floor(elapsed % 60);
-                let timeStr = '';
-                if (h > 0) timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                else timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                el.innerText = timeStr;
+                el.innerText = formatTime(elapsed);
             }
         });
     }, 1000);
@@ -1118,6 +1133,7 @@
         renderItemDetailsHistory(); show(id('item-details-view')); hide(id('item-details-edit')); show(id('item-details-modal'));
     }
 
+    // Expose openDetails explicitly on window for global access
     window.openDetails = openDetails;
 
     addEvt('details-batches-table', 'change', async e => {
@@ -1473,7 +1489,7 @@
                             <div class="${op.isExtra ? 'pl-2' : ''}">
                                 <span class="font-bold text-white">${op.recipeName}</span> <span class="text-ios-blue">(${op.multiplier}x)</span>
                                 ${op.isExtra ? '<span class="badge bg-ios-red text-white text-[9px] ml-1">EXTRA</span>' : ''}<br>
-                                <span class="text-[10px] text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>Data: <strong class="text-gray-300">${new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong> | OP-${op.id}</span>
+                                <span class="text-[10px] text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>Data: <strong class="text-gray-300">${new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong> | OP-${op.id.substring(0,6)}</span>
                             </div>
                             <div class="ml-2">${timerHtml}</div>
                         </div>`;
@@ -1899,7 +1915,9 @@
         const empStats = {}; const lineStats = {};
         opsSeparadas.forEach(po => {
             const resp = po.picking.responsible || 'Desconhecido'; const duration = po.picking.duration || 0; const line = po.recipeCategory || 'Diversos';
-            if(!empStats[resp]) empStats[resp] = { ops: 0, totalTime: 0 }; empStats[resp].ops += 1; empStats[resp].totalTime += duration;
+            // Garante que o nome fique capitalizado corretamente
+            const formattedResp = capitalize(resp);
+            if(!empStats[formattedResp]) empStats[formattedResp] = { ops: 0, totalTime: 0 }; empStats[formattedResp].ops += 1; empStats[formattedResp].totalTime += duration;
             if(!lineStats[line]) lineStats[line] = { ops: 0, totalTime: 0 }; lineStats[line].ops += 1; lineStats[line].totalTime += duration;
         });
 
@@ -1960,10 +1978,29 @@
 
     addEvt('btn-download-backup', 'click', async () => {
         show(id('loading-overlay'));
-        const data = { inventory: await DB.getAll('inventory'), batches: await DB.getAll('batches'), history: await DB.getAll('history'), recipes: await DB.getAll('recipes'), productionOrders: await DB.getAll('productionOrders'), monthlyConsumption: await DB.getAll('monthlyConsumption') };
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
-        a.download = `EstoqueOS_${new Date().toISOString().split('T')[0]}.json`;
-        a.click(); hide(id('loading-overlay')); showNotif('Salvo em Downloads');
+        
+        try {
+            // Usa as funções seguras de obter os dados em formato JSON nativo
+            const inventory = await DB.getAll('inventory');
+            const batches = await DB.getAll('batches');
+            const history = await DB.getAll('history');
+            const recipes = await DB.getAll('recipes');
+            const productionOrders = await DB.getAll('productionOrders');
+            const monthlyConsumption = await DB.getAll('monthlyConsumption');
+            
+            const data = { inventory, batches, history, recipes, productionOrders, monthlyConsumption };
+            
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+            a.download = `EstoqueOS_${new Date().toISOString().split('T')[0]}.json`;
+            a.click(); 
+            showNotif('Backup Firebase Salvo em Downloads com sucesso!');
+        } catch(err) {
+            console.error("Erro ao gerar backup: ", err);
+            showNotif('Erro ao exportar banco de dados.', true);
+        } finally {
+            hide(id('loading-overlay'));
+        }
     });
 
     addEvt('btn-upload-backup', 'click', () => id('backup-file-input')?.click());
@@ -1973,22 +2010,40 @@
             try {
                 const data = JSON.parse(ev.target.result); const s = ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption'];
                 if(!s.some(k=>data[k])) return showNotif("Arquivo incompatível.", true);
-                showConfirmationModal('Restauração', 'Isso destruirá os dados atuais. Deseja aplicar o backup?', async () => {
-                    show(id('loading-overlay')); await DB.restoreBackup(data);
-                    const ds = new Date().toLocaleString('pt-BR'); localStorage.setItem('last_res', ds); 
-                    if(id('last-restore-date')) id('last-restore-date').innerText = ds;
-                    await refreshData(); hide(id('loading-overlay')); showNotif('Restaurado!');
+                showConfirmationModal('Restauração', 'Isso destruirá os dados atuais na nuvem. Deseja aplicar o backup?', async () => {
+                    show(id('loading-overlay')); 
+                    try {
+                        await DB.restoreBackup(data);
+                        const ds = new Date().toLocaleString('pt-BR'); localStorage.setItem('last_res', ds); 
+                        if(id('last-restore-date')) id('last-restore-date').innerText = ds;
+                        await refreshData(); 
+                        showNotif('Backup Restaurado no Firebase!');
+                    } catch(err) {
+                        console.error(err);
+                        showNotif('Erro fatal ao restaurar backup.', true);
+                    } finally {
+                        hide(id('loading-overlay'));
+                    }
                 });
             } catch(e) { showNotif('Erro na leitura', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; }
         }; reader.readAsText(file);
     });
 
     addEvt('btn-reset-database', 'click', () => {
-        showConfirmationModal('Formatação', 'Apagar TUDO irreversivelmente?', async () => {
-            show(id('loading-overlay')); for(const s of ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption']) await DB.clear(s);
-            localStorage.removeItem('last_res'); 
-            if(id('last-restore-date')) id('last-restore-date').innerText = 'Nunca';
-            await refreshData(); hide(id('loading-overlay')); showNotif('Formatado!');
+        showConfirmationModal('Formatação', 'Apagar TUDO da Nuvem irreversivelmente?', async () => {
+            show(id('loading-overlay')); 
+            try {
+                for(const s of ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption']) await DB.clear(s);
+                localStorage.removeItem('last_res'); 
+                if(id('last-restore-date')) id('last-restore-date').innerText = 'Nunca';
+                await refreshData(); 
+                showNotif('Sistema Formatado com sucesso!');
+            } catch (err) {
+                console.error(err);
+                showNotif('Falha na formatação.', true);
+            } finally {
+                hide(id('loading-overlay'));
+            }
         });
     });
 
