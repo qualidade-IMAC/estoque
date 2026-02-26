@@ -11,6 +11,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- Script para leitura de QR Code / Código de Barras pela Câmera -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     
     <script>
         tailwind.config = {
@@ -96,13 +98,16 @@
         .ui-checkbox-success:checked { background-color: #30d158; border-color: #30d158; }
         
         .form-input { transition: all 0.4s ease; }
+        
+        /* Ajustes no leitor de câmera para ele ter bordas arredondadas e caber bem */
+        #main-camera-reader video, #picking-camera-reader video { border-radius: 0.75rem; width: 100% !important; height: auto !important; object-fit: cover;}
     </style>
 </head>
 <body class="bg-ios-bg text-ios-text font-sans antialiased flex h-screen overflow-hidden w-full relative">
 
     <div id="loading-overlay" class="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black bg-opacity-80 backdrop-blur-md transition-opacity">
         <div class="animate-spin rounded-full h-12 w-12 border-4 border-ios-cardHover border-t-ios-blue mb-4"></div>
-        <p class="text-ios-textMuted font-medium" id="loading-text">Conectando Nuvem...</p>
+        <p class="text-ios-textMuted font-medium" id="loading-text">Processando...</p>
     </div>
 
     <div id="notification-modal" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[2000] hidden py-3 px-6 rounded-full shadow-2xl font-semibold text-white transition-all text-sm backdrop-blur-md"></div>
@@ -149,7 +154,7 @@
             </div>
             <nav class="flex-1 w-full px-3 space-y-2 overflow-y-auto">
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="dashboard"><i class="fa-solid fa-chart-pie w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Visão Geral</span></a>
-                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="scanner"><i class="fa-solid fa-barcode w-6 text-center text-lg text-ios-green"></i><span class="ml-3 hidden lg:block font-medium text-ios-green">Cód. Barras (Cad. & Leitura)</span></a>
+                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="scanner"><i class="fa-solid fa-barcode w-6 text-center text-lg text-ios-green"></i><span class="ml-3 hidden lg:block font-medium text-ios-green">Cód. Barras (Leitura)</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="entry"><i class="fa-solid fa-box-open w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Entrada Lote</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="inventory"><i class="fa-solid fa-boxes-stacked w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Estoque Geral</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="recipes"><i class="fa-solid fa-book-bookmark w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Receitas</span></a>
@@ -248,7 +253,14 @@
             <!-- NOVO: Leitor de Scanner (Cadastro e Associação) -->
             <div id="screen-scanner" class="screen-panel hidden flex-col items-center max-w-4xl mx-auto py-10">
                 <h1 class="title-lg w-full text-center text-ios-green mb-2"><i class="fa-solid fa-barcode mr-3"></i>Leitor de Código de Barras</h1>
-                <p class="text-ios-textMuted mb-8 text-center">Bipe a embalagem da matéria-prima. O sistema vai reconhecer ou pedir para você associar ao cadastro.</p>
+                <p class="text-ios-textMuted mb-8 text-center">Bipe a embalagem da matéria-prima com a câmera ou leitor físico. O sistema vai reconhecer ou pedir para você associar ao cadastro.</p>
+                
+                <div class="flex gap-4 w-full max-w-md mx-auto mb-4">
+                    <button id="btn-start-camera-main" class="btn-secondary w-full py-4 text-ios-blue border-ios-blue/30 bg-ios-blue/10"><i class="fa-solid fa-camera mr-2"></i>Usar Câmera do Dispositivo</button>
+                </div>
+
+                <!-- Container do Leitor da Câmera -->
+                <div id="main-camera-reader" class="w-full max-w-md mx-auto hidden mb-6 border border-ios-border rounded-xl bg-black"></div>
                 
                 <div class="w-full card bg-ios-cardHover border-2 border-ios-green/30 p-8 shadow-2xl relative overflow-hidden">
                     <div class="absolute inset-0 border-b-2 border-ios-green animate-[slideUp_2s_ease-in-out_infinite] opacity-20 pointer-events-none" style="height: 10px;"></div>
@@ -367,6 +379,10 @@
                     <div class="flex gap-3">
                         <input type="text" id="search-recipe" placeholder="Buscar receita..." class="form-input w-64">
                         <button id="btn-export-recipe-book" class="btn-secondary"><i class="fa-solid fa-file-pdf mr-2"></i>Livro PDF</button>
+                        
+                        <button id="btn-import-recipes" class="btn-secondary text-ios-green border-ios-green/50 hover:bg-ios-green/10"><i class="fa-solid fa-file-excel mr-2"></i>Importar Excel</button>
+                        <input type="file" id="recipe-file-input" class="hidden" accept=".xlsx, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                        
                         <button id="btn-new-recipe" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Criar Receita</button>
                     </div>
                 </div>
@@ -519,16 +535,19 @@
                     <button id="btn-finish-picking" class="btn-primary py-3 px-6 shadow-lg shadow-ios-blue/20 rounded-xl"><i class="fa-solid fa-flag-checkered mr-2"></i>Finalizar OP(s)</button>
                 </div>
                 
-                <!-- NOVO: Leitor de Código de Barras Direto no Picking -->
                 <div class="bg-ios-cardHover border-b border-ios-border p-4 shrink-0 flex items-center gap-4">
                     <i class="fa-solid fa-barcode text-ios-green text-3xl"></i>
-                    <div class="flex-1">
-                        <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-1">Leitura Rápida (Scanner)</p>
-                        <input type="text" id="picking-scanner" class="form-input w-full border-ios-green/50 focus:border-ios-green focus:ring-ios-green/20 font-mono text-xl py-3" placeholder="Bipe o insumo para destacar na lista..." autocomplete="off">
+                    <div class="flex-1 flex gap-2">
+                        <div class="flex-1">
+                            <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-1">Leitura Rápida (Scanner ou Câmera)</p>
+                            <input type="text" id="picking-scanner" class="form-input w-full border-ios-green/50 focus:border-ios-green focus:ring-ios-green/20 font-mono text-xl py-3" placeholder="Bipe o insumo para destacar na lista..." autocomplete="off">
+                        </div>
+                        <button id="btn-start-camera-picking" class="bg-ios-card border border-ios-border text-ios-blue px-5 mt-4 rounded-xl hover:bg-ios-blue/10 transition-colors flex items-center" title="Ligar Câmera"><i class="fa-solid fa-camera text-xl"></i></button>
                     </div>
                 </div>
+                <div id="picking-camera-reader" class="w-full max-w-sm mx-auto hidden mt-4 border border-ios-border rounded-xl bg-black shrink-0"></div>
 
-                <div class="overflow-y-auto flex-1 bg-ios-bg p-6">
+                <div class="overflow-y-auto flex-1 bg-ios-bg p-6 relative">
                     <div class="table-container shadow-xl">
                         <table class="base-table w-full text-left">
                             <thead class="base-thead sticky top-0 z-10 shadow-sm">
@@ -546,85 +565,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal Receita -->
-    <div id="recipe-modal" class="modal">
-        <div class="modal-content max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6"><h2 id="recipe-modal-title" class="title-md mb-0">Nova Receita</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="recipe-modal">&times;</button></div>
-            <form id="recipe-form" class="space-y-5">
-                <input type="hidden" id="edit-recipe-id">
-                <div><label class="form-label">Nome da Ficha Técnica / Receita</label><input type="text" id="recipe-name" required class="form-input font-semibold text-lg" placeholder="Ex: Massa de Coxinha ou Bolo de Cenoura"></div>
-                <div>
-                    <label class="form-label">Linha Produtiva</label>
-                    <input type="text" id="recipe-category" list="category-options" required class="form-input" placeholder="Selecione ou digite uma nova linha (ex: Salgados, Pães...)">
-                    <datalist id="category-options">
-                        <option value="Salgados"></option>
-                        <option value="Pães"></option>
-                        <option value="Confeitaria"></option>
-                        <option value="Bases"></option>
-                    </datalist>
-                </div>
-                <div class="p-5 bg-ios-blue/10 border border-ios-blue/30 rounded-xl">
-                    <label class="flex items-center space-x-3 cursor-pointer mb-2">
-                        <input type="checkbox" id="recipe-is-semi" class="ui-checkbox">
-                        <span class="text-sm font-semibold text-white ml-1">Esta receita gera um produto Semi-Acabado</span>
-                    </label>
-                    <p class="text-xs text-ios-textMuted mb-4 mt-2">Se marcado, a receita entra no estoque como Insumo. Se NÃO marcado, é Acabado.</p>
-                    <div id="yield-wrapper" class="hidden pt-4 border-t border-ios-blue/20">
-                        <label class="form-label text-ios-blue font-bold">Rendimento (Quantidade FÍSICA que entra no estoque ao processar 1 receita)</label>
-                        <input type="number" id="recipe-yield" min="0.001" step="0.001" value="1" class="form-input text-ios-blue font-bold text-lg" placeholder="Ex: 2.5">
-                    </div>
-                </div>
-                <div class="pt-2">
-                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Composição (Ingredientes)</h3>
-                    <div id="ingredients-container" class="space-y-3 mb-4"></div>
-                    <button type="button" id="add-ingredient-btn" class="text-ios-blue font-medium text-sm flex items-center"><i class="fa-solid fa-circle-plus mr-1"></i>Adicionar Ingrediente</button>
-                </div>
-                <div class="mt-6 flex justify-end"><button type="submit" class="btn-primary" id="save-recipe-btn">Salvar Ficha Técnica</button></div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal OP -->
-    <div id="production-order-modal" class="modal">
-        <div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6"><h2 id="production-order-modal-title" class="title-md mb-0">Gerar Ordem de Produção (OP)</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="production-order-modal">&times;</button></div>
-            <form id="production-order-form">
-                <input type="hidden" id="edit-po-id">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-ios-bg border border-ios-border p-5 rounded-2xl mb-6 shadow-inner items-start relative z-50">
-                    <div class="md:col-span-2 relative">
-                        <label class="form-label">Receita / Produto a Fabricar</label>
-                        <div id="po-recipe-searchable-container" class="searchable-container"></div>
-                    </div>
-                    <div><label class="form-label">Multiplicador (Qtd Receitas)</label><input type="number" id="po-quantity" value="1" min="0.01" step="0.01" required class="form-input text-ios-blue font-bold text-lg"></div>
-                    <div class="md:col-span-1 mt-2"><label class="form-label">Data Agendada</label><input type="date" id="po-date" required class="form-input"></div>
-                    <div class="md:col-span-4 mt-2">
-                        <label class="flex items-center gap-3 cursor-pointer bg-ios-orange/10 p-3 rounded-xl border border-ios-orange/30 w-max hover:bg-ios-orange/20 transition-colors">
-                            <input type="checkbox" id="po-is-extra" class="ui-checkbox">
-                            <span class="text-sm font-bold text-ios-orange ml-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> OP Extra / Urgente (Menos de 48h)</span>
-                        </label>
-                    </div>
-                    <div id="po-output-fields" class="col-span-1 md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-4 border-t border-ios-border hidden">
-                        <div><label class="form-label">Total Gerado (Entrada Físico)</label><input type="text" id="po-total-output" readonly class="form-input bg-gray-800 text-ios-green font-bold text-lg border-none" value="0.0000" title="Calculado = Rendimento x Multiplicador"></div>
-                        <div><label class="form-label">Lote Sugerido (Saída)</label><input type="text" id="po-output-batch" class="form-input"></div>
-                        <div><label class="form-label">Validade Lote Gerado</label><input type="date" id="po-output-expiry" class="form-input"></div>
-                    </div>
-                </div>
-                <h3 class="title-md text-sm uppercase text-ios-textMuted mb-3">Previsão de Consumo</h3>
-                <div class="table-container mb-6">
-                    <table class="base-table">
-                        <thead class="base-thead"><tr><th class="base-th">Insumo</th><th class="base-th">Estoque Atual</th><th class="base-th">Qtd a Descontar</th><th class="base-th">Lotes Reservados</th></tr></thead>
-                        <tbody id="po-ingredients-body"></tbody>
-                    </table>
-                </div>
-                <div class="flex justify-end"><button type="submit" class="btn-primary">Salvar OP na Fila</button></div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Demais Modais -->
-    <div id="low-stock-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-bell mr-3 text-2xl"></i><span>Itens Abaixo do Mínimo</span></h2><p class="text-sm text-ios-textMuted font-medium">Atenção para reposição imediata. Você define o que mede!</p></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="low-stock-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="low-stock-list" class="space-y-3"></ul></div></div></div>
-    <div id="expiring-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-clock mr-3 text-2xl"></i><span>Lotes Vencendo (Próx. 45 Dias)</span></h2><p class="text-sm text-ios-textMuted font-medium">Acompanhamento e priorização de saída PEPS.</p></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="expiring-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="expiring-list" class="space-y-3"></ul></div></div></div>
 
     <!-- Modal Detalhes Item (Estoque) -->
     <div id="item-details-modal" class="modal">
@@ -733,7 +673,6 @@
     const db = getFirestore(app);
 
     // --- DB WRAPPER (Suporta Firebase e Offline LocalStorage) ---
-    // Ajustado para checar IDs usando == (ao invés de ===) para aceitar IDs numéricos do backup e UUIDs string nativos sem falhar.
     let isOfflineMode = false;
 
     const LocalDB = {
@@ -811,12 +750,67 @@
     }
     window.showConfirmationModal = showConfirmationModal;
 
-    // Time Format
     function formatTime(sec) {
         const h = Math.floor(sec / 3600); const m = Math.floor((sec % 3600) / 60); const s = sec % 60;
         if (h > 0) return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
     }
+
+    // --- LEITOR DE CAMERA GLOBAL (Html5Qrcode) ---
+    let qrCodeInstance = null;
+    async function toggleCamera(readerId, inputId) {
+        const readerEl = id(readerId);
+        const inputEl = id(inputId);
+        
+        if(typeof Html5Qrcode === 'undefined') {
+            return showNotif("A biblioteca da câmera não foi carregada. Tente recarregar a página.", true);
+        }
+
+        if (qrCodeInstance) {
+            try { await qrCodeInstance.stop(); } catch(e) {}
+            qrCodeInstance = null;
+            hide(readerEl);
+            return;
+        }
+        
+        show(readerEl);
+        qrCodeInstance = new Html5Qrcode(readerId);
+        
+        try {
+            await qrCodeInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, 
+            async (decodedText) => {
+                // Ao ler com sucesso:
+                try { await qrCodeInstance.stop(); } catch(e) {}
+                qrCodeInstance = null;
+                hide(readerEl);
+                
+                if(inputEl) {
+                    inputEl.value = decodedText;
+                    // Simula o Enter natural
+                    inputEl.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+                }
+            }, (err) => { /* ignora erros de scan frame a frame */ });
+        } catch(e) {
+            console.error(e);
+            showNotif('Permissão de câmera negada ou dispositivo sem câmera traseira.', true);
+            hide(readerEl);
+        }
+    }
+
+    addEvt('btn-start-camera-main', 'click', () => toggleCamera('main-camera-reader', 'scanner-input'));
+    addEvt('btn-start-camera-picking', 'click', () => toggleCamera('picking-camera-reader', 'picking-scanner'));
+
+    // Desligar câmera ao trocar de tela
+    document.querySelectorAll('.nav-item').forEach(link => {
+        link.addEventListener('click', async () => {
+            if(qrCodeInstance) {
+                try { await qrCodeInstance.stop(); } catch(e) {}
+                qrCodeInstance = null;
+                hide(id('main-camera-reader'));
+                hide(id('picking-camera-reader'));
+            }
+        });
+    });
 
     // --- LOGIN E SESSÃO ---
     addEvt('btn-login-google', 'click', () => {
@@ -836,7 +830,7 @@
 
     addEvt('btn-bypass-login', 'click', async () => {
         isOfflineMode = true;
-        LocalDB.init(); // Carrega o LocalStorage
+        LocalDB.init(); 
         hide(id('login-wrapper')); 
         show(id('app-wrapper'));
         const nu = id('nome-usuario');
@@ -936,7 +930,6 @@
         return { plan, isSufficient: remaining <= 0.0001 };
     }
 
-    // --- REFRESH DATA (REFAZ TUDO NA TELA IMEDIATAMENTE) ---
     async function refreshData() {
         try {
             [localInventory, localBatches, localHistory, localRecipes, localProductionOrders, localMonthlyConsumption] = await Promise.all([DB.getAll('inventory'), DB.getAll('batches'), DB.getAll('history'), DB.getAll('recipes'), DB.getAll('productionOrders'), DB.getAll('monthlyConsumption')]);
@@ -995,30 +988,23 @@
             if(!code) return;
             lastScannedCode = code;
             
-            // Procura se tem barcode igual, ou se tem código interno igual
             const p = localInventory.find(i => i.barcode === code || i.code === code);
             const boxResult = id('scanner-result-box');
             const boxAssociate = id('scanner-associate-box');
             
             if(p) {
-                // Achou! Exibe o resultado e esconde associação
                 hide(boxAssociate); boxAssociate.classList.add('opacity-0', 'translate-y-4');
-                
                 id('scan-res-name').innerText = p.name;
                 id('scan-res-code').innerText = p.code || 'N/D';
                 id('scan-res-barcode').innerText = p.barcode || 'N/D';
                 id('scan-res-type').innerText = typeLabels[p.type] || 'Insumo';
                 id('scan-res-stock').innerText = (p.totalQuantity||0).toFixed(2);
-                
                 show(boxResult);
                 setTimeout(() => boxResult.classList.remove('opacity-0', 'translate-y-4'), 10);
             } else {
-                // Não achou! Pede para associar
                 hide(boxResult); boxResult.classList.add('opacity-0', 'translate-y-4');
-                
                 id('unrecognized-code').innerText = code;
                 createSearchableSelect(id('associate-searchable-container'), localInventory, 'Pesquise pelo nome do insumo...');
-                
                 show(boxAssociate);
                 setTimeout(() => boxAssociate.classList.remove('opacity-0', 'translate-y-4'), 10);
                 showNotif('Código não reconhecido no sistema.', true);
@@ -1281,7 +1267,7 @@
         }
     });
 
-    // --- RECEITAS ---
+    // --- RECEITAS (IMPORTAÇÃO INTELIGENTE DE EXCEL MULTIPLAS ABAS) ---
     addEvt('search-recipe', 'input', renderRecipes);
     function renderRecipes() {
         const grid = id('recipes-grid'); if(!grid) return;
@@ -1298,7 +1284,12 @@
         
         grid.innerHTML = f.map(r => {
             const isSemi = r.isSemi;
-            const ingredientsHTML = (r.ingredients || []).map(i=>`<li class="flex justify-between py-1 border-b border-ios-border/30 last:border-0"><span class="truncate pr-2">${localInventory.find(p=>p.id==i.productId)?.name||'?'}</span><span class="font-bold text-ios-blue bg-ios-bg px-2 rounded">${i.quantity}</span></li>`).join('');
+            const ingredientsHTML = (r.ingredients || []).map(i=> {
+                const prod = localInventory.find(p=>p.id==i.productId);
+                const isWarning = prod && prod.name.startsWith('⚠️');
+                return `<li class="flex justify-between py-1 border-b border-ios-border/30 last:border-0"><span class="truncate pr-2 ${isWarning ? 'text-ios-orange font-bold' : ''}">${prod?prod.name:'?'}</span><span class="font-bold text-ios-blue bg-ios-bg px-2 rounded">${i.quantity}</span></li>`;
+            }).join('');
+            
             return `
             <div class="card relative flex flex-col border border-transparent ${isSemi ? 'hover:border-ios-orange/50' : 'hover:border-ios-cardHover'} transition-all">
                 <div class="absolute top-4 right-4 flex gap-2">
@@ -1324,6 +1315,131 @@
         if(editBtn) openEditRecipe(editBtn.dataset.id);
     });
     addEvt('recipe-is-semi', 'change', e => { if(e.target.checked) show(id('yield-wrapper')); else hide(id('yield-wrapper')); });
+
+    // NOVO: Importação Inteligente de Receitas (Lendo todas as abas)
+    addEvt('btn-import-recipes', 'click', () => id('recipe-file-input')?.click());
+    
+    addEvt('recipe-file-input', 'change', e => {
+        const file = e.target.files[0]; if(!file) return; 
+        const reader = new FileReader();
+        
+        reader.onload = async ev => {
+            try {
+                show(id('loading-overlay'));
+                const data = ev.target.result;
+                const workbook = XLSX.read(data, {type: 'binary'});
+                
+                let importedCount = 0;
+                
+                // Varre todas as abas do Excel
+                for (const sheetName of workbook.SheetNames) {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
+                    
+                    if(rows.length < 2) continue; // Ignora abas vazias
+                    
+                    let recipeName = sheetName;
+                    let yieldQty = 1;
+                    let ingredients = [];
+                    let readingIngs = false;
+                    let colIng = -1, colCode = -1, colQty = -1;
+                    
+                    for (const row of rows) {
+                        const rowStr = row.join(' ').toUpperCase();
+                        
+                        // Extrai Nome da Receita
+                        if(rowStr.includes('PREPARAÇÃO:')) {
+                            const cell = row.find(c => String(c).toUpperCase().includes('PREPARAÇÃO:'));
+                            if(cell) recipeName = String(cell).replace(/PREPARAÇÃO:/i, '').trim();
+                        }
+                        
+                        // Extrai Rendimento
+                        if(rowStr.includes('RENDIMENTO')) {
+                            const idxRend = row.findIndex(c => String(c).toUpperCase().includes('RENDIMENTO'));
+                            if(idxRend !== -1) {
+                                yieldQty = parseFloat(row[idxRend+1]) || parseFloat(row[idxRend+2]) || 1;
+                            }
+                        }
+                        
+                        // Encontra Cabeçalhos da Tabela de Ingredientes
+                        if(!readingIngs && rowStr.includes('INGREDIENTE') && rowStr.includes('QUANTIDADE')) {
+                            colIng = row.findIndex(c => String(c).toUpperCase().trim() === 'INGREDIENTE');
+                            colQty = row.findIndex(c => String(c).toUpperCase().trim() === 'QUANTIDADE');
+                            colCode = row.findIndex(c => String(c).toUpperCase().trim() === 'CÓDIGO');
+                            readingIngs = true;
+                            continue;
+                        }
+                        
+                        // Lê os ingredientes linha a linha
+                        if(readingIngs && colIng !== -1 && colQty !== -1) {
+                            const ingNameRaw = String(row[colIng]).trim();
+                            const qtyRaw = parseFloat(String(row[colQty]).replace(',', '.')); // Garante que a vírgula vire ponto decimal
+                            
+                            // Condições de parada para não ler rodapé
+                            if(ingNameRaw.toUpperCase() === 'TOTAL' || ingNameRaw.toUpperCase() === 'RENDIMENTO' || ingNameRaw.toUpperCase().includes('KG')) {
+                                readingIngs = false;
+                                continue;
+                            }
+                            
+                            if(ingNameRaw && !isNaN(qtyRaw) && qtyRaw > 0) {
+                                let code = colCode !== -1 ? String(row[colCode]).trim() : '';
+                                
+                                // Cruzamento 1: Pelo Código
+                                let p = null;
+                                if(code) p = localInventory.find(i => String(i.code) === code);
+                                
+                                // Cruzamento 2: Pelo Nome
+                                if(!p) p = localInventory.find(i => i.name.toLowerCase() === ingNameRaw.toLowerCase());
+                                
+                                // Se não achou de jeito nenhum, cadastra com ⚠️
+                                if(!p) {
+                                    const alertName = '⚠️ ' + ingNameRaw;
+                                    p = localInventory.find(i => i.name === alertName);
+                                    if(!p) {
+                                        p = { id: crypto.randomUUID(), code: code || '', name: alertName, type: 'insumo', supplier: 'A DEFINIR', totalQuantity: 0, minStock: 0, leadTime: 0 };
+                                        await DB.add('inventory', p);
+                                        localInventory.push(p); // Atualiza cache local pra não duplicar nos próximos
+                                    }
+                                }
+                                ingredients.push({ productId: p.id, quantity: qtyRaw });
+                            }
+                        }
+                    }
+                    
+                    if(ingredients.length > 0) {
+                        // Verifica se a receita já existe para atualizar ou cria nova
+                        let existingRecipe = localRecipes.find(r => r.name === recipeName);
+                        if(existingRecipe) {
+                            existingRecipe.ingredients = ingredients;
+                            existingRecipe.outputYield = yieldQty;
+                            await DB.update('recipes', existingRecipe);
+                        } else {
+                            await DB.add('recipes', {
+                                name: recipeName,
+                                category: 'Importadas',
+                                outputProductId: null,
+                                outputYield: yieldQty,
+                                isSemi: false, // Default
+                                ingredients: ingredients
+                            });
+                        }
+                        importedCount++;
+                    }
+                }
+                
+                await refreshData();
+                showNotif(`Sucesso! ${importedCount} receitas foram importadas ou atualizadas.`);
+                
+            } catch(err) {
+                console.error(err); 
+                showNotif('Erro na leitura do arquivo Excel.', true); 
+            } finally { 
+                if(id('recipe-file-input')) id('recipe-file-input').value=''; 
+                hide(id('loading-overlay'));
+            }
+        }; 
+        reader.readAsBinaryString(file);
+    });
 
     function openEditRecipe(rId) {
         const r = localRecipes.find(x => x.id == rId); if(!r) return;
@@ -1488,7 +1604,7 @@
     });
 
     // --- SEPARAÇÃO AGRUPADA (PICKING KITTING) ---
-    // Adicionada Lógica do Scanner
+    // Adicionada Lógica do Scanner Principal e Câmera
     addEvt('picking-scanner', 'keypress', e => {
         if(e.key === 'Enter') {
             const code = e.target.value.trim();
@@ -1644,7 +1760,7 @@
             show(id('picking-active-view'));
             const actResp = id('picking-active-resp'); if(actResp) actResp.innerText = picking.responsible;
             if(timerEl) { timerEl.dataset.start = picking.start; timerEl.classList.add('timer-active'); }
-            setTimeout(() => id('picking-scanner')?.focus(), 100); // Auto-focus no scanner
+            setTimeout(() => id('picking-scanner')?.focus(), 100); 
         } else {
             show(id('picking-setup-view'));
             hide(id('picking-active-view'));
@@ -1755,6 +1871,9 @@
                 op.picking.duration = Math.floor((op.picking.end - op.picking.start) / 1000); 
                 await DB.update('productionOrders', op);
             }
+            
+            // Certifique-se de parar a câmera se estiver ligada
+            if(qrCodeInstance) { try { await qrCodeInstance.stop(); } catch(e){} qrCodeInstance = null; hide(id('picking-camera-reader')); }
             
             await refreshData(); 
             hide(id('picking-modal')); hide(id('loading-overlay'));
@@ -2095,7 +2214,7 @@
 
     addEvt('btn-upload-backup', 'click', () => id('backup-file-input')?.click());
     
-    // NOVO IMPORTADOR DE PLANILHAS CSV/XLSX
+    // IMPORTADOR DE PLANILHAS CSV/XLSX PARA O ESTOQUE
     addEvt('backup-file-input', 'change', e => {
         const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
         reader.onload = async ev => {
