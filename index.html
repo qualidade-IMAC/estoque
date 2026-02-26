@@ -472,13 +472,10 @@
                         <button id="btn-download-backup" class="w-full btn-secondary text-ios-blue border-ios-blue/30 bg-ios-blue/10">Baixar Cópia do Banco</button>
                     </div>
                     <div class="pt-8">
-                        <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-up mr-2 text-ios-orange"></i>Restaurar Banco Offline</h2>
-                        <p class="text-sm text-ios-textMuted mb-3">Faça o upload do arquivo de backup (<b>.txt</b> ou <b>.json</b>) para carregar os dados offline. <strong>Isso substituirá as informações atuais.</strong></p>
-                        <div class="mb-4 p-3 bg-ios-bg rounded-lg border border-ios-border text-xs text-ios-textMuted">
-                            Última restauração local: <span id="last-restore-date" class="font-bold text-white">Nunca</span>
-                        </div>
-                        <button id="btn-upload-backup" class="w-full btn-secondary text-ios-orange border-ios-orange/30 bg-ios-orange/10"><i class="fa-solid fa-file-import mr-2"></i>Selecionar Arquivo de Backup</button>
-                        <input type="file" id="backup-file-input" class="hidden" accept=".json, .txt, text/plain">
+                        <h2 class="title-md mb-1"><i class="fa-solid fa-file-excel mr-2 text-ios-green"></i>Importar Planilha (Entrada em Massa)</h2>
+                        <p class="text-sm text-ios-textMuted mb-3">Faça o upload do seu relatório de estoque (<b>.csv</b> ou <b>.xlsx</b>) para dar entrada automática em todos os produtos, quantidades e lotes.</p>
+                        <button id="btn-upload-backup" class="w-full btn-secondary text-ios-green border-ios-green/30 bg-ios-green/10"><i class="fa-solid fa-file-import mr-2"></i>Selecionar Arquivo (.csv / .xlsx)</button>
+                        <input type="file" id="backup-file-input" class="hidden" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
                     </div>
                     <div class="pt-8">
                         <h2 class="title-md text-ios-red mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo</h2>
@@ -2097,26 +2094,94 @@
     });
 
     addEvt('btn-upload-backup', 'click', () => id('backup-file-input')?.click());
+    
+    // NOVO IMPORTADOR DE PLANILHAS CSV/XLSX
     addEvt('backup-file-input', 'change', e => {
         const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
         reader.onload = async ev => {
             try {
-                const data = JSON.parse(ev.target.result.trim()); const s = ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption'];
-                if(!s.some(k=>data[k])) return showNotif("Arquivo incompatível.", true);
-                showConfirmationModal('Restauração de Dados', 'Isso substituirá TODOS os dados atuais. Deseja aplicar o backup?', async () => {
-                    show(id('loading-overlay')); 
-                    try {
-                        await DB.restoreBackup(data);
-                        const ds = new Date().toLocaleString('pt-BR'); localStorage.setItem('last_res', ds); 
-                        if(id('last-restore-date')) id('last-restore-date').innerText = ds;
-                        await refreshData(); 
-                        showNotif('Backup Restaurado com Sucesso!');
-                    } catch(err) {
-                        console.error(err); showNotif('Erro fatal ao restaurar backup.', true);
-                    } finally { hide(id('loading-overlay')); }
-                });
-            } catch(e) { showNotif('Erro na leitura do arquivo. Certifique-se de que é um formato válido.', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; }
-        }; reader.readAsText(file);
+                show(id('loading-overlay'));
+                const data = ev.target.result;
+                const workbook = XLSX.read(data, {type: 'binary'});
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
+
+                if(!json || json.length === 0) throw new Error("Planilha vazia ou formato inválido.");
+
+                let countNovos = 0;
+                let countAtualizados = 0;
+
+                for(const row of json) {
+                    const getVal = (key) => {
+                        const found = Object.keys(row).find(k => k.trim() === key);
+                        return found ? row[found] : "";
+                    };
+
+                    const name = getVal('Nome do Produto');
+                    const code = String(getVal('Código')).trim();
+                    const supplier = getVal('Fornecedor');
+                    const minStock = parseFloat(getVal('Estoque Mínimo')) || 0;
+                    const batchCodeRaw = getVal('Lote');
+                    const batchCode = (!batchCodeRaw || batchCodeRaw === 'N/A') ? 'LT-' + crypto.randomUUID().substring(0,6).toUpperCase() : String(batchCodeRaw).trim();
+                    const batchQty = parseFloat(getVal('Quantidade do Lote')) || parseFloat(getVal('Quantidade Física')) || 0;
+
+                    if(!name || batchQty <= 0) continue;
+
+                    let p = null;
+                    if (code && code !== 'N/A') {
+                        p = await DB.getByIndex('inventory', 'code', code);
+                    }
+                    if (!p) {
+                        const allP = await DB.getAll('inventory');
+                        p = allP.find(x => x.name.toLowerCase() === name.toLowerCase());
+                    }
+
+                    if(!p) {
+                        p = { code: code !== 'N/A' ? code : '', name: name, type: 'insumo', supplier: supplier, totalQuantity: 0, minStock: minStock, leadTime: 0 };
+                        p.id = await DB.add('inventory', p);
+                        countNovos++;
+                    } else {
+                        if(supplier && supplier !== 'N/A') p.supplier = supplier;
+                        if(minStock > 0) p.minStock = minStock;
+                        await DB.update('inventory', p);
+                        countAtualizados++;
+                    }
+
+                    // Format expiry date
+                    let expiry = null;
+                    const expRaw = getVal('Data de Validade');
+                    if(expRaw && expRaw !== 'N/A') {
+                        if(!isNaN(expRaw) && typeof expRaw === 'number') {
+                             const d = new Date(Math.round((expRaw - 25569)*86400*1000));
+                             expiry = d.toISOString().split('T')[0];
+                        } else if(typeof expRaw === 'string') {
+                             const pts = expRaw.split('/');
+                             if(pts.length === 3) expiry = `${pts[2]}-${pts[1]}-${pts[0]}`;
+                        }
+                    }
+                    
+                    p.totalQuantity = (p.totalQuantity || 0) + batchQty;
+                    await DB.update('inventory', p);
+                    
+                    const isReleased = (p.code !== '8110'); 
+                    await DB.add('batches', { productId: p.id, code: batchCode, quantity: batchQty, expiryDate: expiry, isReleased: isReleased });
+                    await DB.add('history', { productId: p.id, batchCode: batchCode, type: 'entrada', quantity: batchQty, date: new Date().toISOString().split('T')[0], reason: `Importação Planilha` });
+                }
+
+                await refreshData();
+                const ds = new Date().toLocaleString('pt-BR'); localStorage.setItem('last_res', ds); 
+                if(id('last-restore-date')) id('last-restore-date').innerText = ds;
+                
+                showNotif(`Importação concluída! ${countNovos} produtos criados, ${countAtualizados} atualizados com entradas geradas.`);
+            } catch(err) {
+                console.error(err); showNotif('Erro na leitura do arquivo. Certifique-se de que é um formato CSV/Excel válido.', true); 
+            } finally { 
+                if(id('backup-file-input')) id('backup-file-input').value=''; 
+                hide(id('loading-overlay'));
+            }
+        }; 
+        reader.readAsBinaryString(file);
     });
 
     addEvt('btn-reset-database', 'click', () => {
