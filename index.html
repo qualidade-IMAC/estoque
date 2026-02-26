@@ -149,7 +149,7 @@
             </div>
             <nav class="flex-1 w-full px-3 space-y-2 overflow-y-auto">
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="dashboard"><i class="fa-solid fa-chart-pie w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Visão Geral</span></a>
-                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="scanner"><i class="fa-solid fa-barcode w-6 text-center text-lg text-ios-green"></i><span class="ml-3 hidden lg:block font-medium text-ios-green">Leitor (Cód. Barras)</span></a>
+                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="scanner"><i class="fa-solid fa-barcode w-6 text-center text-lg text-ios-green"></i><span class="ml-3 hidden lg:block font-medium text-ios-green">Cód. Barras (Cad. & Leitura)</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="entry"><i class="fa-solid fa-box-open w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Entrada Lote</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="inventory"><i class="fa-solid fa-boxes-stacked w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Estoque Geral</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="recipes"><i class="fa-solid fa-book-bookmark w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Receitas</span></a>
@@ -245,38 +245,47 @@
                 <div class="card"><h2 class="title-md">Curva ABC de Consumo</h2><div class="h-64"><canvas id="abc-curve-chart"></canvas></div></div>
             </div>
 
-            <!-- NOVO: Leitor de Scanner (Código de Barras) -->
+            <!-- NOVO: Leitor de Scanner (Cadastro e Associação) -->
             <div id="screen-scanner" class="screen-panel hidden flex-col items-center max-w-4xl mx-auto py-10">
-                <h1 class="title-lg w-full text-center text-ios-green mb-2"><i class="fa-solid fa-barcode mr-3"></i>Leitor Rápido</h1>
-                <p class="text-ios-textMuted mb-8 text-center">Utilize seu leitor de código de barras ou digite o código e pressione Enter.</p>
+                <h1 class="title-lg w-full text-center text-ios-green mb-2"><i class="fa-solid fa-barcode mr-3"></i>Leitor de Código de Barras</h1>
+                <p class="text-ios-textMuted mb-8 text-center">Bipe a embalagem da matéria-prima. O sistema vai reconhecer ou pedir para você associar ao cadastro.</p>
                 
                 <div class="w-full card bg-ios-cardHover border-2 border-ios-green/30 p-8 shadow-2xl relative overflow-hidden">
                     <div class="absolute inset-0 border-b-2 border-ios-green animate-[slideUp_2s_ease-in-out_infinite] opacity-20 pointer-events-none" style="height: 10px;"></div>
                     <input type="text" id="scanner-input" class="w-full bg-ios-bg border-2 border-ios-border text-white text-3xl font-mono text-center py-6 rounded-2xl focus:border-ios-green focus:ring-4 focus:ring-ios-green/20 transition-all outline-none" placeholder="Aguardando código..." autocomplete="off">
                 </div>
 
+                <!-- Resultado de Leitura (Produto Conhecido) -->
                 <div id="scanner-result-box" class="w-full card mt-6 hidden flex-col transition-all duration-300 opacity-0 transform translate-y-4">
-                    <div class="flex justify-between items-start border-b border-ios-border pb-4 mb-4">
+                    <div class="flex justify-between items-start">
                         <div>
                             <span class="badge bg-ios-blue/20 text-ios-blue mb-2 block w-max" id="scan-res-type">Insumo</span>
                             <h2 class="text-2xl font-bold text-white mb-1" id="scan-res-name">Nome do Produto</h2>
-                            <p class="text-ios-textMuted text-sm">Cód: <span id="scan-res-code" class="text-white font-mono"></span> | Fornecedor: <span id="scan-res-supplier" class="text-white"></span></p>
+                            <p class="text-ios-textMuted text-sm">Cód Sistema: <span id="scan-res-code" class="text-white font-mono"></span> | Código Barras: <span id="scan-res-barcode" class="text-white font-mono"></span></p>
                         </div>
                         <div class="text-right">
                             <p class="text-xs text-ios-textMuted uppercase font-bold tracking-wide">Saldo Físico Atual</p>
                             <p class="text-4xl font-bold text-ios-green" id="scan-res-stock">0.00</p>
                         </div>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-ios-bg p-5 rounded-2xl border border-ios-border">
-                            <label class="form-label text-white font-bold mb-2">Quantidade (Volume)</label>
-                            <input type="number" id="scan-qty" class="form-input text-2xl font-bold text-center py-4 text-ios-blue" step="0.01" min="0.01" placeholder="0.00">
+                    <div class="mt-4 pt-4 border-t border-ios-border text-center text-ios-textMuted text-sm">
+                        <i class="fa-solid fa-check-circle text-ios-green mr-1"></i> Este código já está associado e pronto para o uso na Separação (Picking).
+                    </div>
+                </div>
+
+                <!-- Associação de Leitura (Produto NÃO Conhecido) -->
+                <div id="scanner-associate-box" class="w-full card mt-6 hidden flex-col border-ios-orange/50 transition-all duration-300 opacity-0 transform translate-y-4">
+                    <div class="flex items-center text-ios-orange mb-4">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl mr-3"></i>
+                        <div>
+                            <h3 class="text-lg font-bold text-white leading-tight">Código Não Reconhecido</h3>
+                            <p class="text-sm">O código <strong class="font-mono text-white" id="unrecognized-code"></strong> não pertence a nenhum produto.</p>
                         </div>
-                        <div class="flex flex-col gap-3 justify-center">
-                            <button id="btn-scan-in" class="btn-success py-4 text-lg w-full shadow-lg shadow-ios-green/20"><i class="fa-solid fa-arrow-down mr-2"></i>Registrar Entrada</button>
-                            <button id="btn-scan-out" class="btn-danger py-4 text-lg w-full shadow-lg shadow-ios-red/20"><i class="fa-solid fa-arrow-up mr-2"></i>Registrar Saída (Avulsa)</button>
-                        </div>
+                    </div>
+                    <div class="bg-ios-bg p-5 rounded-2xl border border-ios-border">
+                        <label class="form-label text-white font-bold mb-2">A qual insumo do sistema este código pertence?</label>
+                        <div id="associate-searchable-container" class="relative z-50 mb-4"></div>
+                        <button id="btn-associate-code" class="btn-primary w-full py-4"><i class="fa-solid fa-link mr-2"></i>Vincular Código ao Produto</button>
                     </div>
                 </div>
             </div>
@@ -481,8 +490,7 @@
         </main>
     </div>
 
-    <!-- Modais (Mantidos inalterados visualmente, lógica otimizada no JS) -->
-    <!-- Modal Picking -->
+    <!-- Modais -->
     <div id="picking-modal" class="modal z-[60]">
         <div class="modal-content max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0 bg-ios-bg border border-ios-border">
             <div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover">
@@ -492,6 +500,7 @@
                 </div>
                 <button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="picking-modal">&times;</button>
             </div>
+            
             <div id="picking-setup-view" class="p-10 flex flex-col items-center justify-center bg-ios-card h-[50vh]">
                 <i class="fa-solid fa-clipboard-user text-6xl text-ios-orange mb-6"></i>
                 <h3 class="text-2xl font-bold text-white mb-2">Quem vai separar esta linha?</h3>
@@ -499,6 +508,7 @@
                 <input type="text" id="picking-responsible" class="form-input max-w-xs text-center text-xl py-4 mb-6 shadow-inner border border-ios-border" placeholder="O seu nome aqui" autocomplete="off">
                 <button id="btn-start-picking" class="btn-success py-4 px-10 text-lg rounded-full shadow-lg shadow-ios-green/20 hover:-translate-y-1 transform transition"><i class="fa-solid fa-play mr-2"></i> Iniciar Cronômetro</button>
             </div>
+            
             <div id="picking-active-view" class="hidden flex-col flex-1 overflow-hidden h-[70vh]">
                 <div class="bg-ios-bg px-6 py-4 flex flex-wrap justify-between items-center shrink-0 border-b border-ios-border shadow-inner gap-4">
                     <div>
@@ -511,6 +521,16 @@
                     </div>
                     <button id="btn-finish-picking" class="btn-primary py-3 px-6 shadow-lg shadow-ios-blue/20 rounded-xl"><i class="fa-solid fa-flag-checkered mr-2"></i>Finalizar OP(s)</button>
                 </div>
+                
+                <!-- NOVO: Leitor de Código de Barras Direto no Picking -->
+                <div class="bg-ios-cardHover border-b border-ios-border p-4 shrink-0 flex items-center gap-4">
+                    <i class="fa-solid fa-barcode text-ios-green text-3xl"></i>
+                    <div class="flex-1">
+                        <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-1">Leitura Rápida (Scanner)</p>
+                        <input type="text" id="picking-scanner" class="form-input w-full border-ios-green/50 focus:border-ios-green focus:ring-ios-green/20 font-mono text-xl py-3" placeholder="Bipe o insumo para destacar na lista..." autocomplete="off">
+                    </div>
+                </div>
+
                 <div class="overflow-y-auto flex-1 bg-ios-bg p-6">
                     <div class="table-container shadow-xl">
                         <table class="base-table w-full text-left">
@@ -624,9 +644,9 @@
                 </div>
             </div>
             <div id="item-details-view" class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm bg-ios-bg p-5 rounded-2xl mb-6 shadow-inner border border-ios-border">
-                <div><span class="text-ios-textMuted block mb-1">Código</span><span id="details-product-code" class="text-white font-medium"></span></div>
+                <div><span class="text-ios-textMuted block mb-1">Cód Padrão</span><span id="details-product-code" class="text-white font-medium font-mono"></span></div>
+                <div><span class="text-ios-textMuted block mb-1">Cód Leitor</span><span id="details-product-barcode" class="text-white font-medium font-mono"></span></div>
                 <div class="md:col-span-2"><span class="text-ios-textMuted block mb-1">Fornecedor</span><span id="details-supplier" class="text-white font-medium"></span></div>
-                <div><span class="text-ios-textMuted block mb-1">Prazo Entr.</span><span id="details-lead-time" class="text-white font-medium"></span></div>
                 <div><span class="text-ios-textMuted block mb-1">Estoque Mín.</span><span id="details-min-stock" class="text-ios-orange font-medium"></span></div>
                 <div><span class="text-ios-textMuted block mb-1">Saldo Físico</span><span id="details-total-quantity" class="text-ios-green font-bold text-xl"></span></div>
             </div>
@@ -635,8 +655,9 @@
                     <input type="hidden" id="edit-item-id">
                     <div class="md:col-span-6"><label class="form-label">Classificação</label><select id="edit-product-type" required class="form-input"><option value="insumo">Insumo</option><option value="semi_acabado">Semi-acabado</option></select></div>
                     <div class="md:col-span-6"><label class="form-label">Nome</label><input type="text" id="edit-product-name" required class="form-input"></div>
-                    <div class="md:col-span-1"><label class="form-label">Cód</label><input type="text" id="edit-product-code" class="form-input"></div>
-                    <div class="md:col-span-2"><label class="form-label">Fornecedor</label><input type="text" id="edit-supplier" class="form-input"></div>
+                    <div class="md:col-span-3"><label class="form-label">Cód. Interno</label><input type="text" id="edit-product-code" class="form-input"></div>
+                    <div class="md:col-span-3"><label class="form-label">Cód. Barras (Leitor)</label><input type="text" id="edit-product-barcode" class="form-input text-ios-green"></div>
+                    <div class="md:col-span-3"><label class="form-label">Fornecedor</label><input type="text" id="edit-supplier" class="form-input"></div>
                     <div class="md:col-span-1"><label class="form-label" title="Prazo de Entrega do Fornecedor em Dias">Prazo (Dias)</label><input type="number" id="edit-lead-time" min="0" class="form-input"></div>
                     <div class="md:col-span-2 relative border border-ios-border p-3 rounded-xl bg-ios-cardHover">
                         <div class="flex gap-2 mb-2 items-end">
@@ -715,6 +736,7 @@
     const db = getFirestore(app);
 
     // --- DB WRAPPER (Suporta Firebase e Offline LocalStorage) ---
+    // Ajustado para checar IDs usando == (ao invés de ===) para aceitar IDs numéricos do backup e UUIDs string nativos sem falhar.
     let isOfflineMode = false;
 
     const LocalDB = {
@@ -722,20 +744,20 @@
         init() { const saved = localStorage.getItem('estoque_db'); if(saved) this.data = JSON.parse(saved); },
         save() { localStorage.setItem('estoque_db', JSON.stringify(this.data)); },
         async add(coll, item) { item.id = crypto.randomUUID(); this.data[coll].push(item); this.save(); return item.id; },
-        async update(coll, item) { const idx = this.data[coll].findIndex(x => x.id === item.id); if(idx > -1) { this.data[coll][idx] = item; this.save(); } },
-        async remove(coll, id) { this.data[coll] = this.data[coll].filter(x => x.id !== id); this.save(); },
-        async get(coll, id) { return this.data[coll].find(x => x.id === id); },
+        async update(coll, item) { const idx = this.data[coll].findIndex(x => x.id == item.id); if(idx > -1) { this.data[coll][idx] = item; this.save(); } },
+        async remove(coll, id) { this.data[coll] = this.data[coll].filter(x => x.id != id); this.save(); },
+        async get(coll, id) { return this.data[coll].find(x => x.id == id); },
         async getAll(coll) { return [...this.data[coll]]; },
-        async getByIndex(coll, idx, val) { return this.data[coll].find(x => x[idx] === val); },
+        async getByIndex(coll, idx, val) { return this.data[coll].find(x => x[idx] == val); },
         async clear(coll) { this.data[coll] = []; this.save(); },
         async restoreBackup(newData) { this.data = {...this.data, ...newData}; this.save(); }
     };
 
     const FirebaseDB = {
         async add(coll, data) { const ref = await addDoc(collection(db, coll), data); await setDoc(ref, { id: ref.id }, { merge: true }); return ref.id; },
-        async update(coll, data) { if(!data.id) return; await setDoc(doc(db, coll, data.id), data, { merge: true }); },
-        async remove(coll, idStr) { if(!idStr) return; await deleteDoc(doc(db, coll, idStr)); },
-        async get(coll, idStr) { if(!idStr) return null; const d = await getDoc(doc(db, coll, idStr)); return d.exists() ? d.data() : null; },
+        async update(coll, data) { if(!data.id) return; await setDoc(doc(db, coll, String(data.id)), data, { merge: true }); },
+        async remove(coll, idStr) { if(!idStr) return; await deleteDoc(doc(db, coll, String(idStr))); },
+        async get(coll, idStr) { if(!idStr) return null; const d = await getDoc(doc(db, coll, String(idStr))); return d.exists() ? d.data() : null; },
         async getAll(coll) { const qs = await getDocs(collection(db, coll)); return qs.docs.map(d => d.data()); },
         async getByIndex(coll, idx, val) { const q = query(collection(db, coll), where(idx, "==", val)); const qs = await getDocs(q); return qs.empty ? null : qs.docs[0].data(); },
         async clear(coll) { const qs = await getDocs(collection(db, coll)); const batch = writeBatch(db); qs.docs.forEach(d => batch.delete(d.ref)); await batch.commit(); },
@@ -901,7 +923,7 @@
         
         const renderList = (searchTerm) => {
             let filtered = items;
-            if(searchTerm) { const term = searchTerm.toLowerCase(); filtered = filtered.filter(i => (i.searchName || i.name).toLowerCase().includes(term) || (i.code && i.code.toLowerCase().includes(term))); }
+            if(searchTerm) { const term = searchTerm.toLowerCase(); filtered = filtered.filter(i => (i.searchName || i.name).toLowerCase().includes(term) || (i.code && i.code.toLowerCase().includes(term)) || (i.barcode && i.barcode.includes(term))); }
             if(filtered.length) { dropdown.innerHTML = filtered.map(i => `<div class="searchable-item flex justify-between items-center" data-id="${i.id}"><span class="font-medium">${i.searchName || i.name}</span>${i.type ? `<span class="text-xs text-ios-textMuted bg-black/30 px-2 py-1 rounded">${typeLabels[i.type]||''}</span>` : ''}</div>`).join(''); dropdown.classList.remove('hidden'); } 
             else { dropdown.innerHTML = `<div class="p-3 text-ios-textMuted text-sm">Nenhum resultado...</div>`; dropdown.classList.remove('hidden'); }
         };
@@ -911,7 +933,7 @@
     }
 
     function getFIFOPlan(productId, qtyNeeded) {
-        const batches = localBatches.filter(b => b.productId === productId && b.quantity > 0 && b.isReleased !== false).sort((a,b) => new Date(a.expiryDate || '9999-01-01') - new Date(b.expiryDate || '9999-01-01'));
+        const batches = localBatches.filter(b => b.productId == productId && b.quantity > 0 && b.isReleased !== false).sort((a,b) => new Date(a.expiryDate || '9999-01-01') - new Date(b.expiryDate || '9999-01-01'));
         let remaining = qtyNeeded; let plan = [];
         for (let b of batches) { if (remaining <= 0) break; const take = Math.min(b.quantity, remaining); plan.push({ batchId: b.id, batchCode: b.code, quantity: take }); remaining -= take; }
         return { plan, isSufficient: remaining <= 0.0001 };
@@ -929,7 +951,7 @@
 
             for(let i of localInventory) {
                 if(!i.type || i.type === 'acabado') { i.type = 'insumo'; changed = true; } 
-                const batches = localBatches.filter(b => b.productId === i.id); const batchSum = batches.reduce((sum, b) => sum + Math.max(0, b.quantity), 0);
+                const batches = localBatches.filter(b => b.productId == i.id); const batchSum = batches.reduce((sum, b) => sum + Math.max(0, b.quantity), 0);
                 if (Math.abs((i.totalQuantity || 0) - batchSum) > 0.001) { i.totalQuantity = batchSum; await DB.update('inventory', i); changed = true; }
             }
             if(changed) { localInventory = await DB.getAll('inventory'); localBatches = await DB.getAll('batches'); }
@@ -937,7 +959,7 @@
             for(let op of localProductionOrders) {
                 let opChanged = false;
                 if(!op.picking) { op.picking = { status: 'pendente', responsible: '', start: null, end: null, duration: 0, pickedItems: {} }; opChanged = true; }
-                if(!op.recipeCategory) { const rec = localRecipes.find(r=>r.id===op.recipeId); if(rec) { op.recipeCategory = rec.category; opChanged = true; } }
+                if(!op.recipeCategory) { const rec = localRecipes.find(r=>r.id == op.recipeId); if(rec) { op.recipeCategory = rec.category; opChanged = true; } }
                 if(typeof op.isExtra === 'undefined') { op.isExtra = false; opChanged = true; } 
                 if(opChanged) await DB.update('productionOrders', op);
             }
@@ -967,84 +989,70 @@
         const mf = id('consumption-month-filter'); if(mf) { mf.innerHTML = months.map((m,i)=>`<option value="${i+1}">${m}</option>`).join(''); mf.value = cm; }
     }
 
-    // --- LEITOR DE CÓDIGO (SCANNER) ---
-    let currentScannerProduct = null;
+    // --- LEITOR DE CÓDIGO (SCANNER - ASSOCIAÇÃO) ---
+    let lastScannedCode = '';
     
     addEvt('scanner-input', 'keypress', e => {
         if(e.key === 'Enter') {
             const code = e.target.value.trim();
             if(!code) return;
-            const p = localInventory.find(i => i.code === code);
-            const box = id('scanner-result-box');
+            lastScannedCode = code;
+            
+            // Procura se tem barcode igual, ou se tem código interno igual
+            const p = localInventory.find(i => i.barcode === code || i.code === code);
+            const boxResult = id('scanner-result-box');
+            const boxAssociate = id('scanner-associate-box');
             
             if(p) {
-                currentScannerProduct = p;
+                // Achou! Exibe o resultado e esconde associação
+                hide(boxAssociate); boxAssociate.classList.add('opacity-0', 'translate-y-4');
+                
                 id('scan-res-name').innerText = p.name;
-                id('scan-res-code').innerText = p.code;
-                id('scan-res-supplier').innerText = p.supplier || '-';
+                id('scan-res-code').innerText = p.code || 'N/D';
+                id('scan-res-barcode').innerText = p.barcode || 'N/D';
                 id('scan-res-type').innerText = typeLabels[p.type] || 'Insumo';
                 id('scan-res-stock').innerText = (p.totalQuantity||0).toFixed(2);
-                id('scan-qty').value = '';
                 
-                box.classList.remove('hidden');
-                setTimeout(() => box.classList.remove('opacity-0', 'translate-y-4'), 10);
-                id('scan-qty').focus();
+                show(boxResult);
+                setTimeout(() => boxResult.classList.remove('opacity-0', 'translate-y-4'), 10);
             } else {
-                box.classList.add('hidden', 'opacity-0', 'translate-y-4');
-                showNotif('Produto não encontrado!', true);
+                // Não achou! Pede para associar
+                hide(boxResult); boxResult.classList.add('opacity-0', 'translate-y-4');
+                
+                id('unrecognized-code').innerText = code;
+                createSearchableSelect(id('associate-searchable-container'), localInventory, 'Pesquise pelo nome do insumo...');
+                
+                show(boxAssociate);
+                setTimeout(() => boxAssociate.classList.remove('opacity-0', 'translate-y-4'), 10);
+                showNotif('Código não reconhecido no sistema.', true);
             }
             e.target.value = '';
         }
     });
 
-    addEvt('btn-scan-in', 'click', async () => {
-        if(!currentScannerProduct) return;
-        const qty = parseFloat(id('scan-qty').value);
-        if(!qty || qty <= 0) return showNotif('Informe uma quantidade válida!', true);
-        
-        show(id('loading-overlay'));
-        try {
-            const p = await DB.get('inventory', currentScannerProduct.id);
-            p.totalQuantity += qty;
-            await DB.update('inventory', p);
-            
-            const autoBatch = 'LEITOR-' + new Date().getTime().toString(36).toUpperCase();
-            await DB.add('batches', { productId: p.id, code: autoBatch, quantity: qty, expiryDate: null, isReleased: true });
-            await DB.add('history', { productId: p.id, batchCode: autoBatch, type: 'entrada', quantity: qty, date: new Date().toISOString().split('T')[0], reason: 'Entrada Rápida Scanner' });
-            
-            await refreshData();
-            showNotif(`Entrada de ${qty} em ${p.name} realizada com sucesso!`);
-            id('scanner-result-box').classList.add('hidden');
-            id('scanner-input').focus();
-        } catch(e) { showNotif('Erro na gravação', true); } finally { hide(id('loading-overlay')); }
-    });
+    addEvt('btn-associate-code', 'click', async () => {
+        const searchInput = id('associate-searchable-container').querySelector('input');
+        if(!searchInput) return;
+        const selectedId = searchInput.dataset.selectedId;
+        if(!selectedId) return showNotif('Selecione um produto da lista antes de vincular!', true);
 
-    addEvt('btn-scan-out', 'click', async () => {
-        if(!currentScannerProduct) return;
-        const qty = parseFloat(id('scan-qty').value);
-        if(!qty || qty <= 0) return showNotif('Informe uma quantidade válida!', true);
-        
         show(id('loading-overlay'));
         try {
-            const p = await DB.get('inventory', currentScannerProduct.id);
-            const { plan, isSufficient } = getFIFOPlan(p.id, qty);
-            
-            if(!isSufficient) throw new Error('Saldo insuficiente ou lote bloqueado.');
-            
-            for(const pl of plan) { 
-                const b = await DB.get('batches', pl.batchId); 
-                b.quantity -= pl.quantity; 
-                await DB.update('batches', b); 
+            const item = await DB.get('inventory', selectedId);
+            if(item) {
+                item.barcode = lastScannedCode;
+                await DB.update('inventory', item);
+                await refreshData();
+                showNotif(`Código de barras salvo com sucesso para ${item.name}!`);
+                
+                hide(id('scanner-associate-box')); id('scanner-associate-box').classList.add('opacity-0', 'translate-y-4');
+                id('scanner-input').focus();
             }
-            p.totalQuantity -= qty; 
-            await DB.update('inventory', p);
-            await DB.add('history', { productId: p.id, type: 'saída', quantity: qty, date: new Date().toISOString().split('T')[0], reason: 'Saída Rápida Scanner' });
-            
-            await refreshData();
-            showNotif(`Saída de ${qty} em ${p.name} realizada com sucesso!`);
-            id('scanner-result-box').classList.add('hidden');
-            id('scanner-input').focus();
-        } catch(e) { showNotif(e.message, true); } finally { hide(id('loading-overlay')); }
+        } catch(e) {
+            showNotif('Erro ao vincular código.', true);
+        } finally {
+            hide(id('loading-overlay'));
+        }
     });
 
     // --- SIDEBAR BADGES & ALERTS ---
@@ -1109,7 +1117,7 @@
         
         document.querySelectorAll('#screen-inventory .table-header-sortable').forEach(th => { const icon = th.querySelector('i'); if(icon) { if (th.dataset.sort === invSort.col) icon.className = invSort.asc ? 'fa-solid fa-sort-up ml-1 text-ios-blue' : 'fa-solid fa-sort-down ml-1 text-ios-blue'; else icon.className = 'fa-solid fa-sort ml-1 text-ios-textMuted'; } });
         let list = localInventory.filter(i => i.name.toLowerCase().includes(term) && (!sup || i.supplier === sup) && (!typ || i.type === typ));
-        const getExp = item => localBatches.filter(bt=>bt.productId===item.id && bt.quantity>0 && bt.expiryDate).sort((x,y)=>new Date(x.expiryDate)-new Date(y.expiryDate))[0]?.expiryDate || '9999-12-31';
+        const getExp = item => localBatches.filter(bt=>bt.productId==item.id && bt.quantity>0 && bt.expiryDate).sort((x,y)=>new Date(x.expiryDate)-new Date(y.expiryDate))[0]?.expiryDate || '9999-12-31';
         list.sort((a,b) => { let valA, valB; if(invSort.col === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } else if(invSort.col === 'supplier') { valA = (a.supplier||'').toLowerCase(); valB = (b.supplier||'').toLowerCase(); } else if(invSort.col === 'totalQuantity') { valA = a.totalQuantity||0; valB = b.totalQuantity||0; } else if(invSort.col === 'expiry') { valA = getExp(a); valB = getExp(b); } if(valA < valB) return invSort.asc ? -1 : 1; if(valA > valB) return invSort.asc ? 1 : -1; return 0; });
         if(!list.length) { tbody.innerHTML = `<tr><td colspan="5" class="base-td text-center text-ios-textMuted py-8">Nenhum item em estoque.</td></tr>`; return; }
         tbody.innerHTML = list.map(item => {
@@ -1127,9 +1135,9 @@
     addEvt('btn-clear-hist-filters', 'click', () => { if(id('hist-filter-start')) id('hist-filter-start').value = ''; if(id('hist-filter-end')) id('hist-filter-end').value = ''; if(id('hist-filter-type')) id('hist-filter-type').value = ''; renderItemDetailsHistory(); });
 
     function renderItemDetailsHistory() {
-        const pId = currentHistoryProductId; if(!pId) return; const p = localInventory.find(i=>i.id===pId); if(!p) return;
+        const pId = currentHistoryProductId; if(!pId) return; const p = localInventory.find(i=>i.id==pId); if(!p) return;
         const cont = id('details-history-container'); if(!cont) return;
-        let hist = localHistory.filter(h=>h.productId===pId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+        let hist = localHistory.filter(h=>h.productId==pId).sort((a,b)=>new Date(b.date)-new Date(a.date));
         const start = id('hist-filter-start')?.value; const end = id('hist-filter-end')?.value; const type = id('hist-filter-type')?.value;
         if (start || end || type) show(id('btn-clear-hist-filters')); else hide(id('btn-clear-hist-filters'));
         if(start) hist = hist.filter(h => h.date >= start); if(end) hist = hist.filter(h => h.date <= end);
@@ -1139,10 +1147,11 @@
     }
 
     function openDetails(pId) {
-        currentHistoryProductId = pId; const p = localInventory.find(i=>i.id===pId); if(!p) return;
+        currentHistoryProductId = pId; const p = localInventory.find(i=>i.id==pId); if(!p) return;
         if(id('details-product-name')) id('details-product-name').innerText = p.name; 
         if(id('details-product-type-badge')) id('details-product-type-badge').innerText = typeLabels[p.type||'insumo']; 
         if(id('details-product-code')) id('details-product-code').innerText = p.code||'-'; 
+        if(id('details-product-barcode')) id('details-product-barcode').innerText = p.barcode||'Não cadastrado'; 
         if(id('details-supplier')) id('details-supplier').innerText = p.supplier||'-'; 
         if(id('details-lead-time')) id('details-lead-time').innerText = (p.leadTime||0) + ' dias';
         if(id('details-min-stock')) id('details-min-stock').innerText = (p.minStock||0).toFixed(2);
@@ -1152,6 +1161,7 @@
         if(id('edit-product-name')) id('edit-product-name').value = p.name; 
         if(id('edit-product-type')) id('edit-product-type').value = p.type||'insumo'; 
         if(id('edit-product-code')) id('edit-product-code').value = p.code||''; 
+        if(id('edit-product-barcode')) id('edit-product-barcode').value = p.barcode||''; 
         if(id('edit-supplier')) id('edit-supplier').value = p.supplier||'';
         if(id('edit-lead-time')) id('edit-lead-time').value = p.leadTime||0;
         if(id('edit-min-stock')) id('edit-min-stock').value = p.minStock||0;
@@ -1159,7 +1169,7 @@
         const is8110 = p.code === '8110';
         const batchesTable = id('details-batches-table');
         if(batchesTable) {
-            batchesTable.innerHTML = localBatches.filter(b=>b.productId===pId && b.quantity>0).map(b=>{
+            batchesTable.innerHTML = localBatches.filter(b=>b.productId==pId && b.quantity>0).map(b=>{
                 let statusHtml = `<span class="text-xs text-ios-green font-bold"><i class="fa-solid fa-check mr-1"></i>Liberado</span>`;
                 if(is8110) { statusHtml = `<div class="flex items-center gap-2" title="Lotes não liberados não entram em OP nem Requisição"><input type="checkbox" class="toggle-status toggle-release-batch" data-bid="${b.id}" ${b.isReleased?'checked':''}><span class="text-xs font-bold ${b.isReleased?'text-ios-green':'text-ios-orange'} w-16">${b.isReleased?'Liberado':'Quarentena'}</span></div>`; } 
                 else if (b.isReleased === false) { statusHtml = `<div class="flex items-center gap-2"><input type="checkbox" class="toggle-status toggle-release-batch" data-bid="${b.id}"><span class="text-xs font-bold text-ios-orange w-16">Bloqueado</span></div>`; }
@@ -1183,7 +1193,7 @@
         const delBtn = e.target.closest('.del-batch-btn');
         if(delBtn) showConfirmationModal('Excluir Lote?', 'Atenção: Apagar o lote remove a quantidade do saldo sem registrar saída.', async () => { show(id('loading-overlay')); await DB.remove('batches', delBtn.dataset.id); await refreshData(); openDetails(id('edit-item-id').value); hide(id('loading-overlay')); showNotif('Lote apagado'); });
         const editBtn = e.target.closest('.edit-batch-btn');
-        if(editBtn) { const b = localBatches.find(x => x.id === editBtn.dataset.id); if(b) { if(id('edit-batch-id')) id('edit-batch-id').value = b.id; if(id('edit-batch-product-id')) id('edit-batch-product-id').value = b.productId; if(id('edit-batch-code')) id('edit-batch-code').value = b.code; if(id('edit-batch-qty')) id('edit-batch-qty').value = b.quantity; if(id('edit-batch-expiry')) id('edit-batch-expiry').value = b.expiryDate || ''; show(id('edit-batch-modal')); } }
+        if(editBtn) { const b = localBatches.find(x => x.id == editBtn.dataset.id); if(b) { if(id('edit-batch-id')) id('edit-batch-id').value = b.id; if(id('edit-batch-product-id')) id('edit-batch-product-id').value = b.productId; if(id('edit-batch-code')) id('edit-batch-code').value = b.code; if(id('edit-batch-qty')) id('edit-batch-qty').value = b.quantity; if(id('edit-batch-expiry')) id('edit-batch-expiry').value = b.expiryDate || ''; show(id('edit-batch-modal')); } }
     });
 
     addEvt('edit-batch-form', 'submit', async e => {
@@ -1203,7 +1213,7 @@
         if(leadTime === 0) return showNotif('Informe o Prazo de Entrega (Dias) primeiro!', true);
         const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const startDateStr = thirtyDaysAgo.toISOString().split('T')[0];
-        const recentOut = localHistory.filter(h => h.productId === pId && (h.type === 'saída' || h.type === 'requisição') && h.date >= startDateStr);
+        const recentOut = localHistory.filter(h => h.productId == pId && (h.type === 'saída' || h.type === 'requisição') && h.date >= startDateStr);
         const totalOut = recentOut.reduce((sum, h) => sum + h.quantity, 0);
         const dailyAvg = totalOut / 30; 
         const finalSuggestion = dailyAvg * (leadTime + safetyMargin);
@@ -1214,18 +1224,18 @@
     addEvt('edit-item-form', 'submit', async e => { 
         e.preventDefault(); show(id('loading-overlay')); const p = await DB.get('inventory', id('edit-item-id').value); 
         if(!p) return;
-        p.name = id('edit-product-name').value; p.type = id('edit-product-type').value; p.code = id('edit-product-code').value; p.supplier = id('edit-supplier').value; 
+        p.name = id('edit-product-name').value; p.type = id('edit-product-type').value; p.code = id('edit-product-code').value; p.barcode = id('edit-product-barcode').value; p.supplier = id('edit-supplier').value; 
         p.leadTime = parseInt(id('edit-lead-time').value) || 0; p.minStock = parseFloat(id('edit-min-stock').value) || 0;
         await DB.update('inventory', p); await refreshData(); openDetails(p.id); showNotif('Atualizado!'); hide(id('item-details-edit')); show(id('item-details-view')); hide(id('loading-overlay'));
     });
     addEvt('btn-delete-item', 'click', () => { const pId = id('edit-item-id').value; showConfirmationModal('Excluir?', 'Histórico e lotes serão perdidos.', async () => { show(id('loading-overlay')); await DB.remove('inventory', pId); await refreshData(); hide(id('item-details-modal')); hide(id('loading-overlay')); showNotif('Excluído'); }); });
 
-    // --- ENTRADA (AUTO-FILL) ---
+    // --- ENTRADA (Lógica com try/catch seguro) ---
     const entryCodeInput = document.querySelector('#entry-form input[name="product-code"]');
     if(entryCodeInput) {
         entryCodeInput.addEventListener('input', e => {
             const code = e.target.value.trim(); if(!code) return;
-            const p = localInventory.find(i => i.code === code);
+            const p = localInventory.find(i => i.code === code || i.barcode === code);
             if(p) {
                 const form = id('entry-form');
                 form.elements['product-name'].value = p.name || ''; form.elements['product-type'].value = p.type || 'insumo'; form.elements['supplier'].value = p.supplier || ''; form.elements['lead-time'].value = p.leadTime || ''; form.elements['min-stock'].value = p.minStock || '';
@@ -1236,24 +1246,42 @@
     }
 
     addEvt('entry-form', 'submit', async e => {
-        e.preventDefault(); show(id('loading-overlay')); const fd = new FormData(e.target); const autoBatch = 'LT-' + new Date().getTime().toString(36).toUpperCase();
-        const data = {code:fd.get('product-code'), type:fd.get('product-type'), name:fd.get('product-name'), supplier:fd.get('supplier'), qtd:parseFloat(fd.get('quantity')), valid:id('expiry-date').value, minStock: parseFloat(fd.get('min-stock')) || 0, leadTime: parseInt(fd.get('lead-time')) || 0 };
-        let p = await DB.getByIndex('inventory','code',data.code); if(!p || !data.code) { p = {code:data.code, name:data.name, type:data.type, supplier:data.supplier, totalQuantity:0, minStock: data.minStock, leadTime: data.leadTime}; }
-        else { p.supplier = data.supplier; p.name = data.name; p.type = data.type; if (data.minStock > 0) p.minStock = data.minStock; if (data.leadTime > 0) p.leadTime = data.leadTime; }
+        e.preventDefault(); 
+        show(id('loading-overlay')); 
         
-        if(!p.id) p.id = await DB.add('inventory', p); else await DB.update('inventory', p);
+        try {
+            const fd = new FormData(e.target); 
+            const autoBatch = 'LT-' + new Date().getTime().toString(36).toUpperCase();
+            const data = {code:fd.get('product-code'), type:fd.get('product-type'), name:fd.get('product-name'), supplier:fd.get('supplier'), qtd:parseFloat(fd.get('quantity')), valid:id('expiry-date').value, minStock: parseFloat(fd.get('min-stock')) || 0, leadTime: parseInt(fd.get('lead-time')) || 0 };
+            
+            let p = await DB.getByIndex('inventory','code',data.code); 
+            if(!p || !data.code) { 
+                p = {code:data.code, name:data.name, type:data.type, supplier:data.supplier, totalQuantity:0, minStock: data.minStock, leadTime: data.leadTime}; 
+                p.id = await DB.add('inventory', p);
+            } else { 
+                p.supplier = data.supplier; p.name = data.name; p.type = data.type; if (data.minStock > 0) p.minStock = data.minStock; if (data.leadTime > 0) p.leadTime = data.leadTime; 
+                await DB.update('inventory', p);
+            }
 
-        const freshP = await DB.get('inventory', p.id);
-        freshP.totalQuantity += data.qtd; await DB.update('inventory', freshP);
-        
-        const isReleased = (freshP.code !== '8110');
-        await DB.add('batches', {productId:freshP.id, code:autoBatch, quantity:data.qtd, expiryDate:data.valid, isReleased: isReleased});
-        await DB.add('history', {productId:freshP.id, batchCode:autoBatch, type:'entrada', quantity:data.qtd, date:id('receipt-date').value, reason: `Recepção Forn. ${freshP.supplier}`});
-        
-        await refreshData();
-        e.target.reset(); if(id('receipt-date')) id('receipt-date').value = new Date().toISOString().split('T')[0];
-        hide(id('loading-overlay'));
-        if(!isReleased) showNotif('Registrada! Lote em Quarentena.', true); else showNotif('Entrada Registrada!'); 
+            // Garante que usa o p recem buscado ou atualizado
+            p.totalQuantity = (p.totalQuantity || 0) + data.qtd; 
+            await DB.update('inventory', p);
+            
+            const isReleased = (p.code !== '8110');
+            await DB.add('batches', {productId:p.id, code:autoBatch, quantity:data.qtd, expiryDate:data.valid, isReleased: isReleased});
+            await DB.add('history', {productId:p.id, batchCode:autoBatch, type:'entrada', quantity:data.qtd, date:id('receipt-date').value, reason: `Recepção Forn. ${p.supplier}`});
+            
+            await refreshData();
+            e.target.reset(); if(id('receipt-date')) id('receipt-date').value = new Date().toISOString().split('T')[0];
+            
+            if(!isReleased) showNotif('Registrada! Lote em Quarentena (8110).', true); else showNotif('Entrada Registrada!'); 
+            
+        } catch (err) {
+            console.error(err);
+            showNotif('Falha ao processar entrada. Verifique os dados.', true);
+        } finally {
+            hide(id('loading-overlay')); 
+        }
     });
 
     // --- RECEITAS ---
@@ -1273,7 +1301,7 @@
         
         grid.innerHTML = f.map(r => {
             const isSemi = r.isSemi;
-            const ingredientsHTML = (r.ingredients || []).map(i=>`<li class="flex justify-between py-1 border-b border-ios-border/30 last:border-0"><span class="truncate pr-2">${localInventory.find(p=>p.id===i.productId)?.name||'?'}</span><span class="font-bold text-ios-blue bg-ios-bg px-2 rounded">${i.quantity}</span></li>`).join('');
+            const ingredientsHTML = (r.ingredients || []).map(i=>`<li class="flex justify-between py-1 border-b border-ios-border/30 last:border-0"><span class="truncate pr-2">${localInventory.find(p=>p.id==i.productId)?.name||'?'}</span><span class="font-bold text-ios-blue bg-ios-bg px-2 rounded">${i.quantity}</span></li>`).join('');
             return `
             <div class="card relative flex flex-col border border-transparent ${isSemi ? 'hover:border-ios-orange/50' : 'hover:border-ios-cardHover'} transition-all">
                 <div class="absolute top-4 right-4 flex gap-2">
@@ -1301,7 +1329,7 @@
     addEvt('recipe-is-semi', 'change', e => { if(e.target.checked) show(id('yield-wrapper')); else hide(id('yield-wrapper')); });
 
     function openEditRecipe(rId) {
-        const r = localRecipes.find(x => x.id === rId); if(!r) return;
+        const r = localRecipes.find(x => x.id == rId); if(!r) return;
         if(id('edit-recipe-id')) id('edit-recipe-id').value = r.id; 
         if(id('recipe-name')) id('recipe-name').value = r.name; 
         if(id('recipe-category')) id('recipe-category').value = r.category;
@@ -1347,7 +1375,7 @@
                 if (yPos > 240) { doc.addPage(); yPos = 20; }
                 doc.setFontSize(14); doc.setTextColor(50, 50, 55); doc.text(r.name, 14, yPos); yPos += 6;
                 doc.setFontSize(10); doc.setTextColor(120, 120, 120); const tipo = r.isSemi ? `Semi-Acabado (Rende: ${r.outputYield || 1})` : "Produto Acabado"; doc.text(`Classificação: ${tipo}`, 14, yPos); yPos += 4;
-                const tableData = (r.ingredients || []).map(i => { return [localInventory.find(p => p.id === i.productId)?.name || 'Desconhecido', i.quantity]; });
+                const tableData = (r.ingredients || []).map(i => { return [localInventory.find(p => p.id == i.productId)?.name || 'Desconhecido', i.quantity]; });
                 doc.autoTable({ startY: yPos, head: [['Ingrediente / Insumo', 'Quantidade Base']], body: tableData, theme: 'striped', headStyles: { fillColor: [44, 44, 46], textColor: [255, 255, 255] }, alternateRowStyles: { fillColor: [248, 248, 250] }, margin: { left: 14, right: 14 }, styles: { fontSize: 9 } });
                 yPos = doc.lastAutoTable.finalY + 12;
             }); yPos += 5;
@@ -1392,7 +1420,7 @@
         createSearchableSelect(div.querySelector('.searchable-container'), localInventory, 'Buscar item...', item => { updatePlan(); });
         qtyInput.addEventListener('input', updatePlan); div.querySelector('.remove-ing').addEventListener('click', () => div.remove());
 
-        if(prefillId) { const ingProd = localInventory.find(p => p.id === prefillId); if(ingProd) { const inp = div.querySelector('.searchable-container input'); if(inp) { inp.value = ingProd.name; inp.dataset.selectedId = ingProd.id; updatePlan(); } } }
+        if(prefillId) { const ingProd = localInventory.find(p => p.id == prefillId); if(ingProd) { const inp = div.querySelector('.searchable-container input'); if(inp) { inp.value = ingProd.name; inp.dataset.selectedId = ingProd.id; updatePlan(); } } }
     }
     addEvt('add-ingredient-btn', 'click', () => { const c = id('ingredients-container'); if(c) addIngRowReq(c); });
     
@@ -1425,11 +1453,11 @@
 
     function openBatchSelector(pId, qtyNeeded, currentPlan) {
         if(id('batch-selector-needed')) id('batch-selector-needed').innerText = qtyNeeded.toFixed(4);
-        const batches = localBatches.filter(b => b.productId === pId && b.quantity > 0 && b.isReleased !== false);
+        const batches = localBatches.filter(b => b.productId == pId && b.quantity > 0 && b.isReleased !== false);
         const listEl = id('batch-selector-list');
         if(listEl) {
             listEl.innerHTML = batches.map(b => {
-                const inPlan = currentPlan.find(p => p.batchId === b.id); const val = inPlan ? inPlan.quantity : '';
+                const inPlan = currentPlan.find(p => p.batchId == b.id); const val = inPlan ? inPlan.quantity : '';
                 return `<div class="flex justify-between items-center mb-3 bg-ios-input p-3 rounded-xl border border-ios-border"><span class="text-white font-medium"><i class="fa-solid fa-box mr-2 text-ios-textMuted"></i>${b.code} <br><span class="text-xs text-ios-textMuted ml-6">Disponível Físico: ${b.quantity.toFixed(2)}</span></span><input type="number" class="form-input w-28 text-right batch-input font-bold" data-bid="${b.id}" data-bcode="${b.code}" max="${b.quantity + (inPlan?inPlan.quantity:0)}" value="${val}" placeholder="0"></div>`;
             }).join('');
         }
@@ -1462,7 +1490,35 @@
         hide(id('batch-selector-modal'));
     });
 
-    // --- SEPARAÇÃO AGRUPADA (PICKING KITTING) & EXTRAS ---
+    // --- SEPARAÇÃO AGRUPADA (PICKING KITTING) ---
+    // Adicionada Lógica do Scanner
+    addEvt('picking-scanner', 'keypress', e => {
+        if(e.key === 'Enter') {
+            const code = e.target.value.trim();
+            if(!code) return;
+            
+            const p = localInventory.find(i => i.barcode === code || i.code === code);
+            if (!p) {
+                showNotif('Produto não encontrado no sistema!', true);
+            } else {
+                const row = document.querySelector(`#picking-checklist-body tr[data-pid="${p.id}"]`);
+                if (row) {
+                    const inputQty = row.querySelector('.picking-qty-input');
+                    if(inputQty) {
+                        inputQty.focus();
+                        inputQty.select();
+                    }
+                    row.classList.add('bg-ios-blue/30');
+                    setTimeout(() => row.classList.remove('bg-ios-blue/30'), 2000);
+                    showNotif(`[${p.name}] localizado! Digite a quantidade no carrinho.`);
+                } else {
+                    showNotif('CUIDADO: Este item NÃO pertence a esta linha de separação!', true);
+                }
+            }
+            e.target.value = '';
+        }
+    });
+
     function renderPickingScreen() {
         const container = id('picking-lines-container');
         if(!container) return;
@@ -1516,7 +1572,7 @@
                             <div class="${op.isExtra ? 'pl-2' : ''}">
                                 <span class="font-bold text-white">${op.recipeName}</span> <span class="text-ios-blue">(${op.multiplier}x)</span>
                                 ${op.isExtra ? '<span class="badge bg-ios-red text-white text-[9px] ml-1">EXTRA</span>' : ''}<br>
-                                <span class="text-[10px] text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>Data: <strong class="text-gray-300">${new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong> | OP-${op.id.substring(0,6)}</span>
+                                <span class="text-[10px] text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>Data: <strong class="text-gray-300">${new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong> | OP-${String(op.id).substring(0,6)}</span>
                             </div>
                             <div class="ml-2">${timerHtml}</div>
                         </div>`;
@@ -1553,7 +1609,7 @@
         doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
 
         const tableData = Object.keys(agg).map(pidStr => {
-            const pName = localInventory.find(p => p.id === pidStr)?.name || 'Desconhecido';
+            const pName = localInventory.find(p => p.id == pidStr)?.name || 'Desconhecido';
             return [pName, agg[pidStr].toFixed(4)];
         });
 
@@ -1591,6 +1647,7 @@
             show(id('picking-active-view'));
             const actResp = id('picking-active-resp'); if(actResp) actResp.innerText = picking.responsible;
             if(timerEl) { timerEl.dataset.start = picking.start; timerEl.classList.add('timer-active'); }
+            setTimeout(() => id('picking-scanner')?.focus(), 100); // Auto-focus no scanner
         } else {
             show(id('picking-setup-view'));
             hide(id('picking-active-view'));
@@ -1601,7 +1658,7 @@
         const checklistBody = id('picking-checklist-body');
         if(checklistBody) {
             checklistBody.innerHTML = aggregatedItems.map((ing) => {
-                const product = localInventory.find(p => p.id === ing.productId);
+                const product = localInventory.find(p => p.id == ing.productId);
                 const needed = ing.adjustedQuantity;
                 let totalPicked = 0;
                 ops.forEach(op => { if(op.picking && op.picking.pickedItems && op.picking.pickedItems[ing.productId]) totalPicked += op.picking.pickedItems[ing.productId]; });
@@ -1613,7 +1670,7 @@
                     <td class="px-6 py-4 text-right font-bold text-ios-blue text-lg">${needed.toFixed(4)}</td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
-                            <input type="number" step="0.001" value="${totalPicked > 0 ? totalPicked : ''}" class="form-input py-2 px-3 w-28 text-center font-bold text-white picking-qty-input bg-ios-bg border-ios-border text-lg" placeholder="0.000">
+                            <input type="number" step="0.001" value="${totalPicked > 0 ? totalPicked : ''}" class="form-input py-2 px-3 w-28 text-center font-bold text-white picking-qty-input bg-ios-bg border-ios-border text-lg transition-all" placeholder="0.000">
                             <button class="bg-ios-cardHover border border-ios-border text-xs px-3 py-2 rounded-lg hover:text-white btn-fill-all shadow" title="Preencher Total"><i class="fa-solid fa-check-double"></i></button>
                         </div>
                     </td>
@@ -1632,7 +1689,7 @@
         const now = Date.now();
         show(id('loading-overlay'));
         for(let opId of activePickingOpIds) {
-            let op = localProductionOrders.find(x => x.id === opId);
+            let op = localProductionOrders.find(x => x.id == opId);
             if(op) { op.picking.status = 'em_andamento'; op.picking.start = now; op.picking.responsible = resp; await DB.update('productionOrders', op); }
         }
         
@@ -1645,6 +1702,7 @@
         await refreshData();
         hide(id('loading-overlay'));
         showNotif('Cronômetro Iniciado!'); 
+        setTimeout(() => id('picking-scanner')?.focus(), 100);
     });
 
     addEvt('picking-checklist-body', 'click', e => {
@@ -1686,7 +1744,7 @@
             Object.keys(pickedTotals).forEach(pidStr => {
                 const pid = pidStr; let remainingPicked = pickedTotals[pid];
                 opsToUpdate.forEach(op => {
-                    const ing = op.ingredients.find(i => i.productId === pid);
+                    const ing = op.ingredients.find(i => i.productId == pid);
                     if(ing) {
                         const take = Math.min(ing.adjustedQuantity, remainingPicked);
                         if(!op.picking.pickedItems) op.picking.pickedItems = {};
@@ -1765,7 +1823,7 @@
                 <div class="bg-ios-bg rounded-lg p-3 mt-auto border border-ios-border">
                     <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-2">Desconto Físico Necessário</p>
                     <ul class="text-sm text-gray-300 space-y-1">${(po.ingredients || []).map(i=>{
-                        const pName = localInventory.find(pd=>pd.id===i.productId)?.name||'?';
+                        const pName = localInventory.find(pd=>pd.id==i.productId)?.name||'?';
                         const pLotes = (i.consumptionPlan||[]).map(x=>x.batchCode).join(', ') || 'PEPS Automático';
                         return `<li class="flex flex-col border-b border-ios-border/50 pb-2 mb-1 last:border-0 last:pb-0 last:mb-0"><div class="flex justify-between"><span class="truncate pr-2">${pName}</span><span class="font-bold text-ios-blue">${i.adjustedQuantity.toFixed(4)}</span></div><span class="text-[10px] text-ios-textMuted mt-1"><i class="fa-solid fa-box mr-1"></i>${pLotes}</span></li>`;
                     }).join('')}</ul>
@@ -1784,7 +1842,7 @@
         const searchInput = id('po-recipe-searchable-container')?.querySelector('input');
         if(!searchInput) return;
         const rId = searchInput.dataset.selectedId;
-        const rec = localRecipes.find(r=>r.id===rId); 
+        const rec = localRecipes.find(r=>r.id==rId); 
         const qtyEl = id('po-quantity'); const mult = qtyEl ? (parseFloat(qtyEl.value) || 1) : 1;
         const bodyEl = id('po-ingredients-body'); const outEl = id('po-total-output');
         
@@ -1793,7 +1851,7 @@
         
         if(bodyEl) {
             bodyEl.innerHTML = (rec.ingredients || []).map(i => {
-                const p = localInventory.find(x=>x.id===i.productId); const reqQty = i.quantity * mult;
+                const p = localInventory.find(x=>x.id==i.productId); const reqQty = i.quantity * mult;
                 const { plan, isSufficient } = getFIFOPlan(i.productId, reqQty);
                 const planText = plan.map(x => `<strong>${x.batchCode}</strong>(${x.quantity.toFixed(2)})`).join(', ');
 
@@ -1831,7 +1889,7 @@
         const searchInput = id('po-recipe-searchable-container')?.querySelector('input');
         if(!searchInput) return;
         const rId = searchInput.dataset.selectedId;
-        const rec = localRecipes.find(r=>r.id===rId); if(!rec) return showNotif('Receita inválida', true);
+        const rec = localRecipes.find(r=>r.id==rId); if(!rec) return showNotif('Receita inválida', true);
         const mult = parseFloat(id('po-quantity')?.value || 1); const totalOut = rec.isSemi ? parseFloat(id('po-total-output')?.value || 0) : null;
         const bodyEl = id('po-ingredients-body'); if(!bodyEl) return;
         const ingredients = [...bodyEl.children].map(tr => { return { productId: tr.dataset.productId, adjustedQuantity: parseFloat(tr.querySelector('.po-ing-qty').value), consumptionPlan: JSON.parse(tr.dataset.plan || '[]') }; });
@@ -1882,12 +1940,12 @@
                         await DB.add('history', { productId: product.id, type: 'saída', quantity: ing.adjustedQuantity, date: op.date, reason: `Prod: OP-${op.id}` });
                         
                         const p = op.date.substring(0,7); let consumptions = await DB.getAll('monthlyConsumption');
-                        let record = consumptions.find(x => x.period === p && x.productId === product.id);
+                        let record = consumptions.find(x => x.period === p && x.productId == product.id);
                         if(record) { record.totalConsumed += ing.adjustedQuantity; record.id = record.id; await DB.update('monthlyConsumption', record); }
                         else await DB.add('monthlyConsumption', { period: p, productId: product.id, totalConsumed: ing.adjustedQuantity });
                     }
                     if(op.quantityProduced) {
-                        const rec = localRecipes.find(r => r.id === op.recipeId);
+                        const rec = localRecipes.find(r => r.id == op.recipeId);
                         if(rec && rec.outputProductId) {
                             const outProduct = await DB.get('inventory', rec.outputProductId);
                             if(outProduct) {
@@ -1942,7 +2000,7 @@
         if(expList) {
             if(expiringBatches.length > 0) {
                 expList.innerHTML = expiringBatches.map(b => {
-                    const p = localInventory.find(i => i.id === b.productId);
+                    const p = localInventory.find(i => i.id == b.productId);
                     const diffTime = new Date(b.expiryDate) - new Date();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     let color = diffDays <= 7 ? 'text-ios-red' : 'text-ios-orange';
@@ -2002,10 +2060,10 @@
         const p = `${id('consumption-year-filter')?.value}-${String(id('consumption-month-filter')?.value).padStart(2,'0')}`;
         const term = id('search-consumption')?.value.toLowerCase() || '';
         let list = localMonthlyConsumption.filter(c => c.period === p);
-        if(term) list = list.filter(c => localInventory.find(i=>i.id===c.productId)?.name.toLowerCase().includes(term));
+        if(term) list = list.filter(c => localInventory.find(i=>i.id==c.productId)?.name.toLowerCase().includes(term));
         const tbody = id('consumption-table-body'); if(!tbody) return;
         if(!list.length) return tbody.innerHTML = `<tr><td colspan="2" class="base-td text-center border-none py-10">Nada registrado.</td></tr>`;
-        tbody.innerHTML = list.map(c => `<tr class="base-tr"><td class="base-td text-white">${localInventory.find(i=>i.id===c.productId)?.name||'?'}</td><td class="base-td text-right font-bold text-ios-blue">${c.totalConsumed.toFixed(2)}</td></tr>`).join('');
+        tbody.innerHTML = list.map(c => `<tr class="base-tr"><td class="base-td text-white">${localInventory.find(i=>i.id==c.productId)?.name||'?'}</td><td class="base-td text-right font-bold text-ios-blue">${c.totalConsumed.toFixed(2)}</td></tr>`).join('');
     }
 
     // --- AJUSTES MANUAIS E BACKUP ---
