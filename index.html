@@ -413,17 +413,31 @@
             </div>
 
             <!-- Configurações -->
-            <div id="screen-settings" class="screen-panel hidden">
-                <h1 class="title-lg">Ajustes do Aplicativo</h1>
-                <div class="card max-w-2xl mx-auto space-y-8 divide-y divide-ios-border">
-                    <div class="pt-2">
-                        <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-down mr-2 text-ios-blue"></i>Exportar Backup</h2>
-                        <p class="text-sm text-ios-textMuted mb-4">Gera um arquivo seguro contendo toda a base de dados em Nuvem (JSON).</p>
-                        <button id="btn-download-backup" class="w-full btn-secondary text-ios-blue border-ios-blue/30 bg-ios-blue/10">Baixar Cópia</button>
+        <div id="screen-settings" class="screen-panel hidden">
+            <h1 class="title-lg">Ajustes do Aplicativo</h1>
+            <div class="card max-w-2xl mx-auto space-y-8 divide-y divide-ios-border">
+                <div class="pt-2">
+                    <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-down mr-2 text-ios-blue"></i>Exportar Backup</h2>
+                    <p class="text-sm text-ios-textMuted mb-4">Gera um arquivo seguro contendo toda a base de dados em Nuvem (JSON).</p>
+                    <button id="btn-download-backup" class="w-full btn-secondary text-ios-blue border-ios-blue/30 bg-ios-blue/10">Baixar Cópia</button>
+                </div>
+                <div class="pt-8">
+                    <h2 class="title-md mb-1"><i class="fa-solid fa-cloud-arrow-up mr-2 text-ios-orange"></i>Restaurar Banco</h2>
+                    <p class="text-sm text-ios-textMuted mb-3">Carrega um arquivo de backup anterior. <strong>Isso substituirá as informações atuais.</strong></p>
+                    <div class="mb-4 p-3 bg-ios-bg rounded-lg border border-ios-border text-xs text-ios-textMuted">
+                        Última restauração: <span id="last-restore-date" class="font-bold text-white">Nunca</span>
                     </div>
+                    <button id="btn-upload-backup" class="w-full btn-secondary text-ios-orange border-ios-orange/30 bg-ios-orange/10">Selecionar Arquivo</button>
+                    <input type="file" id="backup-file-input" class="hidden" accept=".json">
+                </div>
+                <div class="pt-8">
+                    <h2 class="title-md text-ios-red mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo</h2>
+                    <p class="text-sm text-ios-textMuted mb-4">Ação irreversível.</p>
+                    <button id="btn-reset-database" class="w-full btn-danger bg-ios-red/20 text-ios-red border border-ios-red border-opacity-50 hover:bg-ios-red hover:text-white">Formatar Sistema</button>
                 </div>
             </div>
-        </main>
+        </div>
+    </main>
     </div>
 
     <!-- Modal Picking (Separação Agrupada - REVISADO) -->
