@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <script>
@@ -48,7 +47,6 @@
             .base-tr { @apply border-b border-ios-border hover:bg-ios-cardHover transition-colors; }
             .base-th { @apply px-5 py-4 font-semibold whitespace-nowrap; }
             .base-td { @apply px-5 py-4; }
-            .stat-icon { @apply p-3 rounded-xl flex items-center justify-center w-12 h-12 text-xl; }
             .modal-content { @apply bg-ios-card border border-ios-border rounded-3xl shadow-2xl p-6 w-full transform transition-all; }
             .badge { @apply text-xs font-semibold px-2 py-1 rounded-md; }
         }
@@ -96,17 +94,18 @@
         .ui-checkbox-success:checked { background-color: #30d158; border-color: #30d158; }
         
         .form-input { transition: all 0.4s ease; }
-        
         #main-camera-reader video, #picking-camera-reader video, #entry-camera-reader video, #entry-loc-camera-reader video, #address-camera-reader video { border-radius: 0.75rem; width: 100% !important; height: auto !important; object-fit: cover;}
     </style>
 </head>
 <body class="bg-ios-bg text-ios-text font-sans antialiased flex h-screen overflow-hidden w-full relative">
 
+    <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black bg-opacity-80 backdrop-blur-md transition-opacity">
         <div class="animate-spin rounded-full h-12 w-12 border-4 border-ios-cardHover border-t-ios-blue mb-4"></div>
         <p class="text-ios-textMuted font-medium" id="loading-text">Processando...</p>
     </div>
 
+    <!-- Notification -->
     <div id="notification-modal" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[2000] hidden py-3 px-6 rounded-full shadow-2xl font-semibold text-white transition-all text-sm backdrop-blur-md"></div>
 
     <!-- Tela de Login -->
@@ -123,26 +122,6 @@
 
     <!-- App Principal -->
     <div id="app-wrapper" class="flex h-screen overflow-hidden w-full hidden">
-        <!-- Barra Flutuante Global de Separação -->
-        <div id="global-picking-bar" class="fixed bottom-0 left-0 right-0 bg-ios-cardHover border-t border-ios-orange shadow-[0_-10px_30px_rgba(255,159,10,0.15)] z-[45] hidden slide-up-active backdrop-blur-md">
-            <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="bg-ios-orange/20 text-ios-orange p-2 rounded-full w-10 h-10 flex items-center justify-center animate-pulse"><i class="fa-solid fa-dolly"></i></div>
-                    <div>
-                        <h4 class="text-white font-bold text-sm" id="global-picking-title">Separação em Andamento</h4>
-                        <p class="text-xs text-ios-textMuted" id="global-picking-subtitle">Estoquista: -</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-6">
-                    <div class="text-right">
-                        <p class="text-[10px] uppercase text-ios-textMuted font-bold mb-0.5">Tempo Gasto</p>
-                        <div id="global-picking-timer" class="text-xl font-mono font-bold text-ios-orange tracking-wider">00:00</div>
-                    </div>
-                    <button id="btn-return-picking" class="btn-primary py-2 text-sm shadow-lg shadow-ios-blue/30"><i class="fa-solid fa-up-right-from-square mr-2"></i>Abrir Check-list</button>
-                </div>
-            </div>
-        </div>
-
         <!-- Sidebar -->
         <aside class="w-20 lg:w-64 bg-[#000000] border-r border-ios-border flex flex-col py-6 transition-all duration-300 z-40">
             <div class="px-4 mb-8 flex items-center justify-center lg:justify-start">
@@ -151,30 +130,23 @@
             </div>
             <nav class="flex-1 w-full px-3 space-y-2 overflow-y-auto">
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="dashboard"><i class="fa-solid fa-home w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Início</span></a>
-                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="addressing"><i class="fa-solid fa-map-location-dot w-6 text-center text-lg text-ios-blue"></i><span class="ml-3 hidden lg:block font-medium text-ios-blue">Endereçamento (Local)</span></a>
+                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="addressing"><i class="fa-solid fa-map-location-dot w-6 text-center text-lg text-ios-blue"></i><span class="ml-3 hidden lg:block font-medium text-ios-blue">Endereçamento</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="scanner"><i class="fa-solid fa-barcode w-6 text-center text-lg text-ios-green"></i><span class="ml-3 hidden lg:block font-medium text-ios-green">Cód. Barras (Item)</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="entry"><i class="fa-solid fa-box-open w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Entrada Lote</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="inventory"><i class="fa-solid fa-boxes-stacked w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Estoque Geral</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="recipes"><i class="fa-solid fa-book-bookmark w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Receitas</span></a>
-                
                 <div class="border-t border-ios-border my-2 mx-2"></div>
-                
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all relative" data-target="picking">
-                    <i class="fa-solid fa-dolly w-6 text-center text-lg text-ios-orange"></i>
-                    <span class="ml-3 hidden lg:block font-medium text-ios-orange">Separação (Picking)</span>
+                    <i class="fa-solid fa-dolly w-6 text-center text-lg text-ios-orange"></i><span class="ml-3 hidden lg:block font-medium text-ios-orange">Separação (Picking)</span>
                     <span id="badge-nav-picking" class="absolute top-3 right-3 w-2.5 h-2.5 bg-ios-orange rounded-full animate-pulse hidden"></span>
                 </a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all relative" data-target="production">
-                    <i class="fa-solid fa-hammer w-6 text-center text-lg"></i>
-                    <span class="ml-3 hidden lg:block font-medium">Produção (OP)</span>
+                    <i class="fa-solid fa-hammer w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Produção (OP)</span>
                     <span id="badge-nav-prod" class="absolute top-3 right-3 w-2.5 h-2.5 bg-ios-blue rounded-full animate-pulse hidden"></span>
                 </a>
-                
                 <div class="border-t border-ios-border my-2 mx-2"></div>
-                
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="requisitions"><i class="fa-solid fa-arrow-right-from-bracket w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Requisição Avulsa</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="adjustments"><i class="fa-solid fa-sliders w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Ajuste de Lote</span></a>
-                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="consumption"><i class="fa-solid fa-chart-line w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Consumo Mensal</span></a>
             </nav>
             <div class="mt-auto w-full px-3 pt-4 border-t border-ios-border">
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="settings"><i class="fa-solid fa-gear w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Ajustes App</span></a>
@@ -192,25 +164,21 @@
             
             <!-- Home / Dash Leve -->
             <div id="screen-dashboard" class="screen-panel flex-col gap-6">
-                <h1 class="title-lg mb-0">Menu Principal</h1>
+                <h1 class="title-lg mb-0">Menu Rápido</h1>
                 <p class="text-ios-textMuted mb-2 italic">"Não se gerencia o que não se mede, não se mede o que não se define, não se define o que não se entende..."</p>
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-green" onclick="navTo('scanner')">
-                        <i class="fa-solid fa-barcode text-4xl text-ios-green mb-3"></i>
-                        <span class="font-semibold text-white">Ler Código</span>
+                        <i class="fa-solid fa-barcode text-4xl text-ios-green mb-3"></i><span class="font-semibold text-white">Ler Código</span>
                     </button>
                     <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-blue" onclick="navTo('entry')">
-                        <i class="fa-solid fa-box-open text-4xl text-ios-blue mb-3"></i>
-                        <span class="font-semibold text-white">Nova Entrada</span>
+                        <i class="fa-solid fa-box-open text-4xl text-ios-blue mb-3"></i><span class="font-semibold text-white">Nova Entrada</span>
                     </button>
                     <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-orange" onclick="navTo('picking')">
-                        <i class="fa-solid fa-dolly text-4xl text-ios-orange mb-3"></i>
-                        <span class="font-semibold text-white">Separação</span>
+                        <i class="fa-solid fa-dolly text-4xl text-ios-orange mb-3"></i><span class="font-semibold text-white">Separação</span>
                     </button>
                     <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-blue" onclick="navTo('addressing')">
-                        <i class="fa-solid fa-map-location-dot text-4xl text-ios-blue mb-3"></i>
-                        <span class="font-semibold text-white">Endereços</span>
+                        <i class="fa-solid fa-map-location-dot text-4xl text-ios-blue mb-3"></i><span class="font-semibold text-white">Endereços</span>
                     </button>
                 </div>
 
@@ -232,22 +200,19 @@
                 </div>
             </div>
 
-            <!-- Consulta Endereçamento -->
+            <!-- Endereçamento -->
             <div id="screen-addressing" class="screen-panel hidden flex-col items-center max-w-5xl mx-auto py-10">
                 <div class="w-full flex justify-between items-center mb-6">
                     <div>
                         <h1 class="title-lg text-ios-blue mb-2"><i class="fa-solid fa-map-location-dot mr-3"></i>Consulta de Endereçamento</h1>
-                        <p class="text-ios-textMuted">Bipe o local (Rua/Prateleira) para ver os insumos armazenados e as reservas de produção.</p>
+                        <p class="text-ios-textMuted">Bipe o local (Rua/Prateleira) para ver os insumos armazenados e as reservas.</p>
                     </div>
                     <button id="btn-manage-locations" class="btn-secondary whitespace-nowrap"><i class="fa-solid fa-list-ul mr-2"></i>Gerenciar Locais</button>
                 </div>
-                
                 <div class="flex gap-4 w-full max-w-md mx-auto mb-4">
-                    <button id="btn-start-camera-address" class="btn-secondary w-full py-4 text-ios-blue border-ios-blue/30 bg-ios-blue/10" onclick="toggleCamera('address-camera-reader', 'address-input')"><i class="fa-solid fa-camera mr-2"></i>Ler Câmera</button>
+                    <button id="btn-start-camera-address" class="btn-secondary w-full py-4 text-ios-blue border-ios-blue/30 bg-ios-blue/10"><i class="fa-solid fa-camera mr-2"></i>Ler Câmera</button>
                 </div>
-                
                 <div id="address-camera-reader" class="w-full max-w-md mx-auto hidden mb-6 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
-                
                 <div class="w-full card bg-ios-cardHover border-2 border-ios-blue/30 p-8 shadow-2xl relative overflow-hidden">
                     <input type="text" id="address-input" class="w-full bg-ios-bg border-2 border-ios-border text-white text-3xl font-mono text-center py-6 rounded-2xl focus:border-ios-blue focus:ring-4 focus:ring-ios-blue/20 transition-all outline-none uppercase" placeholder="Bipe o Código do Local..." autocomplete="off">
                 </div>
@@ -257,43 +222,28 @@
                         <h2 class="text-2xl font-bold text-white mb-1"><i class="fa-solid fa-location-dot mr-2 text-ios-blue"></i> Local: <span id="address-res-name" class="text-ios-blue"></span></h2>
                         <span class="badge bg-ios-cardHover border border-ios-border text-ios-textMuted px-3 py-1" id="address-res-count">0 Lotes</span>
                     </div>
-                    
                     <div class="table-container">
                         <table class="base-table">
-                            <thead class="base-thead">
-                                <tr>
-                                    <th class="base-th">Produto</th>
-                                    <th class="base-th">Lote</th>
-                                    <th class="base-th">Validade</th>
-                                    <th class="base-th text-right">Físico Total</th>
-                                    <th class="base-th text-right text-ios-orange">Reservado (OP)</th>
-                                    <th class="base-th text-right text-ios-green">Saldo Livre</th>
-                                </tr>
-                            </thead>
-                            <tbody id="address-table-body" class="divide-y divide-ios-border">
-                            </tbody>
+                            <thead class="base-thead"><tr><th class="base-th">Produto</th><th class="base-th">Lote</th><th class="base-th">Validade</th><th class="base-th text-right">Físico Total</th><th class="base-th text-right text-ios-orange">Reservado (OP)</th><th class="base-th text-right text-ios-green">Saldo Livre</th></tr></thead>
+                            <tbody id="address-table-body" class="divide-y divide-ios-border"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Leitor de Scanner (Cadastro e Associação) -->
+            <!-- Scanner (Item) -->
             <div id="screen-scanner" class="screen-panel hidden flex-col items-center max-w-4xl mx-auto py-10">
                 <h1 class="title-lg w-full text-center text-ios-green mb-2"><i class="fa-solid fa-barcode mr-3"></i>Leitor de Código de Barras</h1>
-                <p class="text-ios-textMuted mb-8 text-center">Bipe a embalagem da matéria-prima com a câmera ou leitor físico. O sistema vai reconhecer ou pedir para você associar ao cadastro.</p>
-                
+                <p class="text-ios-textMuted mb-8 text-center">Bipe a embalagem da matéria-prima. O sistema mostrará todos os lotes e locais onde o item está guardado.</p>
                 <div class="flex gap-4 w-full max-w-md mx-auto mb-4">
                     <button id="btn-start-camera-main" class="btn-secondary w-full py-4 text-ios-blue border-ios-blue/30 bg-ios-blue/10"><i class="fa-solid fa-camera mr-2"></i>Usar Câmera do Dispositivo</button>
                 </div>
-
                 <div id="main-camera-reader" class="w-full max-w-md mx-auto hidden mb-6 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
-                
                 <div class="w-full card bg-ios-cardHover border-2 border-ios-green/30 p-8 shadow-2xl relative overflow-hidden">
                     <div class="absolute inset-0 border-b-2 border-ios-green animate-[slideUp_2s_ease-in-out_infinite] opacity-20 pointer-events-none" style="height: 10px;"></div>
-                    <input type="text" id="scanner-input" class="w-full bg-ios-bg border-2 border-ios-border text-white text-3xl font-mono text-center py-6 rounded-2xl focus:border-ios-green focus:ring-4 focus:ring-ios-green/20 transition-all outline-none" placeholder="Aguardando código..." autocomplete="off">
+                    <input type="text" id="scanner-input" class="w-full bg-ios-bg border-2 border-ios-border text-white text-3xl font-mono text-center py-6 rounded-2xl focus:border-ios-green transition-all outline-none" placeholder="Aguardando código..." autocomplete="off">
                 </div>
 
-                <!-- Resultado de Leitura (Produto Conhecido) -->
                 <div id="scanner-result-box" class="w-full card mt-6 hidden flex-col transition-all duration-300 opacity-0 transform translate-y-4">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-ios-border pb-4 mb-4 gap-4">
                         <div>
@@ -306,28 +256,21 @@
                             <p class="text-3xl font-bold text-ios-green" id="scan-res-stock">0.00</p>
                         </div>
                     </div>
-                    
                     <div class="mt-2">
                         <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Distribuição por Lote e Local</h3>
                         <div class="table-container max-h-64 overflow-y-auto">
                             <table class="base-table w-full text-left">
-                                <thead class="base-thead">
-                                    <tr><th class="base-th">Lote</th><th class="base-th">Local (Rua)</th><th class="base-th text-right">Qtd Física</th><th class="base-th text-right">Livre</th></tr>
-                                </thead>
+                                <thead class="base-thead"><tr><th class="base-th">Lote</th><th class="base-th">Local (Rua)</th><th class="base-th text-right">Qtd Física</th><th class="base-th text-right">Livre</th></tr></thead>
                                 <tbody id="scan-res-batches" class="divide-y divide-ios-border"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Associação de Leitura -->
                 <div id="scanner-associate-box" class="w-full card mt-6 hidden flex-col border-ios-orange/50 transition-all duration-300 opacity-0 transform translate-y-4">
                     <div class="flex items-center text-ios-orange mb-4">
                         <i class="fa-solid fa-triangle-exclamation text-2xl mr-3"></i>
-                        <div>
-                            <h3 class="text-lg font-bold text-white leading-tight">Código Não Reconhecido</h3>
-                            <p class="text-sm">O código <strong class="font-mono text-white" id="unrecognized-code"></strong> não pertence a nenhum produto.</p>
-                        </div>
+                        <div><h3 class="text-lg font-bold text-white leading-tight">Código Não Reconhecido</h3><p class="text-sm">O código <strong class="font-mono text-white" id="unrecognized-code"></strong> não pertence a nenhum produto.</p></div>
                     </div>
                     <div class="bg-ios-bg p-5 rounded-2xl border border-ios-border">
                         <label class="form-label text-white font-bold mb-2">A qual insumo do sistema este código pertence?</label>
@@ -341,14 +284,11 @@
             <div id="screen-entry" class="screen-panel hidden">
                 <h1 class="title-lg">Nova Entrada Físico (Lote Específico)</h1>
                 <div class="card max-w-3xl mx-auto">
-                    <div class="bg-ios-blue/10 border border-ios-blue/30 rounded-xl p-4 mb-6">
-                        <p class="text-sm text-ios-blue font-medium"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Dica: Digite o código ou use a câmera para preencher os dados do fornecedor e prazos automaticamente.</p>
-                    </div>
                     <form id="entry-form">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-1">
                                 <label class="form-label flex justify-between items-end mb-1">
-                                    <span>Código do Produto / Barras</span>
+                                    <span>Cód. Produto / Barras</span>
                                     <button type="button" id="btn-start-camera-entry" class="text-ios-blue text-xs flex items-center bg-ios-blue/10 px-2 py-1 rounded hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-camera mr-1"></i>Ler Câmera</button>
                                 </label>
                                 <input type="text" id="entry-product-code" name="product-code" class="form-input text-lg font-mono placeholder:text-sm placeholder:font-sans" placeholder="Busca automática...">
@@ -357,28 +297,16 @@
                             <div class="md:col-span-1">
                                 <label class="form-label flex justify-between items-end mb-1">
                                     <span>Endereço (Rua/Prateleira)</span>
-                                    <button type="button" onclick="toggleCamera('entry-loc-camera-reader', 'entry-location')" class="text-ios-blue text-xs flex items-center bg-ios-blue/10 px-2 py-1 rounded hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-camera mr-1"></i>Ler Câmera</button>
+                                    <button type="button" id="btn-start-camera-entry-loc" class="text-ios-blue text-xs flex items-center bg-ios-blue/10 px-2 py-1 rounded hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-camera mr-1"></i>Ler Câmera</button>
                                 </label>
                                 <input type="text" id="entry-location" name="location" class="form-input uppercase" placeholder="Ex: RUA-A-01" autocomplete="off">
                                 <div id="entry-loc-camera-reader" class="w-full hidden mt-2 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
                             </div>
-                            
-                            <div class="md:col-span-2">
-                                <label class="form-label">Nome do Produto</label>
-                                <input type="text" name="product-name" required class="form-input">
-                            </div>
-                            <div>
-                                <label class="form-label">Tipo de Produto</label>
-                                <select name="product-type" required class="form-input">
-                                    <option value="insumo">Insumo (Matéria Prima / Embalagem)</option>
-                                    <option value="semi_acabado">Semi-acabado (Massa, Recheio, Base)</option>
-                                </select>
-                            </div>
+                            <div class="md:col-span-2"><label class="form-label">Nome do Produto</label><input type="text" name="product-name" required class="form-input"></div>
+                            <div><label class="form-label">Tipo</label><select name="product-type" required class="form-input"><option value="insumo">Insumo</option><option value="semi_acabado">Semi-acabado</option></select></div>
                             <div><label class="form-label">Fornecedor</label><input type="text" name="supplier" required class="form-input" placeholder="Ex: Fornecedor X"></div>
-                            
                             <div><label class="form-label">Prazo Entrega (Dias)</label><input type="number" name="lead-time" min="0" class="form-input text-ios-blue" placeholder="Ex: 5"></div>
                             <div><label class="form-label">Estoque Mínimo (Alerta)</label><input type="number" name="min-stock" min="0" step="0.01" class="form-input text-ios-orange" placeholder="Opcional"></div>
-                            
                             <div><label class="form-label">Quantidade FÍSICA</label><input type="number" name="quantity" required min="0.01" step="0.01" class="form-input text-ios-blue font-bold"></div>
                             <div><label class="form-label">Data de Recebimento</label><input type="date" id="receipt-date" required class="form-input"></div>
                             <div><label class="form-label">Data de Fabricação</label><input type="date" id="mfg-date" class="form-input"></div>
@@ -395,27 +323,18 @@
                 <div class="card p-0 overflow-hidden border-none bg-transparent">
                     <div class="flex flex-wrap gap-3 mb-5 p-1">
                         <input type="text" id="search-inventory" placeholder="Pesquisar itens..." class="form-input w-full md:w-64">
-                        <select id="type-filter" class="form-input w-auto">
-                            <option value="">Todos os Tipos</option>
-                            <option value="insumo">Insumos</option>
-                            <option value="semi_acabado">Semi-acabados</option>
-                        </select>
+                        <select id="type-filter" class="form-input w-auto"><option value="">Todos Tipos</option><option value="insumo">Insumos</option><option value="semi_acabado">Semi-acabados</option></select>
                         <select id="supplier-filter" class="form-input w-auto"><option value="">Fornecedores</option></select>
                         <button id="btn-export-excel" class="btn-secondary ml-auto"><i class="fa-solid fa-arrow-up-from-bracket mr-2"></i>Exportar</button>
                     </div>
                     <div class="table-container">
-                        <table class="base-table">
-                            <thead class="base-thead">
-                                <tr>
-                                    <th class="base-th table-header-sortable" data-sort="name">Produto <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
-                                    <th class="base-th">Tipo</th>
-                                    <th class="base-th table-header-sortable" data-sort="supplier">Fornecedor <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
-                                    <th class="base-th text-right table-header-sortable" data-sort="totalQuantity">Saldo Consolidado <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
-                                    <th class="base-th table-header-sortable" data-sort="expiry">Próx. Validade <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventory-table-body"></tbody>
-                        </table>
+                        <table class="base-table"><thead class="base-thead"><tr>
+                            <th class="base-th table-header-sortable" data-sort="name">Produto <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
+                            <th class="base-th">Tipo</th>
+                            <th class="base-th table-header-sortable" data-sort="supplier">Fornecedor <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
+                            <th class="base-th text-right table-header-sortable" data-sort="totalQuantity">Saldo Consolidado <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
+                            <th class="base-th table-header-sortable" data-sort="expiry">Próx. Validade <i class="fa-solid fa-sort ml-1 text-ios-textMuted"></i></th>
+                        </tr></thead><tbody id="inventory-table-body"></tbody></table>
                     </div>
                 </div>
             </div>
@@ -429,14 +348,11 @@
                         <button id="btn-export-recipe-book" class="btn-secondary"><i class="fa-solid fa-file-pdf mr-2"></i>Livro PDF</button>
                         <button id="btn-import-recipes" class="btn-secondary text-ios-green border-ios-green/50 hover:bg-ios-green/10"><i class="fa-solid fa-file-excel mr-2"></i>Importar Excel</button>
                         <input type="file" id="recipe-file-input" class="hidden" accept=".xlsx, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-                        <button id="btn-new-recipe-main" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Criar Receita</button>
+                        <button id="btn-new-recipe" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Criar Receita</button>
                     </div>
                 </div>
                 <div class="flex flex-col xl:flex-row gap-6">
-                    <div class="w-full xl:w-1/4 card self-start">
-                        <h2 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Linhas de Produção</h2>
-                        <ul id="recipe-categories-list" class="space-y-1"></ul>
-                    </div>
+                    <div class="w-full xl:w-1/4 card self-start"><h2 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Linhas de Produção</h2><ul id="recipe-categories-list" class="space-y-1"></ul></div>
                     <div id="recipes-grid" class="w-full xl:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-5 self-start"></div>
                 </div>
             </div>
@@ -446,7 +362,7 @@
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h1 class="title-lg mb-0 text-ios-orange"><i class="fa-solid fa-dolly mr-3"></i>Separação (Kitting por Linha)</h1>
-                        <p class="text-ios-textMuted mt-1 text-sm">Organize as matérias-primas por setor. Os cronômetros rodam de forma independente.</p>
+                        <p class="text-ios-textMuted mt-1 text-sm">Organize as matérias-primas por setor. Cronômetros independentes.</p>
                     </div>
                 </div>
                 <div id="picking-lines-container" class="space-y-6"></div>
@@ -458,12 +374,12 @@
                     <h1 class="title-lg mb-0">Ordens de Produção (OP)</h1>
                     <div class="flex gap-3">
                         <button id="btn-confirm-production" class="btn-success"><i class="fa-solid fa-check-double mr-2"></i>Efetivar OPs</button>
-                        <button id="btn-new-production-order-main" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Nova OP</button>
+                        <button id="btn-new-production-order" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Nova OP</button>
                     </div>
                 </div>
                 <div class="card mb-5 flex flex-wrap gap-4 items-center border-l-4 border-l-ios-blue">
                     <label class="text-sm font-medium text-ios-textMuted"><i class="fa-solid fa-filter mr-2"></i>Filtrar Programação:</label>
-                    <input type="date" id="search-po-by-date" class="form-input w-auto py-2" title="Deixe vazio para mostrar todas as pendentes">
+                    <input type="date" id="search-po-by-date" class="form-input w-auto py-2">
                     <button id="btn-clear-po-date" class="text-xs text-ios-blue underline px-2 py-1">Mostrar Todas</button>
                 </div>
                 <div id="production-orders-list" class="grid grid-cols-1 xl:grid-cols-2 gap-5"></div>
@@ -478,12 +394,7 @@
                         <select id="consumption-year-filter" class="form-input w-auto py-2"></select>
                         <input type="text" id="search-consumption" placeholder="Buscar produto..." class="form-input flex-1 py-2">
                     </div>
-                    <div class="table-container">
-                        <table class="base-table">
-                            <thead class="base-thead"><tr><th class="base-th">Produto</th><th class="base-th text-right">Volume Consumido</th></tr></thead>
-                            <tbody id="consumption-table-body"></tbody>
-                        </table>
-                    </div>
+                    <div class="table-container"><table class="base-table"><thead class="base-thead"><tr><th class="base-th">Produto</th><th class="base-th text-right">Volume Consumido</th></tr></thead><tbody id="consumption-table-body"></tbody></table></div>
                 </div>
             </div>
 
@@ -491,9 +402,7 @@
             <div id="screen-requisitions" class="screen-panel hidden">
                 <h1 class="title-lg">Baixa Avulsa (Requisição)</h1>
                 <div class="card max-w-4xl mx-auto">
-                    <div class="bg-ios-orange/10 border border-ios-orange/30 rounded-xl p-4 mb-6">
-                        <p class="text-sm text-ios-orange font-medium"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Atenção: O sistema bloqueará a requisição se não houver saldo físico suficiente nos lotes ou se os lotes estiverem bloqueados em quarentena.</p>
-                    </div>
+                    <div class="bg-ios-orange/10 border border-ios-orange/30 rounded-xl p-4 mb-6"><p class="text-sm text-ios-orange font-medium"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Atenção: O sistema bloqueará a requisição se não houver saldo físico suficiente nos lotes ou se os lotes estiverem bloqueados em quarentena.</p></div>
                     <form id="requisition-form">
                         <div class="grid grid-cols-2 gap-5 mb-6">
                             <div><label class="form-label">Destino / Motivo</label><input type="text" id="requisition-reason" required class="form-input" placeholder="Ex: Quebra, Teste, Refeição"></div>
@@ -535,13 +444,12 @@
                     </div>
                     <div class="pt-8">
                         <h2 class="title-md mb-1"><i class="fa-solid fa-file-excel mr-2 text-ios-green"></i>Importar Planilha (Entrada em Massa)</h2>
-                        <p class="text-sm text-ios-textMuted mb-3">Faça o upload do seu relatório de estoque (<b>.csv</b> ou <b>.xlsx</b>) para dar entrada automática.</p>
+                        <p class="text-sm text-ios-textMuted mb-3">Faça o upload do seu relatório de estoque (<b>.csv</b> ou <b>.xlsx</b>).</p>
                         <button id="btn-upload-backup" class="w-full btn-secondary text-ios-green border-ios-green/30 bg-ios-green/10"><i class="fa-solid fa-file-import mr-2"></i>Selecionar Arquivo</button>
                         <input type="file" id="backup-file-input" class="hidden" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
                     </div>
                     <div class="pt-8">
                         <h2 class="title-md text-ios-red mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Zona de Perigo</h2>
-                        <p class="text-sm text-ios-textMuted mb-4">Formatar e limpar todo o banco de dados (Ação irreversível).</p>
                         <button id="btn-reset-database" class="w-full btn-danger bg-ios-red/20 text-ios-red border border-ios-red border-opacity-50 hover:bg-ios-red hover:text-white">Zerar Sistema Completamente</button>
                     </div>
                 </div>
@@ -549,238 +457,26 @@
         </main>
     </div>
 
-    <!-- Modais Picking, Recipes, PO, DB Alerts -->
+    <!-- Modais de Cadastro e Gestão (Unificados para evitar bugs) -->
     
-    <!-- Modal: Gerenciar Locais -->
-    <div id="manage-locations-modal" class="modal z-[70]">
-        <div class="modal-content max-w-2xl max-h-[90vh] flex flex-col p-0 bg-ios-bg border border-ios-border">
-            <div class="flex justify-between items-center p-6 border-b border-ios-border bg-ios-cardHover">
-                <h2 class="title-md mb-0 text-white"><i class="fa-solid fa-list-ul mr-2 text-ios-blue"></i>Gerenciar Locais Cadastrados</h2>
-                <button class="text-ios-textMuted hover:text-white text-3xl close-modal leading-none" data-target="manage-locations-modal">&times;</button>
-            </div>
-            <div class="p-6 overflow-y-auto">
-                <div class="table-container">
-                    <table class="base-table w-full">
-                        <thead class="base-thead"><tr><th class="base-th">Código Base</th><th class="base-th">Nome de Exibição (Rua)</th><th class="base-th text-center">Ações</th></tr></thead>
-                        <tbody id="locations-table-body" class="divide-y divide-ios-border"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="manage-locations-modal" class="modal z-[70]"><div class="modal-content max-w-2xl max-h-[90vh] flex flex-col p-0 bg-ios-bg border border-ios-border"><div class="flex justify-between items-center p-6 border-b border-ios-border bg-ios-cardHover"><h2 class="title-md mb-0 text-white"><i class="fa-solid fa-list-ul mr-2 text-ios-blue"></i>Gerenciar Locais</h2><button class="text-ios-textMuted hover:text-white text-3xl close-modal leading-none" data-target="manage-locations-modal">&times;</button></div><div class="p-6 overflow-y-auto"><div class="table-container"><table class="base-table w-full"><thead class="base-thead"><tr><th class="base-th">Código</th><th class="base-th">Nome de Exibição (Rua)</th><th class="base-th text-center">Ações</th></tr></thead><tbody id="locations-table-body" class="divide-y divide-ios-border"></tbody></table></div></div></div></div>
+    
+    <div id="edit-location-modal" class="modal z-[80]"><div class="modal-content max-w-sm bg-ios-card border border-ios-border"><h2 class="title-md mb-4 text-white">Editar Local</h2><form id="edit-location-form" class="space-y-4"><input type="hidden" id="edit-loc-id"><input type="hidden" id="edit-loc-old-name"><div><label class="form-label">Código Lido (QR/Barras)</label><input type="text" id="edit-loc-code" required class="form-input bg-ios-bg border-ios-border text-ios-textMuted" readonly></div><div><label class="form-label">Nome do Local</label><input type="text" id="edit-loc-name" required class="form-input uppercase bg-ios-bg border-ios-blue text-white font-bold" placeholder="Digite o nome..."></div><div class="flex justify-end gap-2 mt-4"><button type="button" class="btn-secondary close-modal" data-target="edit-location-modal">Cancelar</button><button type="submit" class="btn-primary">Salvar Edição</button></div></form></div></div>
+    
+    <div id="register-location-modal" class="modal z-[80]"><div class="modal-content max-w-sm bg-ios-card border border-ios-border"><h2 class="title-md mb-4 text-white">Cadastrar Novo Local</h2><form id="register-location-form" class="space-y-4"><p class="text-sm text-ios-textMuted mb-4">O código escaneado não existe. Dê um nome para esta Rua/Prateleira.</p><div><label class="form-label">Código Lido</label><input type="text" id="loc-code" class="form-input bg-ios-bg border-ios-border text-ios-textMuted" readonly></div><div><label class="form-label">Nome do Local (Ex: Prateleira 10)</label><input type="text" id="loc-name" required class="form-input uppercase bg-ios-bg border-ios-blue text-white font-bold" placeholder="Digite o nome do local..."></div><div class="flex justify-end gap-2 mt-4"><button type="button" class="btn-secondary close-modal" data-target="register-location-modal">Cancelar</button><button type="submit" class="btn-primary">Salvar Local</button></div></form></div></div>
 
-    <!-- Modal: Editar Local -->
-    <div id="edit-location-modal" class="modal z-[80]">
-        <div class="modal-content max-w-sm bg-ios-card border border-ios-border">
-            <h2 class="title-md mb-4 text-white">Editar Local</h2>
-            <form id="edit-location-form" class="space-y-4">
-                <input type="hidden" id="edit-loc-id">
-                <input type="hidden" id="edit-loc-old-name">
-                <div>
-                    <label class="form-label">Código Lido (QR/Barras)</label>
-                    <input type="text" id="edit-loc-code" required class="form-input bg-ios-bg border-ios-border text-ios-textMuted" readonly>
-                </div>
-                <div>
-                    <label class="form-label">Nome do Local (Atualizará todos os lotes desta rua)</label>
-                    <input type="text" id="edit-loc-name" required class="form-input uppercase bg-ios-bg border-ios-blue text-white font-bold" placeholder="Digite o nome...">
-                </div>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button type="button" class="btn-secondary close-modal" data-target="edit-location-modal">Cancelar</button>
-                    <button type="submit" class="btn-primary">Salvar Edição</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div id="recipe-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-6"><h2 id="recipe-modal-title" class="title-md mb-0">Nova Receita</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="recipe-modal">&times;</button></div><form id="recipe-form" class="space-y-5"><input type="hidden" id="edit-recipe-id"><div><label class="form-label">Nome da Ficha Técnica / Receita</label><input type="text" id="recipe-name" required class="form-input font-semibold text-lg" placeholder="Ex: Massa de Coxinha ou Bolo de Cenoura"></div><div><label class="form-label">Linha Produtiva</label><input type="text" id="recipe-category" list="category-options" required class="form-input" placeholder="Selecione ou digite..."><datalist id="category-options"><option value="Salgados"></option><option value="Pães"></option><option value="Confeitaria"></option><option value="Bases"></option></datalist></div><div class="p-5 bg-ios-blue/10 border border-ios-blue/30 rounded-xl"><label class="flex items-center space-x-3 cursor-pointer mb-2"><input type="checkbox" id="recipe-is-semi" class="ui-checkbox"><span class="text-sm font-semibold text-white ml-1">Esta receita gera um produto Semi-Acabado</span></label><div id="yield-wrapper" class="hidden pt-4 border-t border-ios-blue/20"><label class="form-label text-ios-blue font-bold">Rendimento (Qtd FÍSICA que entra no estoque)</label><input type="number" id="recipe-yield" min="0.001" step="0.001" value="1" class="form-input text-ios-blue font-bold text-lg" placeholder="Ex: 2.5"></div></div><div class="pt-2"><h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Composição (Ingredientes)</h3><div id="ingredients-container" class="space-y-3 mb-4"></div><button type="button" id="add-ingredient-btn" class="text-ios-blue font-medium text-sm flex items-center"><i class="fa-solid fa-circle-plus mr-1"></i>Adicionar Ingrediente</button></div><div class="mt-6 flex justify-end"><button type="submit" class="btn-primary" id="save-recipe-btn">Salvar Ficha Técnica</button></div></form></div></div>
+    
+    <div id="production-order-modal" class="modal z-[60]"><div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-6"><h2 id="production-order-modal-title" class="title-md mb-0">Gerar Ordem de Produção (OP)</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="production-order-modal">&times;</button></div><form id="production-order-form"><input type="hidden" id="edit-po-id"><div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-ios-bg border border-ios-border p-5 rounded-2xl mb-6 shadow-inner items-start relative z-50"><div class="md:col-span-2 relative"><label class="form-label">Receita / Produto a Fabricar</label><div id="po-recipe-searchable-container" class="searchable-container"></div></div><div><label class="form-label">Multiplicador</label><input type="number" id="po-quantity" value="1" min="0.01" step="0.01" required class="form-input text-ios-blue font-bold text-lg"></div><div class="md:col-span-1 mt-2"><label class="form-label">Data Agendada</label><input type="date" id="po-date" required class="form-input"></div><div class="md:col-span-4 mt-2"><label class="flex items-center gap-3 cursor-pointer bg-ios-orange/10 p-3 rounded-xl border border-ios-orange/30 w-max hover:bg-ios-orange/20 transition-colors"><input type="checkbox" id="po-is-extra" class="ui-checkbox"><span class="text-sm font-bold text-ios-orange ml-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> OP Extra / Urgente</span></label></div><div id="po-output-fields" class="col-span-1 md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-4 border-t border-ios-border hidden"><div><label class="form-label">Total Gerado</label><input type="text" id="po-total-output" readonly class="form-input bg-gray-800 text-ios-green font-bold text-lg border-none" value="0.0000"></div><div><label class="form-label">Lote Sugerido</label><input type="text" id="po-output-batch" class="form-input"></div><div><label class="form-label">Validade Gerado</label><input type="date" id="po-output-expiry" class="form-input"></div></div></div><h3 class="title-md text-sm uppercase text-ios-textMuted mb-3">Previsão de Consumo</h3><div class="table-container mb-6"><table class="base-table"><thead class="base-thead"><tr><th class="base-th">Insumo</th><th class="base-th">Estoque Atual</th><th class="base-th">Qtd a Descontar</th><th class="base-th">Lotes Reservados</th></tr></thead><tbody id="po-ingredients-body"></tbody></table></div><div class="flex justify-end"><button type="submit" class="btn-primary">Salvar OP na Fila</button></div></form></div></div>
 
-    <!-- Modal: Cadastrar Localização (Novo) -->
-    <div id="register-location-modal" class="modal z-[80]">
-        <div class="modal-content max-w-sm bg-ios-card border border-ios-border">
-            <h2 class="title-md mb-4 text-white">Cadastrar Novo Local</h2>
-            <form id="register-location-form" class="space-y-4">
-                <p class="text-sm text-ios-textMuted mb-4">O código escaneado não existe no sistema. Por favor, dê um nome para esta Rua/Prateleira.</p>
-                <div>
-                    <label class="form-label">Código Lido (QR/Barras)</label>
-                    <input type="text" id="loc-code" class="form-input bg-ios-bg border-ios-border text-ios-textMuted" readonly>
-                </div>
-                <div>
-                    <label class="form-label">Nome do Local (Ex: Prateleira 10)</label>
-                    <input type="text" id="loc-name" required class="form-input uppercase bg-ios-bg border-ios-blue text-white font-bold" placeholder="Digite o nome do local...">
-                </div>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button type="button" class="btn-secondary close-modal" data-target="register-location-modal">Cancelar</button>
-                    <button type="submit" class="btn-primary">Salvar Local</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div id="item-details-modal" class="modal z-[60]"><div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-start mb-6"><div><h2 class="title-md flex items-center mb-1 text-2xl tracking-tight"><span id="details-product-name"></span></h2><span id="details-product-type-badge" class="badge bg-ios-cardHover text-ios-textMuted border border-ios-border"></span></div><div class="flex items-center gap-3"><button id="btn-edit-item" class="text-ios-blue bg-ios-blue/10 p-3 rounded-full hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-pen"></i></button><button id="btn-delete-item" class="text-ios-red bg-ios-red/10 p-3 rounded-full hover:bg-ios-red/20 transition-colors"><i class="fa-solid fa-trash"></i></button><button class="text-ios-textMuted hover:text-white text-3xl ml-2 close-modal" data-target="item-details-modal">&times;</button></div></div><div id="item-details-view" class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm bg-ios-bg p-5 rounded-2xl mb-6 shadow-inner border border-ios-border"><div><span class="text-ios-textMuted block mb-1">Cód Padrão</span><span id="details-product-code" class="text-white font-medium font-mono"></span></div><div><span class="text-ios-textMuted block mb-1">Cód Leitor</span><span id="details-product-barcode" class="text-white font-medium font-mono"></span></div><div class="md:col-span-2"><span class="text-ios-textMuted block mb-1">Fornecedor</span><span id="details-supplier" class="text-white font-medium"></span></div><div><span class="text-ios-textMuted block mb-1">Estoque Mín.</span><span id="details-min-stock" class="text-ios-orange font-medium"></span></div><div><span class="text-ios-textMuted block mb-1">Saldo Físico</span><span id="details-total-quantity" class="text-ios-green font-bold text-xl"></span></div></div><div id="item-details-edit" class="hidden mb-6 bg-ios-bg p-5 rounded-2xl border border-ios-border shadow-inner"><form id="edit-item-form" class="grid grid-cols-1 md:grid-cols-6 gap-5"><input type="hidden" id="edit-item-id"><div class="md:col-span-6"><label class="form-label">Classificação</label><select id="edit-product-type" required class="form-input"><option value="insumo">Insumo</option><option value="semi_acabado">Semi-acabado</option></select></div><div class="md:col-span-6"><label class="form-label">Nome</label><input type="text" id="edit-product-name" required class="form-input"></div><div class="md:col-span-3"><label class="form-label">Cód. Interno</label><input type="text" id="edit-product-code" class="form-input"></div><div class="md:col-span-3"><label class="form-label">Cód. Barras</label><input type="text" id="edit-product-barcode" class="form-input text-ios-green"></div><div class="md:col-span-3"><label class="form-label">Fornecedor</label><input type="text" id="edit-supplier" class="form-input"></div><div class="md:col-span-1"><label class="form-label">Prazo (Dias)</label><input type="number" id="edit-lead-time" min="0" class="form-input"></div><div class="md:col-span-2 relative border border-ios-border p-3 rounded-xl bg-ios-cardHover"><div class="flex gap-2 mb-2 items-end"><div class="flex-1"><label class="text-[10px] text-ios-textMuted uppercase mb-1 block">Margem Seg. (Dias)</label><input type="number" id="edit-safety-margin" min="0" class="form-input py-1 px-2 text-sm" value="2"></div><button type="button" id="btn-calc-min-stock" class="text-ios-blue text-[10px] bg-ios-blue/10 px-2 py-1 rounded hover:bg-ios-blue/20 transition-colors h-8"><i class="fa-solid fa-calculator mr-1"></i>Sugerir</button></div><label class="text-xs text-ios-orange font-bold mb-1 block">Estoque Mínimo</label><input type="number" step="0.01" id="edit-min-stock" class="form-input text-ios-orange font-bold"></div><div class="md:col-span-6 flex justify-end gap-3 mt-2"><button type="button" id="btn-cancel-edit" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Salvar Edição</button></div></form></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div><h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Lotes Físicos na Prateleira</h3><div class="table-container mb-8 max-h-96 overflow-y-auto"><table class="base-table"><thead class="base-thead"><tr><th class="base-th">Lote</th><th class="base-th">Local (Rua)</th><th class="base-th">Status</th><th class="base-th">Volume</th><th class="base-th text-center">Gestão</th></tr></thead><tbody id="details-batches-table"></tbody></table></div></div><div><h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3 flex justify-between items-center">Extrato de Movimentação <button id="btn-clear-hist-filters" class="text-xs text-ios-blue hover:text-blue-300 font-normal underline hidden">Limpar Filtros</button></h3><div class="flex flex-wrap gap-2 mb-3 bg-ios-bg p-3 rounded-xl border border-ios-border shadow-inner"><input type="date" id="hist-filter-start" class="form-input py-1 px-2 text-xs w-auto border-ios-border"><span class="text-ios-textMuted flex items-center text-xs">até</span><input type="date" id="hist-filter-end" class="form-input py-1 px-2 text-xs w-auto border-ios-border"><select id="hist-filter-type" class="form-input py-1 px-2 text-xs w-auto border-ios-border ml-auto"><option value="">Todas</option><option value="entrada">Entradas</option><option value="saída">Saídas</option><option value="requisição">Requisição</option><option value="ajuste">Ajustes</option></select></div><div class="table-container max-h-72 overflow-y-auto bg-ios-bg p-2" id="details-history-container"></div></div></div></div></div>
 
-    <!-- Picking Modal -->
-    <div id="picking-modal" class="modal z-[60]">
-        <div class="modal-content max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0 bg-ios-bg border border-ios-border">
-            <div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover">
-                <div>
-                    <h2 id="picking-modal-title" class="title-md mb-1 text-ios-orange flex items-center"><i class="fa-solid fa-dolly mr-3 text-2xl"></i><span>Check-list de Separação</span></h2>
-                    <p id="picking-modal-subtitle" class="text-sm text-ios-textMuted font-medium"></p>
-                </div>
-                <button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="picking-modal">&times;</button>
-            </div>
-            
-            <div id="picking-setup-view" class="p-10 flex flex-col items-center justify-center bg-ios-card h-[50vh]">
-                <i class="fa-solid fa-clipboard-user text-6xl text-ios-orange mb-6"></i>
-                <h3 class="text-2xl font-bold text-white mb-2">Quem vai separar esta linha?</h3>
-                <input type="text" id="picking-responsible" class="form-input max-w-xs text-center text-xl py-4 mb-6 shadow-inner border border-ios-border" placeholder="O seu nome aqui" autocomplete="off">
-                <button id="btn-start-picking" class="btn-success py-4 px-10 text-lg rounded-full shadow-lg shadow-ios-green/20 hover:-translate-y-1 transform transition"><i class="fa-solid fa-play mr-2"></i> Iniciar Cronômetro</button>
-            </div>
-            
-            <div id="picking-active-view" class="hidden flex-col flex-1 overflow-hidden h-[70vh]">
-                <div class="bg-ios-bg px-6 py-4 flex flex-wrap justify-between items-center shrink-0 border-b border-ios-border shadow-inner gap-4">
-                    <div>
-                        <p class="text-[10px] text-ios-textMuted uppercase font-bold tracking-widest mb-1">Estoquista Responsável</p>
-                        <p class="font-bold text-white text-lg flex items-center"><i class="fa-solid fa-user-check text-ios-blue mr-2"></i><span id="picking-active-resp">---</span></p>
-                    </div>
-                    <div class="text-center bg-ios-card px-8 py-2 rounded-2xl border border-ios-border shadow-md">
-                        <div class="text-4xl font-mono font-bold text-ios-orange tracking-widest live-timer timer-active" id="picking-timer-display" data-start="">00:00</div>
-                        <p class="text-[10px] text-ios-textMuted uppercase mt-1">Tempo Corrido</p>
-                    </div>
-                    <button id="btn-finish-picking" class="btn-primary py-3 px-6 shadow-lg shadow-ios-blue/20 rounded-xl"><i class="fa-solid fa-flag-checkered mr-2"></i>Finalizar OP(s)</button>
-                </div>
-                
-                <div class="bg-ios-cardHover border-b border-ios-border p-4 shrink-0 flex items-center gap-4">
-                    <i class="fa-solid fa-barcode text-ios-green text-3xl"></i>
-                    <div class="flex-1 flex gap-2 items-end">
-                        <div class="flex-1">
-                            <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-1">Leitura Rápida (Scanner ou Câmera)</p>
-                            <input type="text" id="picking-scanner" class="form-input w-full border-ios-green/50 focus:border-ios-green focus:ring-ios-green/20 font-mono text-xl py-3" placeholder="Bipe o insumo para destacar na lista..." autocomplete="off">
-                        </div>
-                        <button type="button" id="btn-start-camera-picking" class="bg-ios-bg border border-ios-border text-ios-blue px-5 py-3 h-[52px] rounded-xl hover:bg-ios-blue/10 transition-colors flex items-center" title="Ligar Câmera"><i class="fa-solid fa-camera text-xl"></i></button>
-                    </div>
-                </div>
-                <div id="picking-camera-reader" class="w-full max-w-sm mx-auto hidden mt-4 border border-ios-border rounded-xl bg-black shrink-0 overflow-hidden"></div>
-
-                <div class="overflow-y-auto flex-1 bg-ios-bg p-6 relative">
-                    <div class="table-container shadow-xl">
-                        <table class="base-table w-full text-left">
-                            <thead class="base-thead sticky top-0 z-10 shadow-sm">
-                                <tr>
-                                    <th class="base-th rounded-tl-lg text-sm">Item a Separar (Consolidado)</th>
-                                    <th class="base-th text-right text-sm">Qtd Necessária</th>
-                                    <th class="base-th text-center w-48 text-sm">Qtd no Carrinho</th>
-                                    <th class="base-th text-center rounded-tr-lg text-sm">Pronto</th>
-                                </tr>
-                            </thead>
-                            <tbody id="picking-checklist-body" class="divide-y divide-ios-border"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recipe Modal -->
-    <div id="recipe-modal" class="modal z-[60]">
-        <div class="modal-content max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6"><h2 id="recipe-modal-title" class="title-md mb-0">Nova Receita</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="recipe-modal">&times;</button></div>
-            <form id="recipe-form" class="space-y-5">
-                <input type="hidden" id="edit-recipe-id">
-                <div><label class="form-label">Nome da Ficha Técnica / Receita</label><input type="text" id="recipe-name" required class="form-input font-semibold text-lg" placeholder="Ex: Massa de Coxinha ou Bolo de Cenoura"></div>
-                <div><label class="form-label">Linha Produtiva</label><input type="text" id="recipe-category" list="category-options" required class="form-input" placeholder="Selecione ou digite..."><datalist id="category-options"><option value="Salgados"></option><option value="Pães"></option><option value="Confeitaria"></option><option value="Bases"></option></datalist></div>
-                <div class="p-5 bg-ios-blue/10 border border-ios-blue/30 rounded-xl">
-                    <label class="flex items-center space-x-3 cursor-pointer mb-2">
-                        <input type="checkbox" id="recipe-is-semi" class="ui-checkbox">
-                        <span class="text-sm font-semibold text-white ml-1">Esta receita gera um produto Semi-Acabado</span>
-                    </label>
-                    <div id="yield-wrapper" class="hidden pt-4 border-t border-ios-blue/20">
-                        <label class="form-label text-ios-blue font-bold">Rendimento (Quantidade gerada)</label>
-                        <input type="number" id="recipe-yield" min="0.001" step="0.001" value="1" class="form-input text-ios-blue font-bold text-lg" placeholder="Ex: 2.5">
-                    </div>
-                </div>
-                <div class="pt-2">
-                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Composição (Ingredientes)</h3>
-                    <div id="ingredients-container" class="space-y-3 mb-4"></div>
-                    <button type="button" id="add-ingredient-btn" class="text-ios-blue font-medium text-sm flex items-center"><i class="fa-solid fa-circle-plus mr-1"></i>Adicionar Ingrediente</button>
-                </div>
-                <div class="mt-6 flex justify-end"><button type="submit" class="btn-primary" id="save-recipe-btn">Salvar Ficha Técnica</button></div>
-            </form>
-        </div>
-    </div>
-
-    <!-- OP Modal -->
-    <div id="production-order-modal" class="modal z-[60]">
-        <div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6"><h2 id="production-order-modal-title" class="title-md mb-0">Gerar Ordem de Produção (OP)</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="production-order-modal">&times;</button></div>
-            <form id="production-order-form">
-                <input type="hidden" id="edit-po-id">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-ios-bg border border-ios-border p-5 rounded-2xl mb-6 shadow-inner items-start relative z-50">
-                    <div class="md:col-span-2 relative"><label class="form-label">Receita / Produto</label><div id="po-recipe-searchable-container" class="searchable-container"></div></div>
-                    <div><label class="form-label">Multiplicador</label><input type="number" id="po-quantity" value="1" min="0.01" step="0.01" required class="form-input text-ios-blue font-bold text-lg"></div>
-                    <div class="md:col-span-1 mt-2"><label class="form-label">Data Agendada</label><input type="date" id="po-date" required class="form-input"></div>
-                    <div class="md:col-span-4 mt-2">
-                        <label class="flex items-center gap-3 cursor-pointer bg-ios-orange/10 p-3 rounded-xl border border-ios-orange/30 w-max hover:bg-ios-orange/20 transition-colors"><input type="checkbox" id="po-is-extra" class="ui-checkbox"><span class="text-sm font-bold text-ios-orange ml-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> OP Extra (Menos de 48h)</span></label>
-                    </div>
-                    <div id="po-output-fields" class="col-span-1 md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-4 border-t border-ios-border hidden">
-                        <div><label class="form-label">Total Gerado (Entrada)</label><input type="text" id="po-total-output" readonly class="form-input bg-gray-800 text-ios-green font-bold text-lg border-none" value="0.0000"></div>
-                        <div><label class="form-label">Lote Sugerido</label><input type="text" id="po-output-batch" class="form-input"></div>
-                        <div><label class="form-label">Validade Gerado</label><input type="date" id="po-output-expiry" class="form-input"></div>
-                    </div>
-                </div>
-                <h3 class="title-md text-sm uppercase text-ios-textMuted mb-3">Previsão de Consumo</h3>
-                <div class="table-container mb-6"><table class="base-table"><thead class="base-thead"><tr><th class="base-th">Insumo</th><th class="base-th">Estoque Atual</th><th class="base-th">Qtd a Descontar</th><th class="base-th">Lotes Reservados</th></tr></thead><tbody id="po-ingredients-body"></tbody></table></div>
-                <div class="flex justify-end"><button type="submit" class="btn-primary">Salvar OP</button></div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Alert Modals -->
-    <div id="low-stock-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-bell mr-3 text-2xl"></i><span>Itens Abaixo do Mínimo</span></h2></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="low-stock-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="low-stock-list" class="space-y-3"></ul></div></div></div>
-    <div id="expiring-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-clock mr-3 text-2xl"></i><span>Lotes Vencendo (Próx. 45 Dias)</span></h2></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="expiring-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="expiring-list" class="space-y-3"></ul></div></div></div>
-
-    <!-- Details Modal -->
-    <div id="item-details-modal" class="modal z-[60]">
-        <div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-start mb-6">
-                <div><h2 class="title-md flex items-center mb-1 text-2xl tracking-tight"><span id="details-product-name"></span></h2><span id="details-product-type-badge" class="badge bg-ios-cardHover text-ios-textMuted border border-ios-border"></span></div>
-                <div class="flex items-center gap-3"><button id="btn-edit-item" class="text-ios-blue bg-ios-blue/10 p-3 rounded-full hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-pen"></i></button><button id="btn-delete-item" class="text-ios-red bg-ios-red/10 p-3 rounded-full hover:bg-ios-red/20 transition-colors"><i class="fa-solid fa-trash"></i></button><button class="text-ios-textMuted hover:text-white text-3xl ml-2 close-modal" data-target="item-details-modal">&times;</button></div>
-            </div>
-            <div id="item-details-view" class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm bg-ios-bg p-5 rounded-2xl mb-6 shadow-inner border border-ios-border">
-                <div><span class="text-ios-textMuted block mb-1">Cód.</span><span id="details-product-code" class="text-white font-medium font-mono"></span></div>
-                <div><span class="text-ios-textMuted block mb-1">Cód. Barras</span><span id="details-product-barcode" class="text-white font-medium font-mono"></span></div>
-                <div class="md:col-span-2"><span class="text-ios-textMuted block mb-1">Fornecedor</span><span id="details-supplier" class="text-white font-medium"></span></div>
-                <div><span class="text-ios-textMuted block mb-1">Mínimo</span><span id="details-min-stock" class="text-ios-orange font-medium"></span></div>
-                <div><span class="text-ios-textMuted block mb-1">Saldo</span><span id="details-total-quantity" class="text-ios-green font-bold text-xl"></span></div>
-            </div>
-            <div id="item-details-edit" class="hidden mb-6 bg-ios-bg p-5 rounded-2xl border border-ios-border shadow-inner">
-                <form id="edit-item-form" class="grid grid-cols-1 md:grid-cols-6 gap-5">
-                    <input type="hidden" id="edit-item-id">
-                    <div class="md:col-span-6"><label class="form-label">Nome</label><input type="text" id="edit-product-name" required class="form-input"></div>
-                    <div class="md:col-span-3"><label class="form-label">Cód.</label><input type="text" id="edit-product-code" class="form-input"></div>
-                    <div class="md:col-span-3"><label class="form-label">Cód. Barras</label><input type="text" id="edit-product-barcode" class="form-input text-ios-green"></div>
-                    <div class="md:col-span-3"><label class="form-label">Fornecedor</label><input type="text" id="edit-supplier" class="form-input"></div>
-                    <div class="md:col-span-1"><label class="form-label">Classificação</label><select id="edit-product-type" required class="form-input"><option value="insumo">Insumo</option><option value="semi_acabado">Semi-acabado</option></select></div>
-                    <div class="md:col-span-2 relative border border-ios-border p-3 rounded-xl bg-ios-cardHover"><label class="text-xs text-ios-orange font-bold mb-1 block">Estoque Mínimo</label><input type="number" step="0.01" id="edit-min-stock" class="form-input text-ios-orange font-bold"></div>
-                    <div class="md:col-span-6 flex justify-end gap-3 mt-2"><button type="button" id="btn-cancel-edit" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Salvar Edição</button></div>
-                </form>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Lotes Físicos na Prateleira</h3>
-                    <div class="table-container mb-8 max-h-96 overflow-y-auto"><table class="base-table"><thead class="base-thead"><tr><th class="base-th">Lote</th><th class="base-th">Local (Rua)</th><th class="base-th">Status</th><th class="base-th">Volume</th><th class="base-th text-center">Ações</th></tr></thead><tbody id="details-batches-table"></tbody></table></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3 flex justify-between items-center">Extrato Movimentação <button id="btn-clear-hist-filters" class="text-xs text-ios-blue hover:text-blue-300 font-normal underline hidden">Limpar Filtros</button></h3>
-                    <div class="flex flex-wrap gap-2 mb-3 bg-ios-bg p-3 rounded-xl border border-ios-border shadow-inner"><input type="date" id="hist-filter-start" class="form-input py-1 px-2 text-xs w-auto border-ios-border"><span class="text-ios-textMuted flex items-center text-xs">até</span><input type="date" id="hist-filter-end" class="form-input py-1 px-2 text-xs w-auto border-ios-border"><select id="hist-filter-type" class="form-input py-1 px-2 text-xs w-auto border-ios-border ml-auto"><option value="">Todas Movimentações</option><option value="entrada">Entradas</option><option value="saída">Saídas / Consumo</option></select></div>
-                    <div class="table-container max-h-72 overflow-y-auto bg-ios-bg p-2" id="details-history-container"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Batch / Selector / Confirm -->
     <div id="edit-batch-modal" class="modal z-[70]"><div class="modal-content max-w-sm"><h2 class="title-md mb-4">Editar Lote</h2><form id="edit-batch-form" class="space-y-4"><input type="hidden" id="edit-batch-id"><input type="hidden" id="edit-batch-product-id"><div><label class="form-label">Código do Lote</label><input type="text" id="edit-batch-code" required class="form-input bg-ios-bg border-ios-border"></div><div><label class="form-label">Local (Rua/Endereço)</label><input type="text" id="edit-batch-location" class="form-input uppercase bg-ios-bg border-ios-border"></div><div><label class="form-label">Quantidade</label><input type="number" step="0.001" id="edit-batch-qty" required class="form-input text-ios-blue font-bold bg-ios-bg border-ios-border"></div><div><label class="form-label">Validade</label><input type="date" id="edit-batch-expiry" class="form-input bg-ios-bg border-ios-border"></div><div class="flex justify-end gap-2 mt-2"><button type="button" class="btn-secondary close-modal" data-target="edit-batch-modal">Cancelar</button><button type="submit" class="btn-primary">Salvar</button></div></form></div></div>
 
     <div id="batch-selector-modal" class="modal z-[70]"><div class="modal-content max-w-xl"><h2 id="batch-selector-title" class="title-md mb-4">Descontar de quais lotes?</h2><div class="bg-ios-bg border border-ios-border p-4 rounded-xl flex justify-between mb-5 items-center"><span class="text-ios-textMuted text-sm">Alvo: <span id="batch-selector-needed" class="text-white font-semibold"></span></span><span class="text-ios-textMuted text-sm">Marcado: <span id="batch-selector-selected" class="font-bold text-lg text-ios-blue"></span></span></div><div id="batch-selector-list" class="max-h-64 overflow-y-auto mb-6 pr-2 space-y-2"></div><div class="flex justify-end gap-3"><button class="btn-secondary close-modal" data-target="batch-selector-modal">Cancelar</button><button id="confirm-batch-selection" class="btn-primary">Aplicar Seleção</button></div></div></div>
 
     <div id="confirm-action-modal" class="modal z-[9999]"><div class="modal-content max-w-md text-center flex flex-col items-center"><div class="w-16 h-16 rounded-full bg-ios-cardHover border border-ios-border flex items-center justify-center mb-5"><i class="fa-solid fa-circle-question text-3xl text-ios-blue"></i></div><h3 id="confirm-title" class="title-md mb-2"></h3><p id="confirm-message" class="text-ios-textMuted text-sm mb-8 leading-relaxed"></p><div class="flex gap-3 w-full justify-center"><button id="cancel-action-btn" class="btn-secondary flex-1">Cancelar</button><button id="confirm-action-btn" class="btn-primary flex-1">Sim, Continuar</button></div></div></div>
-    
+
 <script type="module">
     const id = n => document.getElementById(n);
     const show = el => { if(el) { el.style.display = 'flex'; el.classList.remove('hidden'); } };
@@ -793,14 +489,7 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
     import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, deleteDoc, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDev8spgKoKZi2pOohmk0r9SFLtLMcePa8",
-        authDomain: "estoque-b50df.firebaseapp.com",
-        projectId: "estoque-b50df",
-        storageBucket: "estoque-b50df.firebasestorage.app",
-        messagingSenderId: "634756791567",
-        appId: "1:634756791567:web:993e61243b57b7e057d27a"
-    };
+    const firebaseConfig = { apiKey: "AIzaSyDev8spgKoKZi2pOohmk0r9SFLtLMcePa8", authDomain: "estoque-b50df.firebaseapp.com", projectId: "estoque-b50df", storageBucket: "estoque-b50df.firebasestorage.app", messagingSenderId: "634756791567", appId: "1:634756791567:web:993e61243b57b7e057d27a" };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -833,14 +522,9 @@
         async clear(coll) { const qs = await getDocs(collection(db, coll)); const batch = writeBatch(db); qs.docs.forEach(d => batch.delete(d.ref)); await batch.commit(); },
         async restoreBackup(data) {
             for (const s of ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption', 'locations']) {
-                const qs = await getDocs(collection(db, s));
-                for (const d of qs.docs) { await deleteDoc(d.ref); } 
+                const qs = await getDocs(collection(db, s)); for (const d of qs.docs) { await deleteDoc(d.ref); } 
                 if (data[s] && Array.isArray(data[s])) {
-                    for (const item of data[s]) {
-                        const idStr = item.id ? String(item.id) : null;
-                        if (idStr) { await setDoc(doc(db, s, idStr), item); } 
-                        else { const ref = await addDoc(collection(db, s), item); await setDoc(ref, { id: ref.id }, { merge: true }); }
-                    }
+                    for (const item of data[s]) { const idStr = item.id ? String(item.id) : null; if (idStr) { await setDoc(doc(db, s, idStr), item); } else { const ref = await addDoc(collection(db, s), item); await setDoc(ref, { id: ref.id }, { merge: true }); } }
                 }
             }
         }
@@ -857,35 +541,23 @@
         async restoreBackup(d) { return isOfflineMode ? await LocalDB.restoreBackup(d) : await FirebaseDB.restoreBackup(d); }
     };
 
-    // --- CADASTRO E GESTÃO DE LOCAIS ---
+    // --- CADASTRO DE LOCAIS ---
     addEvt('btn-manage-locations', 'click', () => { renderLocationsManager(); show(id('manage-locations-modal')); });
-
     function renderLocationsManager() {
         const tbody = id('locations-table-body');
         if(!localLocations || !localLocations.length) { tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-ios-textMuted">Nenhum local cadastrado.</td></tr>'; return; }
         tbody.innerHTML = localLocations.map(l => `
-            <tr class="base-tr hover:bg-ios-card/50">
-                <td class="base-td font-mono text-xs text-ios-textMuted">${l.code || '-'}</td>
-                <td class="base-td font-bold text-white">${l.name}</td>
-                <td class="base-td text-center">
-                    <button class="text-ios-blue hover:text-blue-400 p-2 edit-loc-btn bg-ios-bg rounded-lg border border-ios-border mr-1" data-id="${l.id}"><i class="fa-solid fa-pen"></i></button>
-                    <button class="text-ios-red hover:text-red-400 p-2 del-loc-btn bg-ios-bg rounded-lg border border-ios-border" data-id="${l.id}"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
+            <tr class="base-tr hover:bg-ios-card/50"><td class="base-td font-mono text-xs text-ios-textMuted">${l.code || '-'}</td><td class="base-td font-bold text-white">${l.name}</td><td class="base-td text-center"><button class="text-ios-blue hover:text-blue-400 p-2 edit-loc-btn bg-ios-bg rounded-lg border border-ios-border mr-1" data-id="${l.id}"><i class="fa-solid fa-pen"></i></button><button class="text-ios-red hover:text-red-400 p-2 del-loc-btn bg-ios-bg rounded-lg border border-ios-border" data-id="${l.id}"><i class="fa-solid fa-trash"></i></button></td></tr>
         `).join('');
     }
 
     addEvt('locations-table-body', 'click', async e => {
         const delBtn = e.target.closest('.del-loc-btn');
         if(delBtn) { showConfirmationModal('Excluir Local?', 'Tem certeza que deseja apagar este local do sistema?', async () => { show(id('loading-overlay')); await DB.remove('locations', delBtn.dataset.id); await refreshData(); renderLocationsManager(); hide(id('loading-overlay')); showNotif('Local apagado'); }); }
-        
         const editBtn = e.target.closest('.edit-loc-btn');
         if(editBtn) {
             const loc = localLocations.find(l => l.id == editBtn.dataset.id);
-            if(loc) {
-                id('edit-loc-id').value = loc.id; id('edit-loc-code').value = loc.code; id('edit-loc-name').value = loc.name; id('edit-loc-old-name').value = loc.name;
-                show(id('edit-location-modal'));
-            }
+            if(loc) { id('edit-loc-id').value = loc.id; id('edit-loc-code').value = loc.code; id('edit-loc-name').value = loc.name; id('edit-loc-old-name').value = loc.name; show(id('edit-location-modal')); }
         }
     });
 
@@ -896,10 +568,7 @@
             const loc = await DB.get('locations', lId);
             if(loc) {
                 loc.code = newCode; loc.name = newName; await DB.update('locations', loc);
-                if(oldName && oldName !== newName) {
-                    const affectedBatches = localBatches.filter(b => b.location === oldName);
-                    for(let b of affectedBatches) { b.location = newName; await DB.update('batches', b); }
-                }
+                if(oldName && oldName !== newName) { const affectedBatches = localBatches.filter(b => b.location === oldName); for(let b of affectedBatches) { b.location = newName; await DB.update('batches', b); } }
                 await refreshData(); hide(id('edit-location-modal')); renderLocationsManager(); showNotif('Local atualizado com sucesso!');
             }
         } catch(err) { showNotif('Erro ao atualizar local.', true); } finally { hide(id('loading-overlay')); }
@@ -909,7 +578,7 @@
         e.preventDefault(); show(id('loading-overlay'));
         try {
             const code = id('loc-code').value.trim(); const name = id('loc-name').value.trim().toUpperCase();
-            await DB.add('locations', { code, name }); await refreshData(); hide(id('register-location-modal')); showNotif('Local cadastrado com sucesso!');
+            await DB.add('locations', { code, name }); await refreshData(); hide(id('register-location-modal')); showNotif('Local cadastrado!');
             if(id('entry-location') && !id('screen-entry').classList.contains('hidden')) { id('entry-location').value = name; } 
             else if(id('address-input') && !id('screen-addressing').classList.contains('hidden')) { id('address-input').value = name; id('address-input').dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13 })); }
         } catch(err) { showNotif('Erro ao cadastrar local', true); } finally { hide(id('loading-overlay')); }
@@ -924,7 +593,11 @@
         }
     });
 
-    // --- FUNÇÕES GLOBAIS DE UI ---
+    addEvt('btn-start-camera-entry-loc', 'click', () => {
+        toggleCamera('entry-loc-camera-reader', 'entry-location');
+    });
+
+    // --- FUNÇÕES DE UI E CÂMERA ---
     function showNotif(msg, isErr=false) {
         const nf = id('notification-modal'); if(!nf) return;
         nf.innerHTML = `<i class="fa-solid ${isErr?'fa-triangle-exclamation':'fa-check-circle'} mr-2"></i> ${msg}`;
@@ -945,14 +618,6 @@
     }
     window.showConfirmationModal = showConfirmationModal;
 
-    function formatTime(sec) {
-        if (isNaN(sec) || sec < 0) return "00:00";
-        const h = Math.floor(sec / 3600); const m = Math.floor((sec % 3600) / 60); const s = sec % 60;
-        if (h > 0) return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    }
-
-    // --- CÂMERA (LEITOR DE CÓDIGO) ---
     let qrCodeInstance = null;
     async function toggleCamera(readerId, inputId) {
         const readerEl = id(readerId); const inputEl = id(inputId);
@@ -983,6 +648,10 @@
             }
         });
     });
+
+    addEvt('btn-start-camera-main', 'click', () => toggleCamera('main-camera-reader', 'scanner-input'));
+    addEvt('btn-start-camera-entry', 'click', () => toggleCamera('entry-camera-reader', 'entry-product-code'));
+    addEvt('btn-start-camera-picking', 'click', () => toggleCamera('picking-camera-reader', 'picking-scanner'));
 
     // --- AUTENTICAÇÃO E INÍCIO ---
     addEvt('btn-login-google', 'click', () => {
@@ -1024,7 +693,16 @@
         }
     });
 
-    // --- NAVEGAÇÃO E REFRESH ---
+    // --- VARIÁVEIS GLOBAIS DE ESTADO E NAVEGAÇÃO ---
+    let localInventory=[], localBatches=[], localHistory=[], localRecipes=[], localProductionOrders=[], localMonthlyConsumption=[], localLocations=[];
+    let currentBatchTarget=null;
+    let invSort = { col: 'name', asc: true };
+    let currentHistoryProductId = null;
+    let activePickingLine = null, activePickingOpIds = [];
+    const typeLabels = { insumo: 'Insumo', semi_acabado: 'Semi-acabado' };
+
+    document.querySelectorAll('.close-modal').forEach(btn => { btn.addEventListener('click', () => { hide(id(btn.dataset.target)); }); });
+
     const screens = ['dashboard','addressing','scanner','entry','inventory','recipes','production','requisitions','adjustments','consumption','settings','picking'];
     function navTo(target) {
         screens.forEach(s => { id('screen-'+s)?.classList.add('hidden'); });
@@ -1194,7 +872,7 @@
     addEvt('home-expiring-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { navTo('inventory'); window.openDetails(item.dataset.id); } });
     addEvt('home-low-stock-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { navTo('inventory'); window.openDetails(item.dataset.id); } });
 
-    // --- NOVA TELA: ENDEREÇAMENTO (Consulta por Localização) ---
+    // --- ENDEREÇAMENTO ---
     addEvt('address-input', 'keypress', e => {
         if(e.key === 'Enter') {
             const code = e.target.value.trim().toUpperCase(); if(!code) return;
@@ -1234,7 +912,7 @@
         }
     });
 
-    // --- LEITOR GERAL (SCANNER TELA PRINCIPAL - Associação) ---
+    // --- LEITOR GERAL (ITEM / ASSOCIAÇÃO) ---
     let lastScannedCode = '';
     addEvt('scanner-input', 'keypress', e => {
         if(e.key === 'Enter') {
@@ -1285,26 +963,6 @@
             }
         } catch(e) { showNotif('Erro ao vincular código.', true); } finally { hide(id('loading-overlay')); }
     });
-
-    // --- SIDEBAR E ALERTAS ---
-    function updateSidebarBadges() {
-        const isPickingActive = localProductionOrders.some(op => op.picking?.status === 'em_andamento');
-        const badgeProd = id('badge-nav-prod'); const badgePicking = id('badge-nav-picking');
-        if (isPickingActive) {
-            if(badgeProd) badgeProd.classList.remove('hidden'); if(badgePicking) badgePicking.classList.remove('hidden');
-        } else {
-            if(badgeProd) badgeProd.classList.add('hidden'); if(badgePicking) badgePicking.classList.add('hidden');
-        }
-
-        const lowStockItems = localInventory.filter(i => (Number(i.minStock) || 0) > 0 && (Number(i.totalQuantity) || 0) <= Number(i.minStock));
-        const badgeAlerts = id('badge-nav-alerts');
-        if (badgeAlerts) {
-            if (lowStockItems.length > 0) { badgeAlerts.innerText = lowStockItems.length; badgeAlerts.classList.remove('hidden'); } 
-            else { badgeAlerts.classList.add('hidden'); }
-        }
-    }
-
-    addEvt('btn-show-alerts', 'click', () => { navTo('dashboard'); showNotif('Alertas estão no Menu Principal!'); });
 
     // --- ESTOQUE E DETALHES ---
     addEvt('search-inventory', 'input', renderInv); addEvt('supplier-filter', 'input', renderInv); addEvt('type-filter', 'input', renderInv);
@@ -1374,93 +1032,7 @@
     }
     window.openDetails = openDetails;
 
-    addEvt('details-batches-table', 'change', async e => {
-        if(e.target.classList.contains('toggle-release-batch')) {
-            show(id('loading-overlay'));
-            const bId = e.target.dataset.bid; const b = await DB.get('batches', bId);
-            if(b) { b.isReleased = e.target.checked; await DB.update('batches', b); showNotif(b.isReleased ? 'Lote Liberado' : 'Lote Bloqueado', !b.isReleased); await refreshData(); openDetails(id('edit-item-id').value); }
-            hide(id('loading-overlay'));
-        }
-    });
-
-    addEvt('details-batches-table', 'click', e => {
-        const delBtn = e.target.closest('.del-batch-btn');
-        if(delBtn) showConfirmationModal('Excluir Lote?', 'Apagar remove do saldo sem registrar saída.', async () => { show(id('loading-overlay')); await DB.remove('batches', delBtn.dataset.id); await refreshData(); openDetails(id('edit-item-id').value); hide(id('loading-overlay')); showNotif('Lote apagado'); });
-        const editBtn = e.target.closest('.edit-batch-btn');
-        if(editBtn) { const b = localBatches.find(x => x.id == editBtn.dataset.id); if(b) { if(id('edit-batch-id')) id('edit-batch-id').value = b.id; if(id('edit-batch-product-id')) id('edit-batch-product-id').value = b.productId; if(id('edit-batch-code')) id('edit-batch-code').value = b.code; if(id('edit-batch-location')) id('edit-batch-location').value = b.location || ''; if(id('edit-batch-qty')) id('edit-batch-qty').value = b.quantity; if(id('edit-batch-expiry')) id('edit-batch-expiry').value = b.expiryDate || ''; show(id('edit-batch-modal')); } }
-    });
-
-    addEvt('edit-batch-form', 'submit', async e => {
-        e.preventDefault(); show(id('loading-overlay')); const bId = id('edit-batch-id')?.value; const pId = id('edit-batch-product-id')?.value;
-        if(!bId || !pId) return;
-        const b = await DB.get('batches', bId); if(b) { b.code = id('edit-batch-code').value; b.location = id('edit-batch-location').value.toUpperCase(); b.quantity = parseFloat(id('edit-batch-qty').value); b.expiryDate = id('edit-batch-expiry').value; await DB.update('batches', b); hide(id('edit-batch-modal')); await refreshData(); openDetails(pId); showNotif('Lote atualizado!'); }
-        hide(id('loading-overlay'));
-    });
-
-    addEvt('btn-edit-item', 'click', () => { hide(id('item-details-view')); show(id('item-details-edit')); }); 
-    addEvt('btn-cancel-edit', 'click', () => { show(id('item-details-view')); hide(id('item-details-edit')); });
-    
-    addEvt('btn-calc-min-stock', 'click', () => {
-        const pId = id('edit-item-id').value; const leadTime = parseInt(id('edit-lead-time').value) || 0; const safetyMargin = parseInt(id('edit-safety-margin')?.value) || 0;
-        if(leadTime === 0) return showNotif('Informe o Prazo de Entrega (Dias) primeiro!', true);
-        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); const startDateStr = thirtyDaysAgo.toISOString().split('T')[0];
-        const recentOut = localHistory.filter(h => h.productId == pId && (h.type === 'saída' || h.type === 'requisição') && h.date >= startDateStr);
-        const totalOut = recentOut.reduce((sum, h) => sum + Number(h.quantity), 0); const dailyAvg = totalOut / 30; const finalSuggestion = dailyAvg * (leadTime + safetyMargin);
-        if(id('edit-min-stock')) id('edit-min-stock').value = finalSuggestion.toFixed(2); showNotif(`Ponto Calculado: ${finalSuggestion.toFixed(2)} (Média: ${dailyAvg.toFixed(2)}/dia x ${leadTime + safetyMargin} dias)`);
-    });
-
-    addEvt('edit-item-form', 'submit', async e => { 
-        e.preventDefault(); show(id('loading-overlay')); const p = await DB.get('inventory', id('edit-item-id').value); if(!p) return;
-        p.name = id('edit-product-name').value; p.type = id('edit-product-type').value; p.code = id('edit-product-code').value; p.barcode = id('edit-product-barcode').value; p.supplier = id('edit-supplier').value; 
-        p.leadTime = parseInt(id('edit-lead-time').value) || 0; p.minStock = parseFloat(id('edit-min-stock').value) || 0;
-        await DB.update('inventory', p); await refreshData(); openDetails(p.id); showNotif('Atualizado!'); hide(id('item-details-edit')); show(id('item-details-view')); hide(id('loading-overlay'));
-    });
-    addEvt('btn-delete-item', 'click', () => { const pId = id('edit-item-id').value; showConfirmationModal('Excluir?', 'Histórico e lotes serão perdidos.', async () => { show(id('loading-overlay')); await DB.remove('inventory', pId); await refreshData(); hide(id('item-details-modal')); hide(id('loading-overlay')); showNotif('Excluído'); }); });
-
-    // --- ENTRADA LOTE (COM ENDEREÇAMENTO) ---
-    const entryCodeInput = document.querySelector('#entry-product-code');
-    if(entryCodeInput) {
-        entryCodeInput.addEventListener('input', e => {
-            const code = e.target.value.trim(); if(!code) return;
-            const p = localInventory.find(i => String(i.code) === code || String(i.barcode) === code);
-            if(p) {
-                const form = id('entry-form');
-                form.elements['product-name'].value = p.name || ''; form.elements['product-type'].value = p.type || 'insumo'; form.elements['supplier'].value = p.supplier || ''; form.elements['lead-time'].value = p.leadTime || ''; form.elements['min-stock'].value = p.minStock || '';
-                ['product-name', 'supplier', 'lead-time', 'min-stock'].forEach(fname => { const el = form.elements[fname]; el.classList.add('border-ios-green', 'bg-ios-green/10'); setTimeout(() => el.classList.remove('border-ios-green', 'bg-ios-green/10'), 800); });
-                showNotif('Dados carregados do cadastro!');
-            }
-        });
-    }
-
-    addEvt('entry-form', 'submit', async e => {
-        e.preventDefault(); show(id('loading-overlay')); 
-        try {
-            const fd = new FormData(e.target); 
-            const autoBatch = 'LT-' + new Date().getTime().toString(36).toUpperCase();
-            const location = (fd.get('location') || '').toUpperCase().trim();
-            const data = {code:fd.get('product-code'), type:fd.get('product-type'), name:fd.get('product-name'), supplier:fd.get('supplier'), qtd:parseFloat(fd.get('quantity')), valid:id('expiry-date').value, minStock: parseFloat(fd.get('min-stock')) || 0, leadTime: parseInt(fd.get('lead-time')) || 0 };
-            
-            let p = await DB.getByIndex('inventory','code',data.code); 
-            if(!p || !data.code) { 
-                p = {code:data.code, name:data.name, type:data.type, supplier:data.supplier, totalQuantity:0, minStock: data.minStock, leadTime: data.leadTime}; 
-                p.id = await DB.add('inventory', p);
-            } else { 
-                p.supplier = data.supplier; p.name = data.name; p.type = data.type; if (data.minStock > 0) p.minStock = data.minStock; if (data.leadTime > 0) p.leadTime = data.leadTime; 
-                await DB.update('inventory', p);
-            }
-
-            p.totalQuantity = (Number(p.totalQuantity) || 0) + data.qtd; await DB.update('inventory', p);
-            const isReleased = (String(p.code) !== '8110');
-            await DB.add('batches', {productId:p.id, code:autoBatch, location: location, quantity:data.qtd, expiryDate:data.valid, isReleased: isReleased});
-            await DB.add('history', {productId:p.id, batchCode:autoBatch, type:'entrada', quantity:data.qtd, date:id('receipt-date').value, reason: `Recepção Forn. ${p.supplier}`});
-            
-            await refreshData();
-            e.target.reset(); if(id('receipt-date')) id('receipt-date').value = new Date().toISOString().split('T')[0];
-            if(!isReleased) showNotif('Registrada! Lote em Quarentena (8110).', true); else showNotif('Entrada Registrada!'); 
-        } catch (err) { console.error(err); showNotif('Falha ao processar entrada.', true); } finally { hide(id('loading-overlay')); }
-    });
-
-    // --- RECEITAS ---
+    // --- RECEITAS (IMPORTAÇÃO INTELIGENTE DE EXCEL MULTIPLAS ABAS) ---
     addEvt('search-recipe', 'input', renderRecipes);
     function renderRecipes() {
         const grid = id('recipes-grid'); if(!grid) return;
@@ -1478,7 +1050,8 @@
         grid.innerHTML = f.map(r => {
             const isSemi = r.isSemi;
             const ingredientsHTML = (r.ingredients || []).map(i=> {
-                const prod = localInventory.find(p=>p.id==i.productId); const isWarning = prod && String(prod.name).startsWith('⚠️');
+                const prod = localInventory.find(p=>p.id==i.productId);
+                const isWarning = prod && String(prod.name).startsWith('⚠️');
                 return `<li class="flex justify-between py-1 border-b border-ios-border/30 last:border-0"><span class="truncate pr-2 ${isWarning ? 'text-ios-orange font-bold' : ''}">${prod?prod.name:'?'}</span><span class="font-bold text-ios-blue bg-ios-bg px-2 rounded">${i.quantity}</span></li>`;
             }).join('');
             
@@ -1489,8 +1062,13 @@
                     <button class="del-rec-btn text-ios-red bg-ios-red/10 p-2 w-8 h-8 rounded-full hover:bg-ios-red/20 flex items-center justify-center" data-id="${r.id}"><i class="fa-solid fa-trash text-xs"></i></button>
                 </div>
                 <h3 class="text-lg font-bold text-white mb-1 pr-20 leading-tight">${r.name}</h3>
-                <div class="mb-4 mt-1 inline-flex">${isSemi ? `<span class="bg-ios-orange/10 border border-ios-orange/50 text-ios-orange text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-box mr-1"></i>Semi-Acabado (Rende: ${r.outputYield||1})</span>` : `<span class="bg-gray-800 border border-gray-600 text-gray-300 text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-utensils mr-1"></i>Produto Acabado</span>`}</div>
-                <div class="mt-auto border-t border-ios-border pt-4 bg-ios-bg -mx-6 -mb-6 px-6 pb-6 rounded-b-2xl"><p class="text-[10px] text-ios-textMuted uppercase font-bold mb-3 tracking-wider"><i class="fa-solid fa-list-ul mr-1"></i> Ingredientes</p><ul class="text-sm text-ios-textMuted">${ingredientsHTML}</ul></div>
+                <div class="mb-4 mt-1 inline-flex">
+                    ${isSemi ? `<span class="bg-ios-orange/10 border border-ios-orange/50 text-ios-orange text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-box mr-1"></i>Semi-Acabado (Rende: ${r.outputYield||1})</span>` : `<span class="bg-gray-800 border border-gray-600 text-gray-300 text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-utensils mr-1"></i>Produto Acabado</span>`}
+                </div>
+                <div class="mt-auto border-t border-ios-border pt-4 bg-ios-bg -mx-6 -mb-6 px-6 pb-6 rounded-b-2xl">
+                    <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-3 tracking-wider"><i class="fa-solid fa-list-ul mr-1"></i> Ingredientes</p>
+                    <ul class="text-sm text-ios-textMuted">${ingredientsHTML}</ul>
+                </div>
             </div>`;
         }).join('');
     }
@@ -1498,67 +1076,114 @@
     addEvt('recipe-categories-list', 'click', e => { if(e.target.tagName==='A') { e.preventDefault(); currentRecipeCategory = e.target.dataset.cat; renderRecipes(); }});
     addEvt('recipes-grid', 'click', e => {
         const delBtn = e.target.closest('.del-rec-btn'); const editBtn = e.target.closest('.edit-rec-btn');
-        if(delBtn) showConfirmationModal('Apagar Ficha?', 'Confirma exclusão?', async () => { show(id('loading-overlay')); await DB.remove('recipes', delBtn.dataset.id); await refreshData(); hide(id('loading-overlay')); showNotif('Excluída'); });
+        if(delBtn) showConfirmationModal('Apagar Ficha?', 'Confirma a exclusão da receita?', async () => { show(id('loading-overlay')); await DB.remove('recipes', delBtn.dataset.id); await refreshData(); hide(id('loading-overlay')); showNotif('Excluída'); });
         if(editBtn) openEditRecipe(editBtn.dataset.id);
     });
     addEvt('recipe-is-semi', 'change', e => { if(e.target.checked) show(id('yield-wrapper')); else hide(id('yield-wrapper')); });
 
-    // IMPORTAÇÃO EXCEL (Receitas)
     addEvt('btn-import-recipes', 'click', () => id('recipe-file-input')?.click());
+    
     addEvt('recipe-file-input', 'change', e => {
-        const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
+        const file = e.target.files[0]; if(!file) return; 
+        const reader = new FileReader();
+        
         reader.onload = async ev => {
             try {
                 show(id('loading-overlay'));
-                const data = ev.target.result; const workbook = XLSX.read(data, {type: 'binary'});
+                const data = new Uint8Array(ev.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                
                 let importedCount = 0;
+                
                 for (const sheetName of workbook.SheetNames) {
                     const worksheet = workbook.Sheets[sheetName];
                     const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
+                    
                     if(rows.length < 2) continue; 
-                    let recipeName = sheetName; let yieldQty = 1; let ingredients = [];
-                    let readingIngs = false; let colIng = -1, colCode = -1, colQty = -1;
+                    
+                    let recipeName = sheetName;
+                    let yieldQty = 1;
+                    let ingredients = [];
+                    let readingIngs = false;
+                    let colIng = -1, colCode = -1, colQty = -1;
                     
                     for (const row of rows) {
                         const rowStr = row.join(' ').toUpperCase();
-                        if(rowStr.includes('PREPARAÇÃO:')) { const cell = row.find(c => String(c).toUpperCase().includes('PREPARAÇÃO:')); if(cell) recipeName = String(cell).replace(/PREPARAÇÃO:/i, '').trim(); }
-                        if(rowStr.includes('RENDIMENTO')) { const idxRend = row.findIndex(c => String(c).toUpperCase().includes('RENDIMENTO')); if(idxRend !== -1) yieldQty = parseFloat(row[idxRend+1]) || parseFloat(row[idxRend+2]) || 1; }
-                        
-                        if(!readingIngs && rowStr.includes('INGREDIENTE') && rowStr.includes('QUANTIDADE')) { colIng = row.findIndex(c => String(c).toUpperCase().trim() === 'INGREDIENTE'); colQty = row.findIndex(c => String(c).toUpperCase().trim() === 'QUANTIDADE'); colCode = row.findIndex(c => String(c).toUpperCase().trim() === 'CÓDIGO'); readingIngs = true; continue; }
-                        
+                        if(rowStr.includes('PREPARAÇÃO:')) {
+                            const cell = row.find(c => String(c).toUpperCase().includes('PREPARAÇÃO:'));
+                            if(cell) recipeName = String(cell).replace(/PREPARAÇÃO:/i, '').trim();
+                        }
+                        if(rowStr.includes('RENDIMENTO')) {
+                            const idxRend = row.findIndex(c => String(c).toUpperCase().includes('RENDIMENTO'));
+                            if(idxRend !== -1) { yieldQty = parseFloat(row[idxRend+1]) || parseFloat(row[idxRend+2]) || 1; }
+                        }
+                        if(!readingIngs && rowStr.includes('INGREDIENTE') && rowStr.includes('QUANTIDADE')) {
+                            colIng = row.findIndex(c => String(c).toUpperCase().trim() === 'INGREDIENTE');
+                            colQty = row.findIndex(c => String(c).toUpperCase().trim() === 'QUANTIDADE');
+                            colCode = row.findIndex(c => String(c).toUpperCase().trim() === 'CÓDIGO');
+                            readingIngs = true; continue;
+                        }
                         if(readingIngs && colIng !== -1 && colQty !== -1) {
                             const ingNameRaw = String(row[colIng]).trim();
                             const qtyRaw = parseFloat(String(row[colQty]).replace(',', '.')); 
-                            if(ingNameRaw.toUpperCase() === 'TOTAL' || ingNameRaw.toUpperCase() === 'RENDIMENTO' || ingNameRaw.toUpperCase().includes('KG')) { readingIngs = false; continue; }
+                            
+                            if(ingNameRaw.toUpperCase() === 'TOTAL' || ingNameRaw.toUpperCase() === 'RENDIMENTO' || ingNameRaw.toUpperCase().includes('KG')) {
+                                readingIngs = false; continue;
+                            }
                             
                             if(ingNameRaw && !isNaN(qtyRaw) && qtyRaw > 0) {
-                                let code = colCode !== -1 ? String(row[colCode]).trim() : ''; let p = null;
+                                let code = colCode !== -1 ? String(row[colCode]).trim() : '';
+                                let p = null;
                                 if(code) p = localInventory.find(i => String(i.code) === code);
                                 if(!p) p = localInventory.find(i => String(i.name).toLowerCase() === ingNameRaw.toLowerCase());
-                                if(!p) { const alertName = '⚠️ ' + ingNameRaw; p = localInventory.find(i => i.name === alertName); if(!p) { p = { id: crypto.randomUUID(), code: code || '', name: alertName, type: 'insumo', supplier: 'A DEFINIR', totalQuantity: 0, minStock: 0, leadTime: 0 }; await DB.add('inventory', p); localInventory.push(p); } }
+                                
+                                if(!p) {
+                                    const alertName = '⚠️ ' + ingNameRaw;
+                                    p = localInventory.find(i => String(i.name) === alertName);
+                                    if(!p) {
+                                        p = { id: crypto.randomUUID(), code: code || '', name: alertName, type: 'insumo', supplier: 'A DEFINIR', totalQuantity: 0, minStock: 0, leadTime: 0 };
+                                        await DB.add('inventory', p);
+                                        localInventory.push(p); 
+                                    }
+                                }
                                 ingredients.push({ productId: p.id, quantity: qtyRaw });
                             }
                         }
                     }
+                    
                     if(ingredients.length > 0) {
                         let existingRecipe = localRecipes.find(r => r.name === recipeName);
-                        if(existingRecipe) { existingRecipe.ingredients = ingredients; existingRecipe.outputYield = yieldQty; await DB.update('recipes', existingRecipe); } 
-                        else { await DB.add('recipes', { name: recipeName, category: 'Importadas', outputProductId: null, outputYield: yieldQty, isSemi: false, ingredients: ingredients }); }
+                        if(existingRecipe) {
+                            existingRecipe.ingredients = ingredients; existingRecipe.outputYield = yieldQty;
+                            await DB.update('recipes', existingRecipe);
+                        } else {
+                            await DB.add('recipes', { name: recipeName, category: 'Importadas', outputProductId: null, outputYield: yieldQty, isSemi: false, ingredients: ingredients });
+                        }
                         importedCount++;
                     }
                 }
-                await refreshData(); showNotif(`Sucesso! ${importedCount} receitas importadas.`);
-            } catch(err) { console.error(err); showNotif('Erro na leitura do Excel.', true); } finally { if(id('recipe-file-input')) id('recipe-file-input').value=''; hide(id('loading-overlay')); }
-        }; reader.readAsBinaryString(file);
+                await refreshData();
+                showNotif(`Sucesso! ${importedCount} receitas importadas.`);
+            } catch(err) {
+                console.error(err); showNotif('Erro na leitura do arquivo Excel.', true); 
+            } finally { 
+                if(id('recipe-file-input')) id('recipe-file-input').value=''; hide(id('loading-overlay'));
+            }
+        }; 
+        reader.readAsArrayBuffer(file);
     });
 
     function openEditRecipe(rId) {
         const r = localRecipes.find(x => x.id == rId); if(!r) return;
-        if(id('edit-recipe-id')) id('edit-recipe-id').value = r.id; if(id('recipe-name')) id('recipe-name').value = r.name; if(id('recipe-category')) id('recipe-category').value = r.category;
+        if(id('edit-recipe-id')) id('edit-recipe-id').value = r.id; 
+        if(id('recipe-name')) id('recipe-name').value = r.name; 
+        if(id('recipe-category')) id('recipe-category').value = r.category;
         const chkSemi = id('recipe-is-semi'); if(chkSemi) { chkSemi.checked = !!r.isSemi; chkSemi.dispatchEvent(new Event('change')); }
         if(r.isSemi && id('recipe-yield')) id('recipe-yield').value = r.outputYield || 1; 
-        const ingCont = id('ingredients-container'); if(ingCont) { ingCont.innerHTML = ''; (r.ingredients || []).forEach(ing => { addIngRowReq(ingCont, ing.productId, ing.quantity); }); }
-        if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Editar Receita'; show(id('recipe-modal'));
+        const ingCont = id('ingredients-container');
+        if(ingCont) { ingCont.innerHTML = ''; (r.ingredients || []).forEach(ing => { addIngRowReq(ingCont, ing.productId, ing.quantity); }); }
+        if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Editar Receita'; 
+        show(id('recipe-modal'));
     }
 
     addEvt('btn-new-recipe', 'click', () => {
@@ -1568,590 +1193,36 @@
         const chkSemi = id('recipe-is-semi'); if(chkSemi) { chkSemi.checked = false; chkSemi.dispatchEvent(new Event('change')); }
         if(id('recipe-yield')) id('recipe-yield').value = 1;
         if(ingCont) addIngRowReq(ingCont); 
-        if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Nova Receita'; show(id('recipe-modal'));
-    });
-    
-    addEvt('btn-export-recipe-book', 'click', () => {
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFontSize(22); doc.setTextColor(10, 132, 255); doc.text("Livro de Receitas", 14, 20);
-        let yPos = 40; const categories = [...new Set(localRecipes.map(r => r.category))].sort();
-        categories.forEach((cat) => {
-            const recs = localRecipes.filter(r => r.category === cat).sort((a,b) => String(a.name).localeCompare(String(b.name)));
-            if(recs.length === 0) return;
-            if (yPos > 260) { doc.addPage(); yPos = 20; }
-            doc.setFontSize(16); doc.setTextColor(0, 0, 0); doc.setFillColor(240, 240, 245); doc.rect(14, yPos-6, 182, 10, 'F'); doc.text("Setor: " + String(cat).toUpperCase(), 16, yPos+1); yPos += 12;
-            recs.forEach(r => {
-                if (yPos > 240) { doc.addPage(); yPos = 20; }
-                doc.setFontSize(14); doc.text(String(r.name), 14, yPos); yPos += 6;
-                const tableData = (r.ingredients || []).map(i => { return [localInventory.find(p => p.id == i.productId)?.name || 'Desconhecido', i.quantity]; });
-                doc.autoTable({ startY: yPos, head: [['Ingrediente', 'Qtd']], body: tableData, styles: { fontSize: 9 } });
-                yPos = doc.lastAutoTable.finalY + 12;
-            }); yPos += 5;
-        });
-        doc.save(`Livro_Receitas.pdf`); showNotif('PDF Gerado!');
-    });
-    
-    function addIngRowReq(container, prefillId=null, prefillQty='') {
-        if(!container) return;
-        const div = document.createElement('div'); div.className='req-item flex flex-col gap-2 bg-ios-bg p-3 rounded-xl border border-ios-border z-50';
-        div.innerHTML = `<div class="flex gap-3 items-center w-full"><div class="searchable-container flex-1"></div><input type="number" step="0.0001" value="${prefillQty}" class="form-input w-24 py-2 text-center req-qty-input font-bold" placeholder="Qtd" required><button type="button" class="text-ios-red p-2 hover:bg-ios-red/20 rounded-lg transition-colors remove-ing"><i class="fa fa-times"></i></button></div><div class="flex justify-between items-center text-xs text-ios-textMuted px-1 req-plan-wrapper hidden mt-1 border-t border-ios-border pt-2"><span class="plan-display font-medium"></span><button type="button" class="text-ios-blue open-batch-selector hidden bg-ios-card px-2 py-1 rounded"><i class="fa-solid fa-pen mr-1"></i> Mudar Lote</button></div>`;
-        container.appendChild(div);
-        const isRecipe = container.id === 'ingredients-container';
-        const planWrap = div.querySelector('.req-plan-wrapper'); const planDisplay = div.querySelector('.plan-display');
-        const editBtn = div.querySelector('.open-batch-selector'); const qtyInput = div.querySelector('.req-qty-input');
-        if(!isRecipe) planWrap.classList.remove('hidden'); 
-
-        const updatePlan = () => {
-            if(isRecipe) return;
-            const inputS = div.querySelector('.searchable-container input');
-            const pId = inputS ? inputS.dataset.selectedId : null; const qty = parseFloat(qtyInput.value);
-            if(pId && qty > 0) {
-                const { plan, isSufficient } = getFIFOPlan(pId, qty);
-                div.dataset.productId = pId; div.dataset.plan = JSON.stringify(plan);
-                planDisplay.innerHTML = isSufficient ? '<i class="fa-solid fa-check mr-1"></i> Lotes: ' + plan.map(x => `<strong>${x.batchCode}</strong>(${x.quantity.toFixed(2)})`).join(', ') : '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Físico Insuficiente!';
-                planDisplay.className = isSufficient ? 'plan-display text-ios-green' : 'plan-display text-ios-red';
-                if(isSufficient) show(editBtn); else hide(editBtn);
-            } else { planDisplay.innerText = 'Aguardando item/qtd...'; hide(editBtn); }
-        };
-        createSearchableSelect(div.querySelector('.searchable-container'), localInventory, 'Buscar item...', item => { updatePlan(); });
-        qtyInput.addEventListener('input', updatePlan); div.querySelector('.remove-ing').addEventListener('click', () => div.remove());
-
-        if(prefillId) { const ingProd = localInventory.find(p => p.id == prefillId); if(ingProd) { const inp = div.querySelector('.searchable-container input'); if(inp) { inp.value = ingProd.name; inp.dataset.selectedId = ingProd.id; updatePlan(); } } }
-    }
-    addEvt('add-ingredient-btn', 'click', () => { const c = id('ingredients-container'); if(c) addIngRowReq(c); });
-    
-    addEvt('recipe-form', 'submit', async e => {
-        e.preventDefault(); show(id('loading-overlay'));
-        const rId = id('edit-recipe-id')?.value; const isSemi = id('recipe-is-semi')?.checked;
-        const yieldQty = isSemi ? (parseFloat(id('recipe-yield')?.value) || 1) : null; const recName = id('recipe-name')?.value.trim();
-        let outId = null;
-        if (isSemi) { let prod = localInventory.find(i => String(i.name).toLowerCase() === recName.toLowerCase() && i.type === 'semi_acabado'); if(!prod) outId = await DB.add('inventory', { name: recName, type: 'semi_acabado', totalQuantity: 0, code: '', supplier: 'Produção Interna' }); else outId = prod.id; } 
-
-        const ingCont = id('ingredients-container'); if(!ingCont) return;
-        const ings = [...ingCont.children].map(r => ({ productId: r.querySelector('input[type="text"]').dataset.selectedId, quantity: parseFloat(r.querySelector('input[type="number"]').value) }));
-        const data = {name:recName, category:id('recipe-category')?.value, outputProductId:outId, outputYield: yieldQty, isSemi: isSemi, ingredients:ings};
-        if(rId) { data.id = rId; await DB.update('recipes', data); showNotif('Ficha atualizada'); } else { await DB.add('recipes', data); showNotif('Ficha salva'); }
-        await refreshData(); hide(id('recipe-modal')); hide(id('loading-overlay'));
+        if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Nova Receita'; 
+        show(id('recipe-modal'));
     });
 
-    // --- SELETOR DE LOTES E OP ---
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.open-batch-selector');
-        if(btn) {
-            currentBatchTarget = btn.closest('.req-item') || btn.closest('tr');
-            const pId = currentBatchTarget.dataset.productId; const qtyStr = currentBatchTarget.querySelector('input[type="number"]').value; const qty = parseFloat(qtyStr) || 0;
-            const currentPlan = JSON.parse(currentBatchTarget.dataset.plan || '[]');
-            openBatchSelector(pId, qty, currentPlan);
-        }
-    });
-
-    function openBatchSelector(pId, qtyNeeded, currentPlan) {
-        if(id('batch-selector-needed')) id('batch-selector-needed').innerText = qtyNeeded.toFixed(4);
-        
-        // Puxa os lotes e desconta as reservas ATUAIS de outras OPs, para mostrar apenas o que está LIVRE
-        const batches = localBatches.filter(b => b.productId == pId && b.isReleased !== false).map(b => {
-            const reserved = getReservedQty(b.id);
-            const livre = Number(b.quantity) - reserved;
-            return { ...b, available: livre > 0 ? livre : 0 };
-        }).filter(b => b.available > 0);
-
-        const listEl = id('batch-selector-list');
-        if(listEl) {
-            listEl.innerHTML = batches.map(b => {
-                const inPlan = currentPlan.find(p => p.batchId == b.id); const val = inPlan ? inPlan.quantity : '';
-                return `<div class="flex justify-between items-center mb-3 bg-ios-input p-3 rounded-xl border border-ios-border"><span class="text-white font-medium"><i class="fa-solid fa-box mr-2 text-ios-textMuted"></i>${b.code} <br><span class="text-xs text-ios-textMuted ml-6">Livre: ${b.available.toFixed(2)}</span></span><input type="number" class="form-input w-28 text-right batch-input font-bold" data-bid="${b.id}" data-bcode="${b.code}" max="${b.available + (inPlan?inPlan.quantity:0)}" value="${val}" placeholder="0"></div>`;
-            }).join('');
-        }
-        updateBatchSelectorSum(); show(id('batch-selector-modal'));
-    }
-
-    addEvt('batch-selector-list', 'input', updateBatchSelectorSum);
-    function updateBatchSelectorSum() {
-        if(event && event.target.classList.contains('batch-input')) {
-            const listEl = id('batch-selector-list'); if(!listEl) return;
-            const inputs = [...listEl.querySelectorAll('.batch-input')]; const sum = inputs.reduce((a, b) => a + (parseFloat(b.value) || 0), 0);
-            const selEl = id('batch-selector-selected'); const needEl = id('batch-selector-needed');
-            if(selEl && needEl) { selEl.innerText = sum.toFixed(4); const needed = parseFloat(needEl.innerText); selEl.className = Math.abs(sum - needed) < 0.001 ? 'font-bold text-xl text-ios-green' : 'font-bold text-xl text-ios-red'; }
-        }
-    }
-
-    addEvt('confirm-batch-selection', 'click', () => {
-        if (!currentBatchTarget) return;
-        const needed = parseFloat(id('batch-selector-needed')?.innerText || 0); const sum = parseFloat(id('batch-selector-selected')?.innerText || 0);
-        if(sum < needed - 0.001) return showNotif('A quantidade marcada é menor que a necessária!', true);
-        const listEl = id('batch-selector-list'); if(!listEl) return;
-        const inputs = [...listEl.querySelectorAll('.batch-input')];
-        const newPlan = inputs.map(inp => ({ batchId: inp.dataset.bid, batchCode: inp.dataset.bcode, quantity: parseFloat(inp.value) || 0 })).filter(p => p.quantity > 0);
-        currentBatchTarget.dataset.plan = JSON.stringify(newPlan);
-        const planDisplay = currentBatchTarget.querySelector('.plan-display');
-        if(planDisplay) planDisplay.innerHTML = '<i class="fa-solid fa-hand mr-1"></i> Lotes Manuais: ' + newPlan.map(p => `<strong>${p.batchCode}</strong>(${p.quantity})`).join(', ');
-        hide(id('batch-selector-modal'));
-    });
-
-    // --- SEPARAÇÃO AGRUPADA (PICKING KITTING) ---
-    addEvt('picking-scanner', 'keypress', e => {
-        if(e.key === 'Enter') {
-            const code = e.target.value.trim(); if(!code) return;
-            const p = localInventory.find(i => String(i.barcode) === code || String(i.code) === code);
-            if (!p) { showNotif('Produto não encontrado!', true); } 
-            else {
-                const row = document.querySelector(`#picking-checklist-body tr[data-pid="${p.id}"]`);
-                if (row) {
-                    const inputQty = row.querySelector('.picking-qty-input');
-                    if(inputQty) { inputQty.focus(); inputQty.select(); }
-                    row.classList.add('bg-ios-blue/30'); setTimeout(() => row.classList.remove('bg-ios-blue/30'), 2000);
-                    showNotif(`[${p.name}] localizado!`);
-                } else { showNotif('CUIDADO: Este item NÃO pertence a esta linha!', true); }
-            }
-            e.target.value = '';
-        }
-    });
-
-    function renderPickingScreen() {
-        const container = id('picking-lines-container'); if(!container) return;
-        const pendingOps = localProductionOrders.filter(po => po.status === 'pendente');
-        const statPending = id('stat-pending-picking'); if(statPending) statPending.innerText = pendingOps.filter(po => po.picking && po.picking.status !== 'concluido').length;
-        if(!pendingOps.length) { container.innerHTML = `<div class="card text-center py-10"><i class="fa-solid fa-clipboard-check text-5xl text-ios-cardHover mb-4"></i><p class="text-ios-textMuted">Não há Ordens de Produção pendentes.</p></div>`; return; }
-
-        const opsByLine = {};
-        pendingOps.forEach(op => { const line = op.recipeCategory || 'Diversos'; if(!opsByLine[line]) opsByLine[line] = []; opsByLine[line].push(op); });
-
-        container.innerHTML = Object.keys(opsByLine).sort().map(line => {
-            const ops = opsByLine[line];
-            const concluidas = ops.filter(o => o.picking?.status === 'concluido').length;
-            const emAndamento = ops.filter(o => o.picking?.status === 'em_andamento').length;
-            const hasExtrasPending = ops.filter(o => o.isExtra === true && o.picking?.status !== 'concluido');
-            
-            let lineStatusHTML = ''; let isLineActive = emAndamento > 0; let allConcluido = concluidas === ops.length;
-            if(allConcluido) lineStatusHTML = `<span class="badge bg-ios-green/20 text-ios-green"><i class="fa-solid fa-check-double mr-1"></i>Linha Separada</span>`;
-            else if(isLineActive) lineStatusHTML = `<span class="badge bg-ios-blue/20 text-ios-blue animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Em Separação</span>`;
-            else lineStatusHTML = `<span class="badge bg-ios-orange/20 text-ios-orange"><i class="fa-solid fa-clock mr-1"></i>A Separar</span>`;
-            const opIdsStr = JSON.stringify(ops.map(o=>o.id));
-
-            return `
-            <div class="card p-0 overflow-hidden border ${isLineActive ? 'border-ios-blue' : 'border-ios-border'} transition-all">
-                <div class="bg-ios-cardHover px-5 py-4 flex flex-wrap justify-between items-center gap-3 ${isLineActive ? 'bg-ios-blue/10' : ''}">
-                    <div>
-                        <h3 class="font-bold text-white text-xl flex items-center"><i class="fa-solid fa-layer-group text-ios-blue mr-2"></i>Setor: ${String(line).toUpperCase()} ${hasExtrasPending.length > 0 ? `<span class="ml-2 badge bg-ios-red text-white">🚨 ${hasExtrasPending.length} EXTRA(s)</span>` : ''}</h3>
-                        <p class="text-xs text-ios-textMuted mt-1">${ops.length} OP(s) programada(s) | ${concluidas} Separada(s)</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-4">
-                        ${lineStatusHTML}
-                        ${hasExtrasPending.length > 0 ? `<button class="btn-secondary py-2 px-4 shadow text-xs border-ios-red/50 text-ios-red btn-print-extras hover:bg-ios-red/10" data-line="${line}"><i class="fa-solid fa-print mr-2"></i>Folha Extras</button>` : ''}
-                        ${!allConcluido ? `<button class="btn-primary py-2 px-4 shadow-lg shadow-ios-blue/20 btn-open-line-picking" data-line="${line}" data-opids='${opIdsStr}'><i class="fa-solid fa-dolly mr-2"></i>Separar Linha</button>` : ''}
-                    </div>
-                </div>
-                <div class="p-4 bg-ios-bg grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 border-t border-ios-border/50">
-                    ${ops.map(op => {
-                        let timerHtml = op.picking?.status === 'concluido' ? '<i class="fa-solid fa-check text-ios-green"></i>' : '<i class="fa-solid fa-clock text-ios-textMuted"></i>';
-                        if(op.picking?.status === 'em_andamento') timerHtml = `<div class="live-timer text-ios-orange font-mono font-bold timer-active" data-start="${op.picking.start}">00:00</div>`;
-                        return `
-                        <div class="bg-ios-card p-3 rounded-lg border border-ios-border text-sm flex justify-between items-center relative overflow-hidden">
-                            ${op.isExtra ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-ios-red"></div>' : ''}
-                            <div class="${op.isExtra ? 'pl-2' : ''}">
-                                <span class="font-bold text-white">${op.recipeName}</span> <span class="text-ios-blue">(${op.multiplier}x)</span>
-                                ${op.isExtra ? '<span class="badge bg-ios-red text-white text-[9px] ml-1">EXTRA</span>' : ''}<br>
-                                <span class="text-[10px] text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>Data: <strong class="text-gray-300">${new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong></span>
-                            </div><div class="ml-2">${timerHtml}</div>
-                        </div>`;
-                    }).join('')}
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    addEvt('picking-lines-container', 'click', e => {
-        const btnPick = e.target.closest('.btn-open-line-picking'); if(btnPick) openGroupedPickingModal(btnPick.dataset.line, JSON.parse(btnPick.dataset.opids));
-        const btnPrint = e.target.closest('.btn-print-extras'); if(btnPrint) printExtras(btnPrint.dataset.line);
-    });
-
-    function printExtras(lineName) {
-        const ops = localProductionOrders.filter(o => o.recipeCategory === lineName && o.status === 'pendente' && o.isExtra === true && o.picking?.status !== 'concluido');
-        if(!ops.length) return showNotif('Nenhuma OP Extra.', true);
-        const agg = {}; ops.forEach(op => { (op.ingredients||[]).forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = 0; agg[ing.productId] += Number(ing.adjustedQuantity)||0; }); });
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFontSize(20); doc.text(`Extras: ${String(lineName).toUpperCase()}`, 14, 20); doc.setLineWidth(0.5); doc.line(14, 30, 196, 30);
-        const tableData = Object.keys(agg).map(pidStr => [localInventory.find(p => p.id == pidStr)?.name || '?', agg[pidStr].toFixed(4)]);
-        doc.autoTable({ startY: 35, head: [['Insumo', 'Qtd']], body: tableData }); doc.save(`Extras_${String(lineName).replace(/\s+/g,'_')}.pdf`); showNotif('Folha gerada!');
-    }
-
-    function getAggregatedIngredients(opIds) {
-        const ops = localProductionOrders.filter(op => opIds.includes(op.id));
-        const agg = {};
-        ops.forEach(op => { (op.ingredients||[]).forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = { productId: ing.productId, adjustedQuantity: 0 }; agg[ing.productId].adjustedQuantity += Number(ing.adjustedQuantity)||0; }); });
-        return Object.values(agg);
-    }
-
-    function openGroupedPickingModal(lineName, opIds) {
-        activePickingLine = lineName; activePickingOpIds = opIds;
-        const ops = localProductionOrders.filter(op => opIds.includes(op.id));
-        const sampleOp = ops[0]; const picking = sampleOp.picking || { status: 'pendente', responsible: '', start: null, end: null, pickedItems: {} };
-
-        if(id('picking-modal-title')) id('picking-modal-title').innerHTML = `<i class="fa-solid fa-dolly mr-3 text-2xl"></i><span>Check-list Setor: ${String(lineName).toUpperCase()}</span>`;
-        if(id('picking-responsible')) id('picking-responsible').value = picking.responsible || '';
-
-        const timerEl = id('picking-timer-display');
-        if(timerEl) { timerEl.innerText = '00:00'; timerEl.classList.remove('timer-active'); timerEl.dataset.start = ""; }
-
-        if(picking.status === 'em_andamento' && picking.start) {
-            hide(id('picking-setup-view')); show(id('picking-active-view'));
-            if(id('picking-active-resp')) id('picking-active-resp').innerText = picking.responsible;
-            if(timerEl) { timerEl.dataset.start = picking.start; timerEl.classList.add('timer-active'); }
-            setTimeout(() => id('picking-scanner')?.focus(), 100); 
-        } else {
-            show(id('picking-setup-view')); hide(id('picking-active-view'));
-            if(id('picking-responsible')) id('picking-responsible').focus();
-        }
-
-        const agg = getAggregatedIngredients(opIds);
-        const checklistBody = id('picking-checklist-body');
-        if(checklistBody) {
-            checklistBody.innerHTML = agg.map((ing) => {
-                const product = localInventory.find(p => p.id == ing.productId);
-                const needed = ing.adjustedQuantity; let totalPicked = 0;
-                ops.forEach(op => { if(op.picking?.pickedItems && op.picking.pickedItems[ing.productId]) totalPicked += Number(op.picking.pickedItems[ing.productId])||0; });
-                const isChecked = totalPicked >= needed - 0.001 && totalPicked > 0;
-                
-                return `
-                <tr class="border-b border-ios-border/50 hover:bg-ios-cardHover transition-colors ${isChecked ? 'opacity-50' : ''}" data-pid="${ing.productId}">
-                    <td class="px-6 py-4 font-medium text-white ${isChecked ? 'line-through text-ios-textMuted' : ''}">${product ? product.name : 'Insumo Excluído'}</td>
-                    <td class="px-6 py-4 text-right font-bold text-ios-blue text-lg">${needed.toFixed(4)}</td>
-                    <td class="px-6 py-4 text-center">
-                        <div class="flex items-center justify-center gap-2">
-                            <input type="number" step="0.001" value="${totalPicked > 0 ? totalPicked : ''}" class="form-input py-2 px-3 w-28 text-center font-bold text-white picking-qty-input bg-ios-bg border-ios-border text-lg transition-all" placeholder="0.000">
-                            <button class="bg-ios-cardHover border border-ios-border text-xs px-3 py-2 rounded-lg hover:text-white btn-fill-all shadow"><i class="fa-solid fa-check-double"></i></button>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-center"><input type="checkbox" class="ui-checkbox ui-checkbox-success picking-row-check" ${isChecked ? 'checked' : ''}></td>
-                </tr>`;
-            }).join('');
-        }
-        show(id('picking-modal'));
-    }
-
-    addEvt('btn-start-picking', 'click', async () => {
-        const resp = id('picking-responsible') ? id('picking-responsible').value.trim() : '';
-        if(!resp) return showNotif('Informe o nome para iniciar.', true);
-        const now = Date.now(); show(id('loading-overlay'));
-        for(let opId of activePickingOpIds) {
-            let op = localProductionOrders.find(x => x.id == opId);
-            if(op) { op.picking.status = 'em_andamento'; op.picking.start = now; op.picking.responsible = resp; await DB.update('productionOrders', op); }
-        }
-        hide(id('picking-setup-view')); show(id('picking-active-view'));
-        if(id('picking-active-resp')) id('picking-active-resp').innerText = resp;
-        if(id('picking-timer-display')) { id('picking-timer-display').dataset.start = now; id('picking-timer-display').classList.add('timer-active'); }
-        await refreshData(); hide(id('loading-overlay')); showNotif('Cronômetro Iniciado!'); setTimeout(() => id('picking-scanner')?.focus(), 100);
-    });
-
-    addEvt('picking-checklist-body', 'click', e => {
-        const btnFill = e.target.closest('.btn-fill-all');
-        if(btnFill) {
-            const row = btnFill.closest('tr'); const neededStr = row.cells[1].innerText;
-            const input = row.querySelector('.picking-qty-input'); const chk = row.querySelector('.picking-row-check');
-            if(input && chk) { input.value = parseFloat(neededStr).toFixed(4); chk.checked = true; }
-            row.classList.add('opacity-50'); row.cells[0].classList.add('line-through', 'text-ios-textMuted');
-        }
-        if(e.target.classList.contains('picking-row-check')) {
-            const row = e.target.closest('tr');
-            if(e.target.checked) {
-                const input = row.querySelector('.picking-qty-input');
-                if(input && (!input.value || parseFloat(input.value) === 0)) input.value = parseFloat(row.cells[1].innerText).toFixed(4);
-                row.classList.add('opacity-50'); row.cells[0].classList.add('line-through', 'text-ios-textMuted');
-            } else { row.classList.remove('opacity-50'); row.cells[0].classList.remove('line-through', 'text-ios-textMuted'); }
-        }
-    });
-
-    addEvt('btn-finish-picking', 'click', async () => {
-        const pickedTotals = {}; let allChecked = true;
-        const bodyEl = id('picking-checklist-body'); if(!bodyEl) return;
-        bodyEl.querySelectorAll('tr').forEach(row => {
-            const pid = row.dataset.pid; const input = row.querySelector('.picking-qty-input'); const qty = input ? (parseFloat(input.value) || 0) : 0;
-            const chk = row.querySelector('.picking-row-check'); const isChecked = chk ? chk.checked : false; 
-            pickedTotals[pid] = qty; if(!isChecked || qty <= 0) allChecked = false;
-        });
-
-        const finishTask = async () => {
-            show(id('loading-overlay')); const now = Date.now();
-            let opsToUpdate = localProductionOrders.filter(op => activePickingOpIds.includes(op.id));
-            Object.keys(pickedTotals).forEach(pid => {
-                let remainingPicked = pickedTotals[pid];
-                opsToUpdate.forEach(op => {
-                    const ing = (op.ingredients||[]).find(i => i.productId == pid);
-                    if(ing) {
-                        const take = Math.min(ing.adjustedQuantity, remainingPicked);
-                        if(!op.picking.pickedItems) op.picking.pickedItems = {};
-                        op.picking.pickedItems[pid] = take; remainingPicked -= take;
-                    }
-                });
-            });
-            for(let op of opsToUpdate) {
-                op.picking.end = now; op.picking.status = 'concluido';
-                op.picking.duration = Math.floor((op.picking.end - op.picking.start) / 1000); 
-                await DB.update('productionOrders', op);
-            }
-            if(qrCodeInstance) { try { await qrCodeInstance.stop(); } catch(e){} qrCodeInstance = null; hide(id('picking-camera-reader')); }
-            await refreshData(); hide(id('picking-modal')); hide(id('loading-overlay')); showNotif('Check-list Concluído!');
-        };
-        if(!allChecked) showConfirmationModal('Itens pendentes!', 'Deseja finalizar com pendências (Baixa Parcial)?', finishTask); else finishTask();
-    });
-
-    // --- ORDEM DE PRODUÇÃO (OP) ---
-    addEvt('po-date', 'change', e => {
-        const diffDays = Math.ceil((new Date(e.target.value) - new Date()) / (1000 * 60 * 60 * 24)); 
-        if (id('po-is-extra')) id('po-is-extra').checked = diffDays <= 2;
-    });
-
-    addEvt('search-po-by-date', 'change', renderPO);
-    addEvt('btn-clear-po-date', 'click', () => { if(id('search-po-by-date')) id('search-po-by-date').value = ''; renderPO(); });
-    
-    function renderPO() {
-        const dateInput = id('search-po-by-date')?.value; 
-        let list = [...localProductionOrders];
-        const container = id('production-orders-list'); if(!container) return;
-        
-        if (dateInput) { list = list.filter(po => po.status === 'pendente' || po.status === 'em_andamento' || po.date === dateInput); } 
-        else { list = list.filter(po => po.status === 'pendente' || po.status === 'em_andamento'); }
-
-        list.sort((a, b) => {
-            const sA = a.status === 'pendente' ? 1 : a.status === 'em_andamento' ? 2 : 3;
-            const sB = b.status === 'pendente' ? 1 : b.status === 'em_andamento' ? 2 : 3;
-            if (sA !== sB) return sA - sB; return new Date(a.date) - new Date(b.date);
-        });
-
-        if(!list.length) { container.innerHTML = `<div class="col-span-full text-center text-ios-textMuted py-10 bg-ios-card rounded-2xl border border-ios-border">Fila vazia.</div>`; return; }
-        
-        container.innerHTML = list.map(po => {
-            const p = po.picking || { status: 'pendente' }; let pickBadge = '';
-            if(p.status === 'concluido') pickBadge = `<span class="badge bg-ios-green/20 text-ios-green text-[10px] mt-1 inline-block"><i class="fa-solid fa-dolly mr-1"></i>Separado</span>`;
-            else if(p.status === 'em_andamento') pickBadge = `<span class="badge bg-ios-blue/20 text-ios-blue text-[10px] mt-1 inline-block"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Em Separação</span>`;
-            else pickBadge = `<span class="badge bg-ios-orange/20 text-ios-orange text-[10px] mt-1 inline-block"><i class="fa-solid fa-clock mr-1"></i>A Separar</span>`;
-
-            return `
-            <div class="card relative flex flex-col pl-14 border-l-4 ${po.status==='pendente'?'border-l-ios-orange':'border-l-ios-green'}">
-                <div class="absolute top-5 left-3"><input type="checkbox" class="ui-checkbox po-select-checkbox" data-id="${po.id}" ${po.status!=='pendente'?'disabled':''}></div>
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <h3 class="text-white font-bold text-lg">${po.recipeName} <span class="text-ios-blue">(${po.multiplier}x)</span> ${po.isExtra?'<span class="badge bg-ios-red text-white ml-2">EXTRA</span>':''}</h3>
-                        <p class="text-xs text-ios-textMuted mt-1"><i class="fa-regular fa-calendar mr-1"></i>Prog: <strong class="text-white">${new Date(po.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong></p>
-                        ${pickBadge}
-                    </div>
-                    <span class="badge uppercase tracking-wider ${po.status==='pendente'?'bg-ios-orange/20 text-ios-orange':'bg-ios-green/20 text-ios-green'}">${po.status}</span>
-                </div>
-                <div class="bg-ios-bg rounded-lg p-3 mt-auto border border-ios-border">
-                    <ul class="text-sm text-gray-300 space-y-1">${(po.ingredients || []).map(i=>{
-                        const pName = localInventory.find(pd=>pd.id==i.productId)?.name||'?';
-                        const pLotes = (i.consumptionPlan||[]).map(x=>x.batchCode).join(', ') || 'PEPS Automático';
-                        return `<li class="flex flex-col border-b border-ios-border/50 pb-2 mb-1 last:border-0 last:pb-0 last:mb-0"><div class="flex justify-between"><span class="truncate pr-2">${pName}</span><span class="font-bold text-ios-blue">${Number(i.adjustedQuantity).toFixed(4)}</span></div><span class="text-[10px] text-ios-textMuted mt-1"><i class="fa-solid fa-box mr-1"></i>${pLotes}</span></li>`;
-                    }).join('')}</ul>
-                </div>
-                ${po.status==='pendente'?`<div class="absolute bottom-4 right-4 flex gap-2"><button class="del-po-btn text-ios-red bg-ios-red/10 w-8 h-8 rounded-full hover:bg-ios-red/20 flex items-center justify-center" data-id="${po.id}"><i class="fa-solid fa-trash text-xs"></i></button></div>`:''}
-            </div>`
-        }).join('');
-    }
-    
-    addEvt('production-orders-list', 'click', e => {
-        const delBtn = e.target.closest('.del-po-btn');
-        if(delBtn) showConfirmationModal('Cancelar OP?', 'Remover a ordem da fila?', async () => { show(id('loading-overlay')); await DB.remove('productionOrders', delBtn.dataset.id); await refreshData(); hide(id('loading-overlay')); showNotif('OP Excluída'); });
-    });
-
-    function updatePOIngredients() {
-        const searchInput = id('po-recipe-searchable-container')?.querySelector('input'); if(!searchInput) return;
-        const rec = localRecipes.find(r=>r.id==searchInput.dataset.selectedId); 
-        const mult = parseFloat(id('po-quantity')?.value) || 1;
-        const bodyEl = id('po-ingredients-body'); const outEl = id('po-total-output');
-        
-        if(!rec) { if(bodyEl) bodyEl.innerHTML = ''; if(outEl) outEl.value = '0.0000'; return; }
-        if (rec.isSemi) { if(outEl) outEl.value = ((Number(rec.outputYield) || 1) * mult).toFixed(4); } else { if(outEl) outEl.value = '-'; }
-        
-        if(bodyEl) {
-            bodyEl.innerHTML = (rec.ingredients || []).map(i => {
-                const p = localInventory.find(x=>x.id==i.productId); const reqQty = Number(i.quantity) * mult;
-                const { plan, isSufficient } = getFIFOPlan(i.productId, reqQty);
-                const planText = plan.map(x => `<strong>${x.batchCode}</strong>(${x.quantity.toFixed(2)})`).join(', ');
-
-                return `<tr class="base-tr" data-product-id="${i.productId}" data-plan='${JSON.stringify(plan)}'>
-                    <td class="base-td font-medium text-white">${p?p.name:'?'}</td><td class="base-td">${(Number(p?.totalQuantity)||0).toFixed(2)}</td>
-                    <td class="base-td"><input type="number" value="${reqQty.toFixed(4)}" class="form-input py-1 text-center font-bold text-ios-blue po-ing-qty bg-ios-bg border-ios-border" readonly></td>
-                    <td class="base-td text-ios-textMuted text-xs"><div class="plan-display ${isSufficient ? 'text-ios-green' : 'text-ios-red font-bold'}">${isSufficient ? '<i class="fa-solid fa-check mr-1"></i>'+planText : '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Faltante'}</div>
-                        ${isSufficient ? `<button type="button" class="text-ios-blue mt-2 open-batch-selector bg-ios-bg p-1 rounded border border-ios-border"><i class="fa-solid fa-pen mr-1"></i> Trocar Lote</button>` : ''}
-                    </td></tr>`;
-            }).join('');
-        }
-    }
-
-    addEvt('po-quantity', 'input', updatePOIngredients);
-    addEvt('btn-new-production-order-main', 'click', () => {
-        const form = id('production-order-form'); if(form) form.reset(); 
-        const bodyEl = id('po-ingredients-body'); if(bodyEl) bodyEl.innerHTML = '';
-        const mappedRecipes = localRecipes.map(r => { return { ...r, searchName: `${r.name}` }; });
-        const cont = id('po-recipe-searchable-container');
-        if(cont) {
-            createSearchableSelect(cont, mappedRecipes, 'Busque pela receita...', r => {
-                if(r.isSemi) { show(id('po-output-fields')); const d = id('po-date')?.value.replace(/-/g,'').slice(2); if(id('po-output-batch')) id('po-output-batch').value = `OP${d}-${r.id}`; } else hide(id('po-output-fields'));
-                updatePOIngredients();
-            });
-        }
-        const d = new Date(); d.setDate(d.getDate() + 2); 
-        if(id('po-date')) id('po-date').value = d.toISOString().split('T')[0];
-        if (id('po-is-extra')) id('po-is-extra').checked = false;
-        hide(id('po-output-fields')); show(id('production-order-modal'));
-    });
-    
-    addEvt('production-order-form', 'submit', async e => {
-        e.preventDefault();
-        const searchInput = id('po-recipe-searchable-container')?.querySelector('input');
-        if(!searchInput) return;
-        const rId = searchInput.dataset.selectedId;
-        const rec = localRecipes.find(r=>r.id==rId); if(!rec) return showNotif('Receita inválida', true);
-        const mult = parseFloat(id('po-quantity')?.value || 1); const totalOut = rec.isSemi ? parseFloat(id('po-total-output')?.value || 0) : null;
-        const bodyEl = id('po-ingredients-body'); if(!bodyEl) return;
-        const ingredients = [...bodyEl.children].map(tr => { return { productId: tr.dataset.productId, adjustedQuantity: parseFloat(tr.querySelector('.po-ing-qty').value), consumptionPlan: JSON.parse(tr.dataset.plan || '[]') }; });
-        for(const ing of ingredients) {
-            const sumPlan = ing.consumptionPlan.reduce((s, x) => s + x.quantity, 0);
-            if(sumPlan < ing.adjustedQuantity - 0.001) return showNotif(`Insumo insuficiente.`, true);
-        }
-        show(id('loading-overlay'));
-        const op = {
-            recipeId: rId, recipeName: rec.name, recipeCategory: rec.category, date: id('po-date')?.value, multiplier: mult, quantityProduced: totalOut,
-            status: 'pendente', outputBatch: rec.isSemi ? id('po-output-batch')?.value : null, ingredients: ingredients, isExtra: id('po-is-extra')?.checked || false,
-            picking: { status: 'pendente', responsible: '', start: null, end: null, duration: 0, pickedItems: {} }
-        };
-        await DB.add('productionOrders', op); 
-        await refreshData();
-        hide(id('production-order-modal')); hide(id('loading-overlay')); showNotif('OP salva na fila!');
-    });
-
-    addEvt('btn-confirm-production', 'click', async () => {
-        const checked = document.querySelectorAll('.po-select-checkbox:checked');
-        if(!checked.length) return showNotif('Selecione pelo menos uma OP.', true);
-        const selectedIds = Array.from(checked).map(cb => cb.dataset.id);
-        const pendentes = localProductionOrders.filter(po => selectedIds.includes(po.id) && po.status === 'pendente');
-        if(!pendentes.length) return;
-        
-        const opsNaoSeparadas = pendentes.filter(po => po.picking && po.picking.status !== 'concluido');
-        let warnMsg = opsNaoSeparadas.length > 0 ? `<p class="text-ios-red mb-3 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Atenção: ${opsNaoSeparadas.length} OP(s) ainda NÃO tiveram a separação concluída!</p>` : '';
-
-        showConfirmationModal('Executar Baixa', `${warnMsg}Efetivar ${pendentes.length} OP(s)?`, async () => {
-            show(id('loading-overlay'));
-            try {
-                for(const op of pendentes) {
-                    for(const ing of op.ingredients) {
-                        const product = await DB.get('inventory', ing.productId);
-                        if(!product || (Number(product.totalQuantity) || 0) < ing.adjustedQuantity - 0.001) throw new Error(`Sem saldo Total no estoque para: ${product ? product.name : 'Insumo Excluído'}.`);
-                        for(const pl of ing.consumptionPlan) {
-                            const b = await DB.get('batches', pl.batchId);
-                            if(!b || Number(b.quantity) < pl.quantity - 0.001 || b.isReleased === false) throw new Error(`Lote ${pl.batchCode} bloqueado ou esgotado!`);
-                        }
-                    }
-                }
-                for(const op of pendentes) {
-                    for(const ing of op.ingredients) {
-                        const product = await DB.get('inventory', ing.productId);
-                        for(const pl of ing.consumptionPlan) { const b = await DB.get('batches', pl.batchId); b.quantity = Number(b.quantity) - pl.quantity; await DB.update('batches', b); }
-                        product.totalQuantity = Number(product.totalQuantity) - ing.adjustedQuantity; await DB.update('inventory', product);
-                        await DB.add('history', { productId: product.id, type: 'saída', quantity: ing.adjustedQuantity, date: op.date, reason: `Prod: OP-${String(op.id).substring(0,6)}` });
-                        
-                        const p = String(op.date).substring(0,7); let consumptions = await DB.getAll('monthlyConsumption');
-                        let record = consumptions.find(x => x.period === p && x.productId == product.id);
-                        if(record) { record.totalConsumed = Number(record.totalConsumed) + ing.adjustedQuantity; await DB.update('monthlyConsumption', record); }
-                        else await DB.add('monthlyConsumption', { period: p, productId: product.id, totalConsumed: ing.adjustedQuantity });
-                    }
-                    if(op.quantityProduced) {
-                        const rec = localRecipes.find(r => r.id == op.recipeId);
-                        if(rec && rec.outputProductId) {
-                            const outProduct = await DB.get('inventory', rec.outputProductId);
-                            if(outProduct) {
-                                outProduct.totalQuantity = Number(outProduct.totalQuantity) + Number(op.quantityProduced); await DB.update('inventory', outProduct);
-                                const lote = op.outputBatch || `OP-${String(op.id).substring(0,6)}`;
-                                await DB.add('batches', { productId: rec.outputProductId, code: lote, quantity: op.quantityProduced, expiryDate: null, isReleased: true });
-                                await DB.add('history', { productId: rec.outputProductId, batchCode: lote, type: 'entrada', quantity: op.quantityProduced, date: op.date, reason: `Gerado OP-${String(op.id).substring(0,6)}` });
-                            }
-                        }
-                    }
-                    op.status = 'concluído'; await DB.update('productionOrders', op);
-                }
-                showNotif('Sucesso! Movimentações registradas.'); 
-            } catch(e) { showNotif(e.message, true); } finally { await refreshData(); hide(id('loading-overlay')); }
-        });
-    });
-
-    // --- REQUISIÇÕES E CONSUMO ---
-    addEvt('add-requisition-item-btn', 'click', () => { const reqCont = id('requisition-items-container'); if(reqCont) addIngRowReq(reqCont, null, ''); });
-    addEvt('requisition-form', 'submit', async e => {
-        e.preventDefault();
-        const reason = id('requisition-reason')?.value; const resp = id('requisition-responsible')?.value;
-        const reqCont = id('requisition-items-container'); if(!reqCont) return;
-        const ings = [...reqCont.children].map(r => ({ productId: r.dataset.productId, quantity: parseFloat(r.querySelector('.req-qty-input').value), plan: JSON.parse(r.dataset.plan || '[]') }));
-        if(ings.some(i=>!i.productId || isNaN(i.quantity) || !i.plan.length)) return showNotif('Preencha quantidades e verifique lotes.', true);
-        show(id('loading-overlay'));
-        try {
-            for(const i of ings) {
-                const p = await DB.get('inventory', i.productId);
-                let sumPlan = i.plan.reduce((s, x) => s + x.quantity, 0);
-                if(sumPlan < i.quantity - 0.001) throw new Error(`Sem saldo suficiente para ${p.name}`);
-                for(const pl of i.plan) { const b = await DB.get('batches', pl.batchId); b.quantity = Number(b.quantity) - pl.quantity; await DB.update('batches', b); }
-                p.totalQuantity = Number(p.totalQuantity) - i.quantity; await DB.update('inventory', p);
-                await DB.add('history', { productId: p.id, type: 'requisição', quantity: i.quantity, date: new Date().toISOString().split('T')[0], reason: reason, responsible: resp }); 
-            }
-            e.target.reset(); reqCont.innerHTML=''; await refreshData(); showNotif('Requisição processada!');
-        } catch (err) { showNotif(err.message, true); } finally { hide(id('loading-overlay')); }
-    });
-
-    ['search-consumption', 'consumption-month-filter', 'consumption-year-filter'].forEach(el => { addEvt(el, el === 'search-consumption' ? 'input' : 'change', renderConsum); });
-    function renderConsum() {
-        const p = `${id('consumption-year-filter')?.value}-${String(id('consumption-month-filter')?.value).padStart(2,'0')}`;
-        const term = id('search-consumption')?.value.toLowerCase() || '';
-        let list = localMonthlyConsumption.filter(c => c.period === p);
-        if(term) list = list.filter(c => localInventory.find(i=>i.id==c.productId)?.name.toLowerCase().includes(term));
-        const tbody = id('consumption-table-body'); if(!tbody) return;
-        if(!list.length) return tbody.innerHTML = `<tr><td colspan="2" class="base-td text-center border-none py-10">Nada registrado.</td></tr>`;
-        tbody.innerHTML = list.map(c => `<tr class="base-tr"><td class="base-td text-white">${localInventory.find(i=>i.id==c.productId)?.name||'?'}</td><td class="base-td text-right font-bold text-ios-blue">${Number(c.totalConsumed).toFixed(2)}</td></tr>`).join('');
-    }
-
-    // --- AJUSTES MANUAIS ---
-    addEvt('adjustment-form', 'submit', async e => {
-        e.preventDefault();
-        const bId = id('adjustment-batch')?.value; const newQtd = parseFloat(id('adjustment-new-quantity')?.value);
-        if(!bId || isNaN(newQtd)) return;
-        show(id('loading-overlay'));
-        try {
-            const batch = await DB.get('batches', bId); batch.quantity = newQtd; await DB.update('batches', batch);
-            await DB.add('history', { productId: batch.productId, type: 'ajuste', quantity: newQtd, date: new Date().toISOString().split('T')[0], reason: id('adjustment-reason')?.value, responsible: id('adjustment-responsible')?.value });
-            e.target.reset(); await refreshData(); showNotif('Lote ajustado');
-        } catch(err) { showNotif('Erro no ajuste', true); } finally { hide(id('loading-overlay')); }
-    });
-
-    // --- BACKUP E IMPORTAÇÃO EXCEL ---
-    addEvt('btn-download-backup', 'click', async () => {
-        show(id('loading-overlay'));
-        try {
-            const data = { 
-                inventory: await DB.getAll('inventory'), batches: await DB.getAll('batches'), history: await DB.getAll('history'), 
-                recipes: await DB.getAll('recipes'), productionOrders: await DB.getAll('productionOrders'), 
-                monthlyConsumption: await DB.getAll('monthlyConsumption'), locations: await DB.getAll('locations')
-            };
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' })); a.download = `EstoqueOS_${new Date().toISOString().split('T')[0]}.json`; a.click(); 
-            showNotif('Backup Salvo!');
-        } catch(err) { showNotif('Erro ao exportar.', true); } finally { hide(id('loading-overlay')); }
-    });
-
+    // --- ENTRADA DE ESTOQUE EM MASSA (CSV/XLSX) ---
     addEvt('btn-upload-backup', 'click', () => id('backup-file-input')?.click());
     
     addEvt('backup-file-input', 'change', e => {
-        const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
+        const file = e.target.files[0]; if(!file) return; 
+        const reader = new FileReader();
         reader.onload = async ev => {
             try {
                 show(id('loading-overlay'));
-                const data = ev.target.result; const workbook = XLSX.read(data, {type: 'binary'});
-                const sheetName = workbook.SheetNames[0]; const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {defval: ""});
+                const data = new Uint8Array(ev.target.result); 
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0]; 
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {defval: ""});
                 if(!json || json.length === 0) throw new Error("Planilha vazia");
 
                 let countNovos = 0, countAtualizados = 0;
                 for(const row of json) {
-                    const getVal = (key) => { const found = Object.keys(row).find(k => k.trim() === key); return found ? row[found] : ""; };
-                    const name = getVal('Nome do Produto'); const code = String(getVal('Código')).trim(); const supplier = getVal('Fornecedor');
-                    const batchCodeRaw = getVal('Lote'); const batchCode = (!batchCodeRaw || batchCodeRaw === 'N/A') ? 'LT-' + crypto.randomUUID().substring(0,6).toUpperCase() : String(batchCodeRaw).trim();
-                    const batchQty = parseFloat(getVal('Quantidade do Lote')) || parseFloat(getVal('Quantidade Física')) || 0;
+                    const cleanKeys = Object.keys(row).map(k => ({ original: k, clean: k.replace(/^\uFEFF/, '').trim() }));
+                    const getVal = (key) => { const found = cleanKeys.find(k => k.clean.toLowerCase().includes(key.toLowerCase())); return found ? row[found.original] : ""; };
+                    
+                    const name = getVal('Nome do Produto'); 
+                    const code = String(getVal('Código')).trim(); 
+                    const supplier = getVal('Fornecedor');
+                    const batchCodeRaw = getVal('Lote'); 
+                    const batchCode = (!batchCodeRaw || batchCodeRaw === 'N/A') ? 'LT-' + crypto.randomUUID().substring(0,6).toUpperCase() : String(batchCodeRaw).trim();
+                    const batchQty = parseFloat(getVal('Quantidade do Lote')) || parseFloat(getVal('Quantidade Física')) || parseFloat(getVal('Quantidade')) || 0;
                     const location = getVal('Local') || getVal('Endereço') || getVal('Rua') || '';
 
                     if(!name || batchQty <= 0) continue;
@@ -2168,7 +1239,7 @@
                         await DB.update('inventory', p); countAtualizados++;
                     }
 
-                    let expiry = null; const expRaw = getVal('Data de Validade');
+                    let expiry = null; const expRaw = getVal('Validade');
                     if(expRaw && expRaw !== 'N/A') {
                         if(!isNaN(expRaw) && typeof expRaw === 'number') { const d = new Date(Math.round((expRaw - 25569)*86400*1000)); expiry = d.toISOString().split('T')[0]; } 
                         else if(typeof expRaw === 'string') { const pts = expRaw.split('/'); if(pts.length === 3) expiry = `${pts[2]}-${pts[1]}-${pts[0]}`; }
@@ -2180,21 +1251,10 @@
                 }
 
                 await refreshData();
-                const ds = new Date().toLocaleString('pt-BR'); localStorage.setItem('last_res', ds); if(id('last-restore-date')) id('last-restore-date').innerText = ds;
                 showNotif(`Importação concluída! ${countNovos} produtos criados, ${countAtualizados} atualizados.`);
-            } catch(err) { showNotif('Erro na leitura do arquivo CSV/Excel.', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; hide(id('loading-overlay')); }
-        }; reader.readAsBinaryString(file);
-    });
-
-    addEvt('btn-reset-database', 'click', () => {
-        showConfirmationModal('Formatação Geral', 'Apagar TUDO irreversivelmente?', async () => {
-            show(id('loading-overlay')); 
-            try {
-                for(const s of ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption', 'locations']) await DB.clear(s);
-                localStorage.removeItem('last_res'); if(id('last-restore-date')) id('last-restore-date').innerText = 'Nunca';
-                await refreshData(); showNotif('Sistema Formatado com sucesso!');
-            } catch (err) { showNotif('Falha na formatação.', true); } finally { hide(id('loading-overlay')); }
-        });
+            } catch(err) { showNotif('Erro na leitura do arquivo CSV/Excel. Verifique o formato.', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; hide(id('loading-overlay')); }
+        }; 
+        reader.readAsArrayBuffer(file); // Correção chave para não corromper caracteres de CSV
     });
 
 </script>
