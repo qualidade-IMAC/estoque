@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     
@@ -151,7 +150,7 @@
                 <span class="ml-3 font-bold text-xl text-white hidden lg:block tracking-tight">Estoque OS</span>
             </div>
             <nav class="flex-1 w-full px-3 space-y-2 overflow-y-auto">
-                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="dashboard"><i class="fa-solid fa-chart-pie w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Visão Geral</span></a>
+                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="dashboard"><i class="fa-solid fa-home w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Início</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="addressing"><i class="fa-solid fa-map-location-dot w-6 text-center text-lg text-ios-blue"></i><span class="ml-3 hidden lg:block font-medium text-ios-blue">Endereçamento (Local)</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="scanner"><i class="fa-solid fa-barcode w-6 text-center text-lg text-ios-green"></i><span class="ml-3 hidden lg:block font-medium text-ios-green">Cód. Barras (Item)</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="entry"><i class="fa-solid fa-box-open w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Entrada Lote</span></a>
@@ -178,13 +177,7 @@
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="consumption"><i class="fa-solid fa-chart-line w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Consumo Mensal</span></a>
             </nav>
             <div class="mt-auto w-full px-3 pt-4 border-t border-ios-border">
-                <button id="btn-show-alerts" class="p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all relative text-left">
-                    <i class="fa-solid fa-bell w-6 text-center text-lg text-ios-red"></i>
-                    <span class="ml-3 hidden lg:block font-medium">Alertas Estoque</span>
-                    <span id="badge-nav-alerts" class="absolute top-3 right-3 bg-ios-red text-white text-[10px] px-2 py-0.5 rounded-full hidden font-bold shadow-sm shadow-ios-red/50">0</span>
-                </button>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="settings"><i class="fa-solid fa-gear w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Ajustes App</span></a>
-                
                 <div class="flex items-center justify-between mt-4 px-2 py-3 bg-ios-card rounded-xl border border-ios-border/50">
                     <div class="flex items-center gap-3 overflow-hidden">
                         <div class="w-8 h-8 rounded-full bg-ios-blue/20 text-ios-blue flex items-center justify-center shrink-0"><i class="fa-solid fa-user text-xs"></i></div>
@@ -197,62 +190,57 @@
 
         <main class="flex-1 p-6 lg:p-10 overflow-y-auto bg-ios-bg relative z-0 h-full">
             
-            <!-- Dashboard -->
-            <div id="screen-dashboard" class="screen-panel">
-                <h1 class="title-lg">Visão Geral</h1>
-                <p class="text-ios-textMuted mb-6 italic">"Não se gerencia o que não se mede, não se mede o que não se define, não se define o que não se entende e não há sucesso no que não se gerencia."</p>
+            <!-- Home / Dash Leve -->
+            <div id="screen-dashboard" class="screen-panel flex-col gap-6">
+                <h1 class="title-lg mb-0">Menu Principal</h1>
+                <p class="text-ios-textMuted mb-2 italic">"Não se gerencia o que não se mede, não se mede o que não se define, não se define o que não se entende..."</p>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
-                    <div class="card flex items-center">
-                        <div class="stat-icon bg-ios-blue/20 text-ios-blue"><i class="fa-solid fa-cube"></i></div>
-                        <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Itens Únicos</p><p id="stat-total-items" class="text-2xl font-bold text-white">0</p></div>
-                    </div>
-                    <div class="card flex items-center">
-                        <div class="stat-icon bg-ios-green/20 text-ios-green"><i class="fa-solid fa-boxes-packing"></i></div>
-                        <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Volume Físico</p><p id="stat-total-quantity" class="text-2xl font-bold text-white">0</p></div>
-                    </div>
-                    <div class="card flex items-center">
-                        <div class="stat-icon bg-ios-orange/20 text-ios-orange"><i class="fa-solid fa-dolly"></i></div>
-                        <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">OPs a Separar</p><p id="stat-pending-picking" class="text-2xl font-bold text-white">0</p></div>
-                    </div>
-                    <div class="card flex items-center cursor-pointer hover:bg-ios-cardHover transition-colors border border-transparent hover:border-ios-red/50" id="card-stat-low-stock">
-                        <div class="stat-icon bg-ios-red/20 text-ios-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                        <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Estoque Baixo</p><p id="stat-low-stock" class="text-2xl font-bold text-white">0</p></div>
-                    </div>
-                    <div class="card flex items-center cursor-pointer hover:bg-ios-cardHover transition-colors border border-transparent hover:border-ios-red/50" id="card-stat-expiring">
-                        <div class="stat-icon bg-ios-red/20 text-ios-red"><i class="fa-solid fa-clock"></i></div>
-                        <div class="ml-4"><p class="text-sm text-ios-textMuted font-medium">Vencendo (45d)</p><p id="stat-expiring-soon" class="text-2xl font-bold text-white">0</p></div>
-                    </div>
-                </div>
-                
-                <h2 class="title-md mt-10 mb-4 text-ios-blue"><i class="fa-solid fa-ranking-star mr-2"></i>Indicadores de Eficiência (Separação)</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
-                    <div class="card flex flex-col">
-                        <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-4">Ranking da Equipe (Estoquistas)</h3>
-                        <div class="table-container flex-1">
-                            <table class="base-table">
-                                <thead class="base-thead"><tr><th class="base-th">Posição & Nome</th><th class="base-th text-center">OPs Concluídas</th><th class="base-th text-right">Tempo Médio/OP</th></tr></thead>
-                                <tbody id="emp-ranking-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card flex flex-col">
-                        <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-4">Demanda de Tempo por Linha (Minutos)</h3>
-                        <div class="h-48 mt-auto"><canvas id="line-efficiency-chart"></canvas></div>
-                    </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-green" onclick="navTo('scanner')">
+                        <i class="fa-solid fa-barcode text-4xl text-ios-green mb-3"></i>
+                        <span class="font-semibold text-white">Ler Código</span>
+                    </button>
+                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-blue" onclick="navTo('entry')">
+                        <i class="fa-solid fa-box-open text-4xl text-ios-blue mb-3"></i>
+                        <span class="font-semibold text-white">Nova Entrada</span>
+                    </button>
+                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-orange" onclick="navTo('picking')">
+                        <i class="fa-solid fa-dolly text-4xl text-ios-orange mb-3"></i>
+                        <span class="font-semibold text-white">Separação</span>
+                    </button>
+                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-blue" onclick="navTo('addressing')">
+                        <i class="fa-solid fa-map-location-dot text-4xl text-ios-blue mb-3"></i>
+                        <span class="font-semibold text-white">Endereços</span>
+                    </button>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5 mt-8 border-t border-ios-border pt-8">
-                    <div class="card"><div class="flex justify-between mb-4"><h2 class="title-md mb-0">Consumo Hoje</h2></div><div class="h-64"><canvas id="daily-output-chart"></canvas></div></div>
-                    <div class="card"><div class="flex justify-between mb-4"><h2 class="title-md mb-0">Previsto 48h</h2></div><div class="h-64"><canvas id="scheduled-output-chart"></canvas></div></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                    <div class="card flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="title-md text-ios-red mb-0"><i class="fa-solid fa-clock mr-2"></i>Vencimento (Próx. 45 dias)</h2>
+                            <span class="badge bg-ios-red/20 text-ios-red" id="home-count-expiring">0</span>
+                        </div>
+                        <ul id="home-expiring-list" class="space-y-3 overflow-y-auto max-h-96 pr-2"></ul>
+                    </div>
+                    <div class="card flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="title-md text-ios-orange mb-0"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Estoque Baixo</h2>
+                            <span class="badge bg-ios-orange/20 text-ios-orange" id="home-count-low">0</span>
+                        </div>
+                        <ul id="home-low-stock-list" class="space-y-3 overflow-y-auto max-h-96 pr-2"></ul>
+                    </div>
                 </div>
-                <div class="card"><h2 class="title-md">Curva ABC de Consumo</h2><div class="h-64"><canvas id="abc-curve-chart"></canvas></div></div>
             </div>
 
             <!-- Consulta Endereçamento -->
             <div id="screen-addressing" class="screen-panel hidden flex-col items-center max-w-5xl mx-auto py-10">
-                <h1 class="title-lg w-full text-center text-ios-blue mb-2"><i class="fa-solid fa-map-location-dot mr-3"></i>Consulta de Endereçamento</h1>
-                <p class="text-ios-textMuted mb-8 text-center">Bipe o local (Rua/Prateleira) para ver os insumos armazenados e as reservas de produção.</p>
+                <div class="w-full flex justify-between items-center mb-6">
+                    <div>
+                        <h1 class="title-lg text-ios-blue mb-2"><i class="fa-solid fa-map-location-dot mr-3"></i>Consulta de Endereçamento</h1>
+                        <p class="text-ios-textMuted">Bipe o local (Rua/Prateleira) para ver os insumos armazenados e as reservas de produção.</p>
+                    </div>
+                    <button id="btn-manage-locations" class="btn-secondary whitespace-nowrap"><i class="fa-solid fa-list-ul mr-2"></i>Gerenciar Locais</button>
+                </div>
                 
                 <div class="flex gap-4 w-full max-w-md mx-auto mb-4">
                     <button id="btn-start-camera-address" class="btn-secondary w-full py-4 text-ios-blue border-ios-blue/30 bg-ios-blue/10" onclick="toggleCamera('address-camera-reader', 'address-input')"><i class="fa-solid fa-camera mr-2"></i>Ler Câmera</button>
@@ -305,21 +293,30 @@
                     <input type="text" id="scanner-input" class="w-full bg-ios-bg border-2 border-ios-border text-white text-3xl font-mono text-center py-6 rounded-2xl focus:border-ios-green focus:ring-4 focus:ring-ios-green/20 transition-all outline-none" placeholder="Aguardando código..." autocomplete="off">
                 </div>
 
-                <!-- Resultado de Leitura -->
+                <!-- Resultado de Leitura (Produto Conhecido) -->
                 <div id="scanner-result-box" class="w-full card mt-6 hidden flex-col transition-all duration-300 opacity-0 transform translate-y-4">
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-ios-border pb-4 mb-4 gap-4">
                         <div>
                             <span class="badge bg-ios-blue/20 text-ios-blue mb-2 block w-max" id="scan-res-type">Insumo</span>
                             <h2 class="text-2xl font-bold text-white mb-1" id="scan-res-name">Nome do Produto</h2>
                             <p class="text-ios-textMuted text-sm">Cód Sistema: <span id="scan-res-code" class="text-white font-mono"></span> | Código Barras: <span id="scan-res-barcode" class="text-white font-mono"></span></p>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xs text-ios-textMuted uppercase font-bold tracking-wide">Saldo Físico Atual</p>
-                            <p class="text-4xl font-bold text-ios-green" id="scan-res-stock">0.00</p>
+                        <div class="text-left md:text-right bg-ios-bg p-4 rounded-xl border border-ios-border w-full md:w-auto">
+                            <p class="text-xs text-ios-textMuted uppercase font-bold tracking-wide mb-1">Saldo Consolidado Global</p>
+                            <p class="text-3xl font-bold text-ios-green" id="scan-res-stock">0.00</p>
                         </div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-ios-border text-center text-ios-textMuted text-sm">
-                        <i class="fa-solid fa-check-circle text-ios-green mr-1"></i> Este código já está associado e pronto para o uso na Separação (Picking).
+                    
+                    <div class="mt-2">
+                        <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Distribuição por Lote e Local</h3>
+                        <div class="table-container max-h-64 overflow-y-auto">
+                            <table class="base-table w-full text-left">
+                                <thead class="base-thead">
+                                    <tr><th class="base-th">Lote</th><th class="base-th">Local (Rua)</th><th class="base-th text-right">Qtd Física</th><th class="base-th text-right">Livre</th></tr>
+                                </thead>
+                                <tbody id="scan-res-batches" class="divide-y divide-ios-border"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -432,7 +429,7 @@
                         <button id="btn-export-recipe-book" class="btn-secondary"><i class="fa-solid fa-file-pdf mr-2"></i>Livro PDF</button>
                         <button id="btn-import-recipes" class="btn-secondary text-ios-green border-ios-green/50 hover:bg-ios-green/10"><i class="fa-solid fa-file-excel mr-2"></i>Importar Excel</button>
                         <input type="file" id="recipe-file-input" class="hidden" accept=".xlsx, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-                        <button id="btn-new-recipe" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Criar Receita</button>
+                        <button id="btn-new-recipe-main" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Criar Receita</button>
                     </div>
                 </div>
                 <div class="flex flex-col xl:flex-row gap-6">
@@ -461,7 +458,7 @@
                     <h1 class="title-lg mb-0">Ordens de Produção (OP)</h1>
                     <div class="flex gap-3">
                         <button id="btn-confirm-production" class="btn-success"><i class="fa-solid fa-check-double mr-2"></i>Efetivar OPs</button>
-                        <button id="btn-new-production-order" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Nova OP</button>
+                        <button id="btn-new-production-order-main" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Nova OP</button>
                     </div>
                 </div>
                 <div class="card mb-5 flex flex-wrap gap-4 items-center border-l-4 border-l-ios-blue">
@@ -554,10 +551,51 @@
 
     <!-- Modais Picking, Recipes, PO, DB Alerts -->
     
-    <!-- Novo: Cadastrar Localização Modal -->
+    <!-- Modal: Gerenciar Locais -->
+    <div id="manage-locations-modal" class="modal z-[70]">
+        <div class="modal-content max-w-2xl max-h-[90vh] flex flex-col p-0 bg-ios-bg border border-ios-border">
+            <div class="flex justify-between items-center p-6 border-b border-ios-border bg-ios-cardHover">
+                <h2 class="title-md mb-0 text-white"><i class="fa-solid fa-list-ul mr-2 text-ios-blue"></i>Gerenciar Locais Cadastrados</h2>
+                <button class="text-ios-textMuted hover:text-white text-3xl close-modal leading-none" data-target="manage-locations-modal">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div class="table-container">
+                    <table class="base-table w-full">
+                        <thead class="base-thead"><tr><th class="base-th">Código Base</th><th class="base-th">Nome de Exibição (Rua)</th><th class="base-th text-center">Ações</th></tr></thead>
+                        <tbody id="locations-table-body" class="divide-y divide-ios-border"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Local -->
+    <div id="edit-location-modal" class="modal z-[80]">
+        <div class="modal-content max-w-sm bg-ios-card border border-ios-border">
+            <h2 class="title-md mb-4 text-white">Editar Local</h2>
+            <form id="edit-location-form" class="space-y-4">
+                <input type="hidden" id="edit-loc-id">
+                <input type="hidden" id="edit-loc-old-name">
+                <div>
+                    <label class="form-label">Código Lido (QR/Barras)</label>
+                    <input type="text" id="edit-loc-code" required class="form-input bg-ios-bg border-ios-border text-ios-textMuted" readonly>
+                </div>
+                <div>
+                    <label class="form-label">Nome do Local (Atualizará todos os lotes desta rua)</label>
+                    <input type="text" id="edit-loc-name" required class="form-input uppercase bg-ios-bg border-ios-blue text-white font-bold" placeholder="Digite o nome...">
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" class="btn-secondary close-modal" data-target="edit-location-modal">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar Edição</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Cadastrar Localização (Novo) -->
     <div id="register-location-modal" class="modal z-[80]">
-        <div class="modal-content max-w-sm">
-            <h2 class="title-md mb-4">Cadastrar Novo Local</h2>
+        <div class="modal-content max-w-sm bg-ios-card border border-ios-border">
+            <h2 class="title-md mb-4 text-white">Cadastrar Novo Local</h2>
             <form id="register-location-form" class="space-y-4">
                 <p class="text-sm text-ios-textMuted mb-4">O código escaneado não existe no sistema. Por favor, dê um nome para esta Rua/Prateleira.</p>
                 <div>
@@ -771,7 +809,6 @@
 
     let isOfflineMode = false;
 
-    // NOVO: Banco de dados agora rastreia 'locations'
     const LocalDB = {
         data: { inventory: [], batches: [], history: [], recipes: [], productionOrders: [], monthlyConsumption: [], locations: [] },
         init() { const saved = localStorage.getItem('estoque_db'); if(saved) this.data = JSON.parse(saved); },
@@ -820,46 +857,70 @@
         async restoreBackup(d) { return isOfflineMode ? await LocalDB.restoreBackup(d) : await FirebaseDB.restoreBackup(d); }
     };
 
-    // --- CADASTRO DE LOCAIS ---
-    addEvt('register-location-form', 'submit', async e => {
-        e.preventDefault();
-        show(id('loading-overlay'));
-        try {
-            const code = id('loc-code').value.trim();
-            const name = id('loc-name').value.trim().toUpperCase();
-            await DB.add('locations', { code, name });
-            await refreshData();
-            hide(id('register-location-modal'));
-            showNotif('Local cadastrado com sucesso!');
+    // --- CADASTRO E GESTÃO DE LOCAIS ---
+    addEvt('btn-manage-locations', 'click', () => { renderLocationsManager(); show(id('manage-locations-modal')); });
 
-            if(id('entry-location') && !id('screen-entry').classList.contains('hidden')) {
-                id('entry-location').value = name;
-            } else if(id('address-input') && !id('screen-addressing').classList.contains('hidden')) {
-                id('address-input').value = name;
-                id('address-input').dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13 }));
+    function renderLocationsManager() {
+        const tbody = id('locations-table-body');
+        if(!localLocations || !localLocations.length) { tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-ios-textMuted">Nenhum local cadastrado.</td></tr>'; return; }
+        tbody.innerHTML = localLocations.map(l => `
+            <tr class="base-tr hover:bg-ios-card/50">
+                <td class="base-td font-mono text-xs text-ios-textMuted">${l.code || '-'}</td>
+                <td class="base-td font-bold text-white">${l.name}</td>
+                <td class="base-td text-center">
+                    <button class="text-ios-blue hover:text-blue-400 p-2 edit-loc-btn bg-ios-bg rounded-lg border border-ios-border mr-1" data-id="${l.id}"><i class="fa-solid fa-pen"></i></button>
+                    <button class="text-ios-red hover:text-red-400 p-2 del-loc-btn bg-ios-bg rounded-lg border border-ios-border" data-id="${l.id}"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    addEvt('locations-table-body', 'click', async e => {
+        const delBtn = e.target.closest('.del-loc-btn');
+        if(delBtn) { showConfirmationModal('Excluir Local?', 'Tem certeza que deseja apagar este local do sistema?', async () => { show(id('loading-overlay')); await DB.remove('locations', delBtn.dataset.id); await refreshData(); renderLocationsManager(); hide(id('loading-overlay')); showNotif('Local apagado'); }); }
+        
+        const editBtn = e.target.closest('.edit-loc-btn');
+        if(editBtn) {
+            const loc = localLocations.find(l => l.id == editBtn.dataset.id);
+            if(loc) {
+                id('edit-loc-id').value = loc.id; id('edit-loc-code').value = loc.code; id('edit-loc-name').value = loc.name; id('edit-loc-old-name').value = loc.name;
+                show(id('edit-location-modal'));
             }
-        } catch(err) {
-            showNotif('Erro ao cadastrar local', true);
-        } finally {
-            hide(id('loading-overlay'));
         }
     });
 
-    // Evento Scanner para Preenchimento de Endereço na Entrada
+    addEvt('edit-location-form', 'submit', async e => {
+        e.preventDefault(); show(id('loading-overlay'));
+        try {
+            const lId = id('edit-loc-id').value; const newCode = id('edit-loc-code').value.trim(); const newName = id('edit-loc-name').value.trim().toUpperCase(); const oldName = id('edit-loc-old-name').value;
+            const loc = await DB.get('locations', lId);
+            if(loc) {
+                loc.code = newCode; loc.name = newName; await DB.update('locations', loc);
+                if(oldName && oldName !== newName) {
+                    const affectedBatches = localBatches.filter(b => b.location === oldName);
+                    for(let b of affectedBatches) { b.location = newName; await DB.update('batches', b); }
+                }
+                await refreshData(); hide(id('edit-location-modal')); renderLocationsManager(); showNotif('Local atualizado com sucesso!');
+            }
+        } catch(err) { showNotif('Erro ao atualizar local.', true); } finally { hide(id('loading-overlay')); }
+    });
+
+    addEvt('register-location-form', 'submit', async e => {
+        e.preventDefault(); show(id('loading-overlay'));
+        try {
+            const code = id('loc-code').value.trim(); const name = id('loc-name').value.trim().toUpperCase();
+            await DB.add('locations', { code, name }); await refreshData(); hide(id('register-location-modal')); showNotif('Local cadastrado com sucesso!');
+            if(id('entry-location') && !id('screen-entry').classList.contains('hidden')) { id('entry-location').value = name; } 
+            else if(id('address-input') && !id('screen-addressing').classList.contains('hidden')) { id('address-input').value = name; id('address-input').dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13 })); }
+        } catch(err) { showNotif('Erro ao cadastrar local', true); } finally { hide(id('loading-overlay')); }
+    });
+
     addEvt('entry-location', 'keypress', e => {
         if(e.key === 'Enter') {
-            e.preventDefault();
-            const val = e.target.value.trim().toUpperCase();
-            if(!val) return;
+            e.preventDefault(); const val = e.target.value.trim().toUpperCase(); if(!val) return;
             const loc = localLocations.find(l => String(l.code).toUpperCase() === val || String(l.name).toUpperCase() === val);
-            if(loc) {
-                e.target.value = loc.name;
-                showNotif('Local reconhecido: ' + loc.name);
-            } else {
-                id('loc-code').value = val;
-                id('loc-name').value = '';
-                show(id('register-location-modal'));
-            }
+            if(loc) { e.target.value = loc.name; showNotif('Local reconhecido: ' + loc.name); } 
+            else { id('loc-code').value = val; id('loc-name').value = ''; show(id('register-location-modal')); }
         }
     });
 
@@ -963,17 +1024,7 @@
         }
     });
 
-    // --- VARIÁVEIS GLOBAIS DE ESTADO ---
-    let localInventory=[], localBatches=[], localHistory=[], localRecipes=[], localProductionOrders=[], localMonthlyConsumption=[], localLocations=[];
-    let dailyChart=null, schedChart=null, abcChart=null, lineChart=null, currentRecipeCategory='Todos';
-    let currentBatchTarget=null;
-    let invSort = { col: 'name', asc: true };
-    let currentHistoryProductId = null;
-    let activePickingLine = null, activePickingOpIds = [];
-    const typeLabels = { insumo: 'Insumo', semi_acabado: 'Semi-acabado' };
-
-    document.querySelectorAll('.close-modal').forEach(btn => { btn.addEventListener('click', () => { hide(id(btn.dataset.target)); }); });
-
+    // --- NAVEGAÇÃO E REFRESH ---
     const screens = ['dashboard','addressing','scanner','entry','inventory','recipes','production','requisitions','adjustments','consumption','settings','picking'];
     function navTo(target) {
         screens.forEach(s => { id('screen-'+s)?.classList.add('hidden'); });
@@ -1009,7 +1060,6 @@
         document.addEventListener('click', e => { if(!container.contains(e.target)) dropdown.classList.add('hidden'); });
     }
 
-    // Calcula a quantidade reservada de um lote específico
     function getReservedQty(batchId, ignoreOpId = null) {
         let res = 0;
         localProductionOrders.forEach(op => {
@@ -1042,7 +1092,6 @@
         return { plan, isSufficient: remaining <= 0.0001 };
     }
 
-    // FUNÇÃO PRINCIPAL DE SINCRONIZAÇÃO E SEGURANÇA CONTRA ERROS DE DB
     async function refreshData() {
         try {
             const results = await Promise.allSettled([
@@ -1058,14 +1107,10 @@
             localMonthlyConsumption = results[5].status === 'fulfilled' ? results[5].value || [] : [];
             localLocations = results[6].status === 'fulfilled' ? results[6].value || [] : [];
 
-            // Filtragem de nulos
-            localInventory = localInventory.filter(Boolean);
-            localBatches = localBatches.filter(Boolean);
-            localRecipes = localRecipes.filter(Boolean);
-            localProductionOrders = localProductionOrders.filter(Boolean);
+            localInventory = localInventory.filter(Boolean); localBatches = localBatches.filter(Boolean);
+            localRecipes = localRecipes.filter(Boolean); localProductionOrders = localProductionOrders.filter(Boolean);
             localLocations = localLocations.filter(Boolean);
             
-            // Segurança e recálculo
             let inventoryUpdates = [];
             for(let i of localInventory) {
                 if(!i || !i.id) continue;
@@ -1083,11 +1128,7 @@
                 if(!op || !op.id) continue;
                 let opChanged = false;
                 if(!op.picking) { op.picking = { status: 'pendente', responsible: '', start: null, end: null, duration: 0, pickedItems: {} }; opChanged = true; }
-                if(!op.recipeCategory) { 
-                    const rec = localRecipes.find(r=>r.id == op.recipeId); 
-                    op.recipeCategory = rec ? rec.category : 'Diversos'; 
-                    opChanged = true; 
-                }
+                if(!op.recipeCategory) { const rec = localRecipes.find(r=>r.id == op.recipeId); op.recipeCategory = rec ? rec.category : 'Diversos'; opChanged = true; }
                 if(typeof op.isExtra === 'undefined') { op.isExtra = false; opChanged = true; }
                 if(!op.ingredients) { op.ingredients = []; opChanged = true; }
                 if(opChanged) poUpdates.push(DB.update('productionOrders', op));
@@ -1095,15 +1136,11 @@
             if(poUpdates.length > 0) await Promise.allSettled(poUpdates);
 
             renderAll();
-            
-        } catch(e) { 
-            console.error("Erro Crítico no Refresh:", e); 
-            showNotif(`Erro na leitura do Banco. A visualização pode estar incompleta.`, true); 
-        }
+        } catch(e) { console.error("Erro Crítico:", e); showNotif(`Erro na leitura do Banco. A visualização pode estar incompleta.`, true); }
     }
 
     function renderAll() {
-        populateFilters(); renderInv(); renderRecipes(); renderPO(); renderDash(); renderConsum(); updateSidebarBadges();
+        populateFilters(); renderInv(); renderRecipes(); renderPO(); renderHome(); renderConsum(); updateSidebarBadges();
         const scrPicking = id('screen-picking'); if(scrPicking && !scrPicking.classList.contains('hidden')) renderPickingScreen();
         if(currentHistoryProductId) renderItemDetailsHistory();
     }
@@ -1111,21 +1148,56 @@
     function populateFilters() {
         const curSup = id('supplier-filter')?.value; const suppliers = [...new Set(localInventory.map(i=>i.supplier))].filter(Boolean).sort();
         const sf = id('supplier-filter'); if(sf) { sf.innerHTML = '<option value="">Fornecedores</option>' + suppliers.map(s=>`<option value="${s}">${s}</option>`).join(''); sf.value = curSup; }
-        
         const cy = id('consumption-year-filter')?.value || new Date().getFullYear().toString(); const cm = id('consumption-month-filter')?.value || (new Date().getMonth()+1).toString();
         const cYears = [...new Set(localMonthlyConsumption.map(c=>c.period.substring(0,4)))].filter(Boolean).sort((a,b)=>b-a); if(!cYears.includes(cy)) cYears.push(cy);
-        
         const yf = id('consumption-year-filter'); if(yf) { yf.innerHTML = cYears.map(y=>`<option value="${y}">${y}</option>`).join(''); yf.value = cy; }
         const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
         const mf = id('consumption-month-filter'); if(mf) { mf.innerHTML = months.map((m,i)=>`<option value="${i+1}">${m}</option>`).join(''); mf.value = cm; }
     }
 
+    // --- HOME (MENU LEVE E CARDS) ---
+    function renderHome() {
+        const quarentaECincoDias = new Date(); quarentaECincoDias.setDate(quarentaECincoDias.getDate() + 45);
+        const expiringBatches = localBatches.filter(b => Number(b.quantity) > 0 && b.expiryDate && new Date(b.expiryDate) <= quarentaECincoDias);
+        const lowStockItems = localInventory.filter(i => (Number(i.minStock) || 0) > 0 && (Number(i.totalQuantity) || 0) <= Number(i.minStock));
+
+        if(id('home-count-expiring')) id('home-count-expiring').innerText = expiringBatches.length;
+        if(id('home-count-low')) id('home-count-low').innerText = lowStockItems.length;
+
+        const expList = id('home-expiring-list');
+        if(expList) {
+            if(expiringBatches.length > 0) {
+                expList.innerHTML = expiringBatches.map(b => {
+                    const p = localInventory.find(i => i.id == b.productId);
+                    const diffDays = Math.ceil((new Date(b.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+                    let color = diffDays <= 7 ? 'text-ios-red' : 'text-ios-orange';
+                    return `<li class="bg-ios-cardHover p-3 rounded-xl border-l-4 border-l-ios-red flex justify-between items-center cursor-pointer hover:bg-ios-border transition alert-item" data-id="${p?.id}">
+                        <div><h4 class="font-bold text-white text-sm">${p?.name || '?'}</h4><p class="text-[10px] text-ios-textMuted font-mono">Lote: ${b.code} | Qtd: ${Number(b.quantity).toFixed(2)}</p></div>
+                        <div class="text-right"><span class="font-bold ${color} text-sm">${diffDays} dias</span><br><span class="text-[10px] text-ios-textMuted">${new Date(b.expiryDate+'T00:00:00').toLocaleDateString('pt-BR')}</span></div>
+                    </li>`;
+                }).join('');
+            } else { expList.innerHTML = '<li class="text-center text-ios-textMuted py-4 text-sm"><i class="fa-solid fa-check-circle text-ios-green mr-2"></i>Nenhum vencimento próximo.</li>'; }
+        }
+
+        const lowList = id('home-low-stock-list');
+        if(lowList) {
+            if(lowStockItems.length > 0) {
+                lowList.innerHTML = lowStockItems.map(item => `
+                    <li class="bg-ios-cardHover p-3 rounded-xl border-l-4 border-l-ios-orange flex justify-between items-center cursor-pointer hover:bg-ios-border transition alert-item" data-id="${item.id}">
+                        <div><h4 class="font-bold text-white text-sm">${item.name}</h4><p class="text-[10px] text-ios-textMuted">${item.supplier || '-'}</p></div>
+                        <div class="text-right"><p class="font-mono"><span class="text-ios-orange font-bold text-sm">${(Number(item.totalQuantity) || 0).toFixed(2)}</span> <span class="text-ios-textMuted text-xs">/ ${Number(item.minStock).toFixed(2)}</span></p></div>
+                    </li>`).join('');
+            } else { lowList.innerHTML = '<li class="text-center text-ios-textMuted py-4 text-sm"><i class="fa-solid fa-check-circle text-ios-green mr-2"></i>Todos os itens acima do mínimo.</li>'; }
+        }
+    }
+
+    addEvt('home-expiring-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { navTo('inventory'); window.openDetails(item.dataset.id); } });
+    addEvt('home-low-stock-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { navTo('inventory'); window.openDetails(item.dataset.id); } });
+
     // --- NOVA TELA: ENDEREÇAMENTO (Consulta por Localização) ---
     addEvt('address-input', 'keypress', e => {
         if(e.key === 'Enter') {
-            const code = e.target.value.trim().toUpperCase();
-            if(!code) return;
-            
+            const code = e.target.value.trim().toUpperCase(); if(!code) return;
             let loc = localLocations.find(l => String(l.code).toUpperCase() === code || String(l.name).toUpperCase() === code);
             const locationName = loc ? loc.name.toUpperCase() : code;
 
@@ -1138,10 +1210,8 @@
                 
                 const tbody = id('address-table-body');
                 tbody.innerHTML = foundBatches.map(b => {
-                    const p = localInventory.find(i => i.id == b.productId);
-                    const pName = p ? String(p.name) : 'Insumo Excluído';
-                    const reserved = getReservedQty(b.id);
-                    const livre = Number(b.quantity) - reserved;
+                    const p = localInventory.find(i => i.id == b.productId); const pName = p ? String(p.name) : 'Insumo Excluído';
+                    const reserved = getReservedQty(b.id); const livre = Number(b.quantity) - reserved;
                     const expFormat = b.expiryDate ? new Date(b.expiryDate+'T00:00:00').toLocaleDateString('pt-BR') : '-';
                     
                     return `
@@ -1155,13 +1225,10 @@
                     </tr>`;
                 }).join('');
                 
-                show(box);
-                setTimeout(() => box.classList.remove('opacity-0', 'translate-y-4'), 10);
+                show(box); setTimeout(() => box.classList.remove('opacity-0', 'translate-y-4'), 10);
             } else {
                 hide(box); box.classList.add('opacity-0', 'translate-y-4');
-                id('loc-code').value = code;
-                id('loc-name').value = '';
-                show(id('register-location-modal'));
+                id('loc-code').value = code; id('loc-name').value = ''; show(id('register-location-modal'));
             }
             e.target.value = '';
         }
@@ -1173,22 +1240,31 @@
         if(e.key === 'Enter') {
             const code = e.target.value.trim(); if(!code) return;
             lastScannedCode = code;
-            
             const p = localInventory.find(i => i.barcode === code || String(i.code) === code);
             const boxResult = id('scanner-result-box'); const boxAssociate = id('scanner-associate-box');
             
             if(p) {
                 hide(boxAssociate); boxAssociate.classList.add('opacity-0', 'translate-y-4');
-                id('scan-res-name').innerText = String(p.name || 'N/A');
-                id('scan-res-code').innerText = p.code || 'N/D';
-                id('scan-res-barcode').innerText = p.barcode || 'N/D';
-                id('scan-res-type').innerText = typeLabels[p.type] || 'Insumo';
-                id('scan-res-stock').innerText = (Number(p.totalQuantity)||0).toFixed(2);
+                id('scan-res-name').innerText = String(p.name || 'N/A'); id('scan-res-code').innerText = p.code || 'N/D'; id('scan-res-barcode').innerText = p.barcode || 'N/D'; id('scan-res-type').innerText = typeLabels[p.type] || 'Insumo'; id('scan-res-stock').innerText = (Number(p.totalQuantity)||0).toFixed(2);
+                
+                const foundBatches = localBatches.filter(b => b.productId == p.id && Number(b.quantity) > 0);
+                const tbody = id('scan-res-batches');
+                tbody.innerHTML = foundBatches.map(b => {
+                    const reserved = getReservedQty(b.id); const livre = Number(b.quantity) - reserved;
+                    return `
+                    <tr class="base-tr">
+                        <td class="base-td font-mono text-xs text-ios-textMuted">${b.code}</td>
+                        <td class="base-td font-bold text-white text-xs">${b.location || 'Sem Local'}</td>
+                        <td class="base-td text-right font-bold text-ios-textMuted">${Number(b.quantity).toFixed(2)}</td>
+                        <td class="base-td text-right font-bold text-ios-green">${livre > 0 ? livre.toFixed(2) : '0.00'}</td>
+                    </tr>`;
+                }).join('');
+                if(!foundBatches.length) tbody.innerHTML = `<tr><td colspan="4" class="base-td text-center py-4 text-ios-textMuted">Nenhum lote físico encontrado.</td></tr>`;
+                
                 show(boxResult); setTimeout(() => boxResult.classList.remove('opacity-0', 'translate-y-4'), 10);
             } else {
                 hide(boxResult); boxResult.classList.add('opacity-0', 'translate-y-4');
-                id('unrecognized-code').innerText = code;
-                createSearchableSelect(id('associate-searchable-container'), localInventory, 'Pesquise pelo nome do insumo...');
+                id('unrecognized-code').innerText = code; createSearchableSelect(id('associate-searchable-container'), localInventory, 'Pesquise pelo nome do insumo...');
                 show(boxAssociate); setTimeout(() => boxAssociate.classList.remove('opacity-0', 'translate-y-4'), 10);
                 showNotif('Código não reconhecido no sistema.', true);
             }
@@ -1226,36 +1302,9 @@
             if (lowStockItems.length > 0) { badgeAlerts.innerText = lowStockItems.length; badgeAlerts.classList.remove('hidden'); } 
             else { badgeAlerts.classList.add('hidden'); }
         }
-        
-        const statLowStock = id('stat-low-stock'); if (statLowStock) statLowStock.innerText = lowStockItems.length;
-        const listAlerts = id('low-stock-list');
-        if (listAlerts) {
-            if(lowStockItems.length > 0) {
-                listAlerts.innerHTML = lowStockItems.map(item => `
-                    <li class="bg-ios-cardHover p-4 rounded-xl border-l-4 border-l-ios-red flex flex-wrap justify-between items-center gap-4 cursor-pointer hover:bg-ios-border transition alert-item" data-id="${item.id}">
-                        <div><h4 class="font-bold text-white text-lg">${item.name}</h4><p class="text-xs text-ios-textMuted">Cód: ${item.code || '-'} | Fornecedor: ${item.supplier || '-'}</p></div>
-                        <div class="text-right"><p class="text-[10px] uppercase text-ios-textMuted mb-1 font-bold">Atual / Mínimo</p><p class="font-mono"><span class="text-ios-red font-bold text-xl">${(Number(item.totalQuantity) || 0).toFixed(2)}</span> <span class="text-ios-textMuted text-sm">/ ${Number(item.minStock).toFixed(2)}</span></p></div>
-                    </li>`).join('');
-            } else {
-                listAlerts.innerHTML = '<li class="text-center text-ios-textMuted py-8"><i class="fa-solid fa-check-circle text-4xl text-ios-green mb-3 block"></i>Todos os itens acima do mínimo.</li>';
-            }
-        }
     }
 
-    addEvt('btn-show-alerts', 'click', () => { show(id('low-stock-modal')); });
-    addEvt('card-stat-low-stock', 'click', () => { show(id('low-stock-modal')); });
-    addEvt('card-stat-expiring', 'click', () => { show(id('expiring-modal')); });
-    addEvt('low-stock-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { hide(id('low-stock-modal')); navTo('inventory'); window.openDetails(item.dataset.id); } });
-
-    setInterval(() => {
-        document.querySelectorAll('.live-timer').forEach(el => {
-            const startTime = parseInt(el.dataset.start);
-            if(startTime && startTime > 0) {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                el.innerText = formatTime(elapsed);
-            }
-        });
-    }, 1000);
+    addEvt('btn-show-alerts', 'click', () => { navTo('dashboard'); showNotif('Alertas estão no Menu Principal!'); });
 
     // --- ESTOQUE E DETALHES ---
     addEvt('search-inventory', 'input', renderInv); addEvt('supplier-filter', 'input', renderInv); addEvt('type-filter', 'input', renderInv);
@@ -1931,7 +1980,7 @@
     }
 
     addEvt('po-quantity', 'input', updatePOIngredients);
-    addEvt('btn-new-production-order', 'click', () => {
+    addEvt('btn-new-production-order-main', 'click', () => {
         const form = id('production-order-form'); if(form) form.reset(); 
         const bodyEl = id('po-ingredients-body'); if(bodyEl) bodyEl.innerHTML = '';
         const mappedRecipes = localRecipes.map(r => { return { ...r, searchName: `${r.name}` }; });
