@@ -11,7 +11,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <!-- Script para leitura de QR Code / Código de Barras pela Câmera -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <script>
@@ -99,8 +98,7 @@
         
         .form-input { transition: all 0.4s ease; }
         
-        /* Ajustes no leitor de câmera para ele ter bordas arredondadas e caber bem */
-        #main-camera-reader video, #picking-camera-reader video { border-radius: 0.75rem; width: 100% !important; height: auto !important; object-fit: cover;}
+        #main-camera-reader video, #picking-camera-reader video, #entry-camera-reader video { border-radius: 0.75rem; width: 100% !important; height: auto !important; object-fit: cover;}
     </style>
 </head>
 <body class="bg-ios-bg text-ios-text font-sans antialiased flex h-screen overflow-hidden w-full relative">
@@ -260,7 +258,7 @@
                 </div>
 
                 <!-- Container do Leitor da Câmera -->
-                <div id="main-camera-reader" class="w-full max-w-md mx-auto hidden mb-6 border border-ios-border rounded-xl bg-black"></div>
+                <div id="main-camera-reader" class="w-full max-w-md mx-auto hidden mb-6 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
                 
                 <div class="w-full card bg-ios-cardHover border-2 border-ios-green/30 p-8 shadow-2xl relative overflow-hidden">
                     <div class="absolute inset-0 border-b-2 border-ios-green animate-[slideUp_2s_ease-in-out_infinite] opacity-20 pointer-events-none" style="height: 10px;"></div>
@@ -307,13 +305,17 @@
                 <h1 class="title-lg">Nova Entrada Físico (Lote Específico)</h1>
                 <div class="card max-w-3xl mx-auto">
                     <div class="bg-ios-blue/10 border border-ios-blue/30 rounded-xl p-4 mb-6">
-                        <p class="text-sm text-ios-blue font-medium"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Dica: Digite o código de um produto já existente para preencher automaticamente os dados do fornecedor e prazos.</p>
+                        <p class="text-sm text-ios-blue font-medium"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Dica: Digite o código ou use a câmera para preencher os dados do fornecedor e prazos automaticamente.</p>
                     </div>
                     <form id="entry-form">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
-                                <label class="form-label">Código do Produto <span class="text-xs text-ios-textMuted font-normal">- Use 8110 p/ Trigo</span></label>
-                                <input type="text" name="product-code" class="form-input text-lg font-mono placeholder:text-sm placeholder:font-sans" placeholder="Busca automática ao digitar...">
+                                <label class="form-label flex justify-between items-end mb-1">
+                                    <span>Código do Produto / Código de Barras</span>
+                                    <button type="button" id="btn-start-camera-entry" class="text-ios-blue text-xs flex items-center bg-ios-blue/10 px-2 py-1 rounded hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-camera mr-1"></i>Ler Câmera</button>
+                                </label>
+                                <input type="text" id="entry-product-code" name="product-code" class="form-input text-lg font-mono placeholder:text-sm placeholder:font-sans" placeholder="Busca automática ao digitar...">
+                                <div id="entry-camera-reader" class="w-full max-w-sm mx-auto hidden mt-2 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="form-label">Nome do Produto</label>
@@ -379,10 +381,8 @@
                     <div class="flex gap-3">
                         <input type="text" id="search-recipe" placeholder="Buscar receita..." class="form-input w-64">
                         <button id="btn-export-recipe-book" class="btn-secondary"><i class="fa-solid fa-file-pdf mr-2"></i>Livro PDF</button>
-                        
                         <button id="btn-import-recipes" class="btn-secondary text-ios-green border-ios-green/50 hover:bg-ios-green/10"><i class="fa-solid fa-file-excel mr-2"></i>Importar Excel</button>
                         <input type="file" id="recipe-file-input" class="hidden" accept=".xlsx, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-                        
                         <button id="btn-new-recipe" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Criar Receita</button>
                     </div>
                 </div>
@@ -537,15 +537,15 @@
                 
                 <div class="bg-ios-cardHover border-b border-ios-border p-4 shrink-0 flex items-center gap-4">
                     <i class="fa-solid fa-barcode text-ios-green text-3xl"></i>
-                    <div class="flex-1 flex gap-2">
+                    <div class="flex-1 flex gap-2 items-end">
                         <div class="flex-1">
                             <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-1">Leitura Rápida (Scanner ou Câmera)</p>
                             <input type="text" id="picking-scanner" class="form-input w-full border-ios-green/50 focus:border-ios-green focus:ring-ios-green/20 font-mono text-xl py-3" placeholder="Bipe o insumo para destacar na lista..." autocomplete="off">
                         </div>
-                        <button id="btn-start-camera-picking" class="bg-ios-card border border-ios-border text-ios-blue px-5 mt-4 rounded-xl hover:bg-ios-blue/10 transition-colors flex items-center" title="Ligar Câmera"><i class="fa-solid fa-camera text-xl"></i></button>
+                        <button type="button" id="btn-start-camera-picking" class="bg-ios-bg border border-ios-border text-ios-blue px-5 py-3 h-[52px] rounded-xl hover:bg-ios-blue/10 transition-colors flex items-center" title="Ligar Câmera"><i class="fa-solid fa-camera text-xl"></i></button>
                     </div>
                 </div>
-                <div id="picking-camera-reader" class="w-full max-w-sm mx-auto hidden mt-4 border border-ios-border rounded-xl bg-black shrink-0"></div>
+                <div id="picking-camera-reader" class="w-full max-w-sm mx-auto hidden mt-4 border border-ios-border rounded-xl bg-black shrink-0 overflow-hidden"></div>
 
                 <div class="overflow-y-auto flex-1 bg-ios-bg p-6 relative">
                     <div class="table-container shadow-xl">
@@ -565,6 +565,85 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Receita -->
+    <div id="recipe-modal" class="modal">
+        <div class="modal-content max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6"><h2 id="recipe-modal-title" class="title-md mb-0">Nova Receita</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="recipe-modal">&times;</button></div>
+            <form id="recipe-form" class="space-y-5">
+                <input type="hidden" id="edit-recipe-id">
+                <div><label class="form-label">Nome da Ficha Técnica / Receita</label><input type="text" id="recipe-name" required class="form-input font-semibold text-lg" placeholder="Ex: Massa de Coxinha ou Bolo de Cenoura"></div>
+                <div>
+                    <label class="form-label">Linha Produtiva</label>
+                    <input type="text" id="recipe-category" list="category-options" required class="form-input" placeholder="Selecione ou digite uma nova linha (ex: Salgados, Pães...)">
+                    <datalist id="category-options">
+                        <option value="Salgados"></option>
+                        <option value="Pães"></option>
+                        <option value="Confeitaria"></option>
+                        <option value="Bases"></option>
+                    </datalist>
+                </div>
+                <div class="p-5 bg-ios-blue/10 border border-ios-blue/30 rounded-xl">
+                    <label class="flex items-center space-x-3 cursor-pointer mb-2">
+                        <input type="checkbox" id="recipe-is-semi" class="ui-checkbox">
+                        <span class="text-sm font-semibold text-white ml-1">Esta receita gera um produto Semi-Acabado</span>
+                    </label>
+                    <p class="text-xs text-ios-textMuted mb-4 mt-2">Se marcado, a receita entra no estoque como Insumo. Se NÃO marcado, é Acabado.</p>
+                    <div id="yield-wrapper" class="hidden pt-4 border-t border-ios-blue/20">
+                        <label class="form-label text-ios-blue font-bold">Rendimento (Quantidade FÍSICA que entra no estoque ao processar 1 receita)</label>
+                        <input type="number" id="recipe-yield" min="0.001" step="0.001" value="1" class="form-input text-ios-blue font-bold text-lg" placeholder="Ex: 2.5">
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Composição (Ingredientes)</h3>
+                    <div id="ingredients-container" class="space-y-3 mb-4"></div>
+                    <button type="button" id="add-ingredient-btn" class="text-ios-blue font-medium text-sm flex items-center"><i class="fa-solid fa-circle-plus mr-1"></i>Adicionar Ingrediente</button>
+                </div>
+                <div class="mt-6 flex justify-end"><button type="submit" class="btn-primary" id="save-recipe-btn">Salvar Ficha Técnica</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal OP -->
+    <div id="production-order-modal" class="modal">
+        <div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6"><h2 id="production-order-modal-title" class="title-md mb-0">Gerar Ordem de Produção (OP)</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="production-order-modal">&times;</button></div>
+            <form id="production-order-form">
+                <input type="hidden" id="edit-po-id">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-ios-bg border border-ios-border p-5 rounded-2xl mb-6 shadow-inner items-start relative z-50">
+                    <div class="md:col-span-2 relative">
+                        <label class="form-label">Receita / Produto a Fabricar</label>
+                        <div id="po-recipe-searchable-container" class="searchable-container"></div>
+                    </div>
+                    <div><label class="form-label">Multiplicador (Qtd Receitas)</label><input type="number" id="po-quantity" value="1" min="0.01" step="0.01" required class="form-input text-ios-blue font-bold text-lg"></div>
+                    <div class="md:col-span-1 mt-2"><label class="form-label">Data Agendada</label><input type="date" id="po-date" required class="form-input"></div>
+                    <div class="md:col-span-4 mt-2">
+                        <label class="flex items-center gap-3 cursor-pointer bg-ios-orange/10 p-3 rounded-xl border border-ios-orange/30 w-max hover:bg-ios-orange/20 transition-colors">
+                            <input type="checkbox" id="po-is-extra" class="ui-checkbox">
+                            <span class="text-sm font-bold text-ios-orange ml-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> OP Extra / Urgente (Menos de 48h)</span>
+                        </label>
+                    </div>
+                    <div id="po-output-fields" class="col-span-1 md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-4 border-t border-ios-border hidden">
+                        <div><label class="form-label">Total Gerado (Entrada Físico)</label><input type="text" id="po-total-output" readonly class="form-input bg-gray-800 text-ios-green font-bold text-lg border-none" value="0.0000" title="Calculado = Rendimento x Multiplicador"></div>
+                        <div><label class="form-label">Lote Sugerido (Saída)</label><input type="text" id="po-output-batch" class="form-input"></div>
+                        <div><label class="form-label">Validade Lote Gerado</label><input type="date" id="po-output-expiry" class="form-input"></div>
+                    </div>
+                </div>
+                <h3 class="title-md text-sm uppercase text-ios-textMuted mb-3">Previsão de Consumo</h3>
+                <div class="table-container mb-6">
+                    <table class="base-table">
+                        <thead class="base-thead"><tr><th class="base-th">Insumo</th><th class="base-th">Estoque Atual</th><th class="base-th">Qtd a Descontar</th><th class="base-th">Lotes Reservados</th></tr></thead>
+                        <tbody id="po-ingredients-body"></tbody>
+                    </table>
+                </div>
+                <div class="flex justify-end"><button type="submit" class="btn-primary">Salvar OP na Fila</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Demais Modais -->
+    <div id="low-stock-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-bell mr-3 text-2xl"></i><span>Itens Abaixo do Mínimo</span></h2><p class="text-sm text-ios-textMuted font-medium">Atenção para reposição imediata. Você define o que mede!</p></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="low-stock-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="low-stock-list" class="space-y-3"></ul></div></div></div>
+    <div id="expiring-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-clock mr-3 text-2xl"></i><span>Lotes Vencendo (Próx. 45 Dias)</span></h2><p class="text-sm text-ios-textMuted font-medium">Acompanhamento e priorização de saída PEPS.</p></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="expiring-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="expiring-list" class="space-y-3"></ul></div></div></div>
 
     <!-- Modal Detalhes Item (Estoque) -->
     <div id="item-details-modal" class="modal">
@@ -645,14 +724,14 @@
     <div id="confirm-action-modal" class="modal z-[9999]"><div class="modal-content max-w-md text-center flex flex-col items-center"><div class="w-16 h-16 rounded-full bg-ios-cardHover border border-ios-border flex items-center justify-center mb-5"><i class="fa-solid fa-circle-question text-3xl text-ios-blue"></i></div><h3 id="confirm-title" class="title-md mb-2"></h3><p id="confirm-message" class="text-ios-textMuted text-sm mb-8 leading-relaxed"></p><div class="flex gap-3 w-full justify-center"><button id="cancel-action-btn" class="btn-secondary flex-1">Cancelar</button><button id="confirm-action-btn" class="btn-primary flex-1">Sim, Continuar</button></div></div></div>
     
 <script type="module">
-    // Helper functions
+    // Utility and Element Selection
     const id = n => document.getElementById(n);
     const show = el => { if(el) { el.style.display = 'flex'; el.classList.remove('hidden'); } };
     const hide = el => { if(el) { el.style.display = 'none'; el.classList.add('hidden'); } };
     const addEvt = (elId, evType, h) => { const el = id(elId); if(el) el.addEventListener(evType, h); };
     const capitalize = (str) => { if(!str) return ''; return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' '); };
 
-    // --- FIREBASE IMPORTS ---
+    // --- FIREBASE IMPORTS E INIT ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
     import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, deleteDoc, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -672,7 +751,7 @@
     const provider = new GoogleAuthProvider();
     const db = getFirestore(app);
 
-    // --- DB WRAPPER (Suporta Firebase e Offline LocalStorage) ---
+    // --- BANCO DE DADOS (LOCAL / FIREBASE) ---
     let isOfflineMode = false;
 
     const LocalDB = {
@@ -724,7 +803,7 @@
         async restoreBackup(d) { return isOfflineMode ? await LocalDB.restoreBackup(d) : await FirebaseDB.restoreBackup(d); }
     };
 
-    // Global Notifications
+    // --- FUNÇÕES GLOBAIS DE UI ---
     function showNotif(msg, isErr=false) {
         const nf = id('notification-modal');
         if(!nf) return;
@@ -735,18 +814,21 @@
     }
     window.showNotif = showNotif;
 
-    // Confirm Modal
     function showConfirmationModal(title, msg, onConfirm) {
         if(id('confirm-title')) id('confirm-title').innerHTML = title;
         if(id('confirm-message')) id('confirm-message').innerHTML = msg;
         show(id('confirm-action-modal'));
         const btnOk = id('confirm-action-btn');
         const btnCancel = id('cancel-action-btn');
-        const clickOk = () => { hide(id('confirm-action-modal')); clearEvts(); onConfirm(); };
-        const clickCancel = () => { hide(id('confirm-action-modal')); clearEvts(); };
-        const clearEvts = () => { btnOk.removeEventListener('click', clickOk); btnCancel.removeEventListener('click', clickCancel); };
-        btnOk.addEventListener('click', clickOk);
-        btnCancel.addEventListener('click', clickCancel);
+        
+        // Remove old listeners to prevent double execution
+        const newBtnOk = btnOk.cloneNode(true);
+        const newBtnCancel = btnCancel.cloneNode(true);
+        btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+        btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+        
+        newBtnOk.addEventListener('click', () => { hide(id('confirm-action-modal')); onConfirm(); });
+        newBtnCancel.addEventListener('click', () => { hide(id('confirm-action-modal')); });
     }
     window.showConfirmationModal = showConfirmationModal;
 
@@ -756,21 +838,17 @@
         return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
     }
 
-    // --- LEITOR DE CAMERA GLOBAL (Html5Qrcode) ---
+    // --- CÂMERA (LEITOR DE CÓDIGO) ---
     let qrCodeInstance = null;
     async function toggleCamera(readerId, inputId) {
         const readerEl = id(readerId);
         const inputEl = id(inputId);
         
-        if(typeof Html5Qrcode === 'undefined') {
-            return showNotif("A biblioteca da câmera não foi carregada. Tente recarregar a página.", true);
-        }
+        if(typeof Html5Qrcode === 'undefined') return showNotif("Biblioteca da câmera não carregada.", true);
 
         if (qrCodeInstance) {
             try { await qrCodeInstance.stop(); } catch(e) {}
-            qrCodeInstance = null;
-            hide(readerEl);
-            return;
+            qrCodeInstance = null; hide(readerEl); return;
         }
         
         show(readerEl);
@@ -779,72 +857,63 @@
         try {
             await qrCodeInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, 
             async (decodedText) => {
-                // Ao ler com sucesso:
                 try { await qrCodeInstance.stop(); } catch(e) {}
-                qrCodeInstance = null;
-                hide(readerEl);
+                qrCodeInstance = null; hide(readerEl);
                 
                 if(inputEl) {
                     inputEl.value = decodedText;
-                    // Simula o Enter natural
+                    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
                     inputEl.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
                 }
-            }, (err) => { /* ignora erros de scan frame a frame */ });
+            }, (err) => { });
         } catch(e) {
             console.error(e);
-            showNotif('Permissão de câmera negada ou dispositivo sem câmera traseira.', true);
+            showNotif('Erro ao acessar a câmera.', true);
             hide(readerEl);
         }
     }
 
     addEvt('btn-start-camera-main', 'click', () => toggleCamera('main-camera-reader', 'scanner-input'));
+    addEvt('btn-start-camera-entry', 'click', () => toggleCamera('entry-camera-reader', 'entry-product-code'));
     addEvt('btn-start-camera-picking', 'click', () => toggleCamera('picking-camera-reader', 'picking-scanner'));
 
-    // Desligar câmera ao trocar de tela
     document.querySelectorAll('.nav-item').forEach(link => {
         link.addEventListener('click', async () => {
             if(qrCodeInstance) {
                 try { await qrCodeInstance.stop(); } catch(e) {}
                 qrCodeInstance = null;
                 hide(id('main-camera-reader'));
+                hide(id('entry-camera-reader'));
                 hide(id('picking-camera-reader'));
             }
         });
     });
 
-    // --- LOGIN E SESSÃO ---
+    // --- AUTENTICAÇÃO E INÍCIO ---
     addEvt('btn-login-google', 'click', () => {
         const msg = id('mensagem-erro');
         if(msg) { msg.innerText = "Abrindo pop-up do Google..."; show(msg); }
         signInWithPopup(auth, provider).catch((error) => {
             if(msg) {
-                if (error.code === 'auth/unauthorized-domain') {
-                    msg.innerHTML = "<i class='fa-solid fa-triangle-exclamation mr-1'></i> <b>Domínio não autorizado.</b><br><br>O Firebase bloqueou. Baixe o arquivo ou clique em 'Acessar Modo Offline'.";
-                } else {
-                    msg.innerText = "Erro ao fazer login: " + error.message;
-                }
+                if (error.code === 'auth/unauthorized-domain') { msg.innerHTML = "<b>Domínio não autorizado.</b> Use Modo Offline."; } 
+                else { msg.innerText = "Erro: " + error.message; }
                 show(msg);
             }
         });
     });
 
     addEvt('btn-bypass-login', 'click', async () => {
-        isOfflineMode = true;
-        LocalDB.init(); 
-        hide(id('login-wrapper')); 
-        show(id('app-wrapper'));
-        const nu = id('nome-usuario');
-        if(nu) nu.innerText = 'Modo Local (Offline)';
+        isOfflineMode = true; LocalDB.init(); 
+        hide(id('login-wrapper')); show(id('app-wrapper'));
+        const nu = id('nome-usuario'); if(nu) nu.innerText = 'Modo Local (Offline)';
         showNotif('Você está usando o banco de dados Local.', false);
         
         const t = new Date().toISOString().split('T')[0];
         if(id('receipt-date')) id('receipt-date').value = t; 
         if(id('mfg-date')) id('mfg-date').value = t;
-        navTo('dashboard');
         
-        show(id('loading-overlay'));
-        await refreshData(); 
-        hide(id('loading-overlay'));
+        navTo('dashboard'); show(id('loading-overlay'));
+        await refreshData(); hide(id('loading-overlay'));
     });
 
     addEvt('btn-sair', 'click', () => {
@@ -854,10 +923,8 @@
 
     onAuthStateChanged(auth, async (user) => {
         if (user && !isOfflineMode) {
-            hide(id('login-wrapper')); 
-            show(id('app-wrapper'));
-            const nu = id('nome-usuario');
-            if(nu) nu.innerText = user.displayName || 'Estoquista';
+            hide(id('login-wrapper')); show(id('app-wrapper'));
+            const nu = id('nome-usuario'); if(nu) nu.innerText = user.displayName || 'Estoquista';
             
             show(id('loading-overlay'));
             const t = new Date().toISOString().split('T')[0];
@@ -868,27 +935,25 @@
             try { await refreshData(); } catch(e) { console.error(e); }
             hide(id('loading-overlay'));
         } else if(!isOfflineMode) {
-            show(id('login-wrapper')); 
-            hide(id('app-wrapper'));
-            hide(id('loading-overlay'));
+            show(id('login-wrapper')); hide(id('app-wrapper')); hide(id('loading-overlay'));
         }
     });
 
-    // --- ESTADO GLOBAL ---
+    // --- VARIÁVEIS GLOBAIS DE ESTADO ---
     let localInventory=[], localBatches=[], localHistory=[], localRecipes=[], localProductionOrders=[], localMonthlyConsumption=[];
     let dailyChart=null, schedChart=null, abcChart=null, lineChart=null, currentRecipeCategory='Todos';
     let currentBatchTarget=null;
     let invSort = { col: 'name', asc: true };
     let currentHistoryProductId = null;
-    let activePickingLine = null;
-    let activePickingOpIds = [];
+    let activePickingLine = null, activePickingOpIds = [];
     const typeLabels = { insumo: 'Insumo', semi_acabado: 'Semi-acabado' };
 
-    // --- EVENT LISTENERS GERAIS ---
+    // --- FECHAR MODAIS ---
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.addEventListener('click', () => { hide(id(btn.dataset.target)); });
     });
 
+    // --- NAVEGAÇÃO ---
     const screens = ['dashboard','scanner','entry','inventory','recipes','production','requisitions','adjustments','consumption','settings','picking'];
     function navTo(target) {
         screens.forEach(s => { id('screen-'+s)?.classList.add('hidden'); });
@@ -899,7 +964,7 @@
         const activeLink = document.querySelector(`.nav-item[data-target="${target}"]`);
         if(activeLink) { activeLink.classList.remove('text-ios-textMuted'); activeLink.classList.add('bg-ios-card', 'text-white'); }
         
-        if(target==='adjustments') { createSearchableSelect(id('adjustment-searchable-container'), localInventory, 'Buscar produto inteligente...', p => { const batchEl = id('adjustment-batch'); if(batchEl) batchEl.innerHTML = '<option value="">Selecione Lote...</option>' + localBatches.filter(b=>b.productId===p.id && b.quantity>0).map(b=>`<option value="${b.id}">${b.code}</option>`).join(''); }); }
+        if(target==='adjustments') { createSearchableSelect(id('adjustment-searchable-container'), localInventory, 'Buscar produto...', p => { const batchEl = id('adjustment-batch'); if(batchEl) batchEl.innerHTML = '<option value="">Selecione Lote...</option>' + localBatches.filter(b=>b.productId===p.id && b.quantity>0).map(b=>`<option value="${b.id}">${b.code}</option>`).join(''); }); }
         if(target==='requisitions') { const reqCont = id('requisition-items-container'); if (reqCont) { reqCont.innerHTML=''; addIngRowReq(reqCont); } }
         if(target==='picking') { renderPickingScreen(); }
         if(target==='scanner') { setTimeout(() => id('scanner-input')?.focus(), 100); }
@@ -955,7 +1020,6 @@
             }
 
             renderAll();
-            
         } catch(e) { showNotif('Erro ao processar dados.', true); console.error(e); }
     }
 
@@ -979,7 +1043,7 @@
         const mf = id('consumption-month-filter'); if(mf) { mf.innerHTML = months.map((m,i)=>`<option value="${i+1}">${m}</option>`).join(''); mf.value = cm; }
     }
 
-    // --- LEITOR DE CÓDIGO (SCANNER - ASSOCIAÇÃO) ---
+    // --- LEITOR GERAL (SCANNER TELA PRINCIPAL) ---
     let lastScannedCode = '';
     
     addEvt('scanner-input', 'keypress', e => {
@@ -1027,18 +1091,13 @@
                 await DB.update('inventory', item);
                 await refreshData();
                 showNotif(`Código de barras salvo com sucesso para ${item.name}!`);
-                
                 hide(id('scanner-associate-box')); id('scanner-associate-box').classList.add('opacity-0', 'translate-y-4');
                 id('scanner-input').focus();
             }
-        } catch(e) {
-            showNotif('Erro ao vincular código.', true);
-        } finally {
-            hide(id('loading-overlay'));
-        }
+        } catch(e) { showNotif('Erro ao vincular código.', true); } finally { hide(id('loading-overlay')); }
     });
 
-    // --- SIDEBAR BADGES & ALERTS ---
+    // --- SIDEBAR E ALERTAS ---
     function updateSidebarBadges() {
         const isPickingActive = localProductionOrders.some(op => op.picking?.status === 'em_andamento');
         const badgeProd = id('badge-nav-prod'); const badgePicking = id('badge-nav-picking');
@@ -1077,7 +1136,6 @@
     addEvt('card-stat-expiring', 'click', () => { show(id('expiring-modal')); });
     addEvt('low-stock-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { hide(id('low-stock-modal')); navTo('inventory'); window.openDetails(item.dataset.id); } });
 
-    // --- TIMERS MULTIPLOS BACKGROUND ---
     setInterval(() => {
         document.querySelectorAll('.live-timer').forEach(el => {
             const startTime = parseInt(el.dataset.start);
@@ -1088,7 +1146,7 @@
         });
     }, 1000);
 
-    // --- ESTOQUE ---
+    // --- ESTOQUE E DETALHES ---
     addEvt('search-inventory', 'input', renderInv);
     addEvt('supplier-filter', 'input', renderInv);
     addEvt('type-filter', 'input', renderInv);
@@ -1111,10 +1169,7 @@
     }
     addEvt('inventory-table-body', 'click', e => { const row = e.target.closest('tr'); if(row && row.dataset.id) openDetails(row.dataset.id); });
 
-    // --- DETALHES E HISTÓRICO ---
-    addEvt('hist-filter-start', 'change', renderItemDetailsHistory); 
-    addEvt('hist-filter-end', 'change', renderItemDetailsHistory); 
-    addEvt('hist-filter-type', 'change', renderItemDetailsHistory);
+    addEvt('hist-filter-start', 'change', renderItemDetailsHistory); addEvt('hist-filter-end', 'change', renderItemDetailsHistory); addEvt('hist-filter-type', 'change', renderItemDetailsHistory);
     addEvt('btn-clear-hist-filters', 'click', () => { if(id('hist-filter-start')) id('hist-filter-start').value = ''; if(id('hist-filter-end')) id('hist-filter-end').value = ''; if(id('hist-filter-type')) id('hist-filter-type').value = ''; renderItemDetailsHistory(); });
 
     function renderItemDetailsHistory() {
@@ -1174,7 +1229,7 @@
 
     addEvt('details-batches-table', 'click', e => {
         const delBtn = e.target.closest('.del-batch-btn');
-        if(delBtn) showConfirmationModal('Excluir Lote?', 'Atenção: Apagar o lote remove a quantidade do saldo sem registrar saída.', async () => { show(id('loading-overlay')); await DB.remove('batches', delBtn.dataset.id); await refreshData(); openDetails(id('edit-item-id').value); hide(id('loading-overlay')); showNotif('Lote apagado'); });
+        if(delBtn) showConfirmationModal('Excluir Lote?', 'Apagar remove do saldo sem registrar saída.', async () => { show(id('loading-overlay')); await DB.remove('batches', delBtn.dataset.id); await refreshData(); openDetails(id('edit-item-id').value); hide(id('loading-overlay')); showNotif('Lote apagado'); });
         const editBtn = e.target.closest('.edit-batch-btn');
         if(editBtn) { const b = localBatches.find(x => x.id == editBtn.dataset.id); if(b) { if(id('edit-batch-id')) id('edit-batch-id').value = b.id; if(id('edit-batch-product-id')) id('edit-batch-product-id').value = b.productId; if(id('edit-batch-code')) id('edit-batch-code').value = b.code; if(id('edit-batch-qty')) id('edit-batch-qty').value = b.quantity; if(id('edit-batch-expiry')) id('edit-batch-expiry').value = b.expiryDate || ''; show(id('edit-batch-modal')); } }
     });
@@ -1213,8 +1268,8 @@
     });
     addEvt('btn-delete-item', 'click', () => { const pId = id('edit-item-id').value; showConfirmationModal('Excluir?', 'Histórico e lotes serão perdidos.', async () => { show(id('loading-overlay')); await DB.remove('inventory', pId); await refreshData(); hide(id('item-details-modal')); hide(id('loading-overlay')); showNotif('Excluído'); }); });
 
-    // --- ENTRADA (Lógica com try/catch seguro) ---
-    const entryCodeInput = document.querySelector('#entry-form input[name="product-code"]');
+    // --- ENTRADA LOTE ---
+    const entryCodeInput = document.querySelector('#entry-product-code');
     if(entryCodeInput) {
         entryCodeInput.addEventListener('input', e => {
             const code = e.target.value.trim(); if(!code) return;
@@ -1231,7 +1286,6 @@
     addEvt('entry-form', 'submit', async e => {
         e.preventDefault(); 
         show(id('loading-overlay')); 
-        
         try {
             const fd = new FormData(e.target); 
             const autoBatch = 'LT-' + new Date().getTime().toString(36).toUpperCase();
@@ -1246,7 +1300,6 @@
                 await DB.update('inventory', p);
             }
 
-            // Garante que usa o p recem buscado ou atualizado
             p.totalQuantity = (p.totalQuantity || 0) + data.qtd; 
             await DB.update('inventory', p);
             
@@ -1256,18 +1309,11 @@
             
             await refreshData();
             e.target.reset(); if(id('receipt-date')) id('receipt-date').value = new Date().toISOString().split('T')[0];
-            
             if(!isReleased) showNotif('Registrada! Lote em Quarentena (8110).', true); else showNotif('Entrada Registrada!'); 
-            
-        } catch (err) {
-            console.error(err);
-            showNotif('Falha ao processar entrada. Verifique os dados.', true);
-        } finally {
-            hide(id('loading-overlay')); 
-        }
+        } catch (err) { console.error(err); showNotif('Falha ao processar entrada.', true); } finally { hide(id('loading-overlay')); }
     });
 
-    // --- RECEITAS (IMPORTAÇÃO INTELIGENTE DE EXCEL MULTIPLAS ABAS) ---
+    // --- RECEITAS ---
     addEvt('search-recipe', 'input', renderRecipes);
     function renderRecipes() {
         const grid = id('recipes-grid'); if(!grid) return;
@@ -1311,132 +1357,67 @@
     addEvt('recipe-categories-list', 'click', e => { if(e.target.tagName==='A') { e.preventDefault(); currentRecipeCategory = e.target.dataset.cat; renderRecipes(); }});
     addEvt('recipes-grid', 'click', e => {
         const delBtn = e.target.closest('.del-rec-btn'); const editBtn = e.target.closest('.edit-rec-btn');
-        if(delBtn) showConfirmationModal('Apagar Ficha?', 'Confirma a exclusão da receita?', async () => { show(id('loading-overlay')); await DB.remove('recipes', delBtn.dataset.id); await refreshData(); hide(id('loading-overlay')); showNotif('Excluída'); });
+        if(delBtn) showConfirmationModal('Apagar Ficha?', 'Confirma exclusão?', async () => { show(id('loading-overlay')); await DB.remove('recipes', delBtn.dataset.id); await refreshData(); hide(id('loading-overlay')); showNotif('Excluída'); });
         if(editBtn) openEditRecipe(editBtn.dataset.id);
     });
     addEvt('recipe-is-semi', 'change', e => { if(e.target.checked) show(id('yield-wrapper')); else hide(id('yield-wrapper')); });
 
-    // NOVO: Importação Inteligente de Receitas (Lendo todas as abas)
+    // NOVO: Importação Inteligente de Receitas
     addEvt('btn-import-recipes', 'click', () => id('recipe-file-input')?.click());
     
     addEvt('recipe-file-input', 'change', e => {
-        const file = e.target.files[0]; if(!file) return; 
-        const reader = new FileReader();
-        
+        const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
         reader.onload = async ev => {
             try {
                 show(id('loading-overlay'));
                 const data = ev.target.result;
                 const workbook = XLSX.read(data, {type: 'binary'});
-                
                 let importedCount = 0;
                 
-                // Varre todas as abas do Excel
                 for (const sheetName of workbook.SheetNames) {
                     const worksheet = workbook.Sheets[sheetName];
                     const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
+                    if(rows.length < 2) continue; 
                     
-                    if(rows.length < 2) continue; // Ignora abas vazias
-                    
-                    let recipeName = sheetName;
-                    let yieldQty = 1;
-                    let ingredients = [];
-                    let readingIngs = false;
-                    let colIng = -1, colCode = -1, colQty = -1;
+                    let recipeName = sheetName; let yieldQty = 1; let ingredients = [];
+                    let readingIngs = false; let colIng = -1, colCode = -1, colQty = -1;
                     
                     for (const row of rows) {
                         const rowStr = row.join(' ').toUpperCase();
+                        if(rowStr.includes('PREPARAÇÃO:')) { const cell = row.find(c => String(c).toUpperCase().includes('PREPARAÇÃO:')); if(cell) recipeName = String(cell).replace(/PREPARAÇÃO:/i, '').trim(); }
+                        if(rowStr.includes('RENDIMENTO')) { const idxRend = row.findIndex(c => String(c).toUpperCase().includes('RENDIMENTO')); if(idxRend !== -1) yieldQty = parseFloat(row[idxRend+1]) || parseFloat(row[idxRend+2]) || 1; }
                         
-                        // Extrai Nome da Receita
-                        if(rowStr.includes('PREPARAÇÃO:')) {
-                            const cell = row.find(c => String(c).toUpperCase().includes('PREPARAÇÃO:'));
-                            if(cell) recipeName = String(cell).replace(/PREPARAÇÃO:/i, '').trim();
-                        }
+                        if(!readingIngs && rowStr.includes('INGREDIENTE') && rowStr.includes('QUANTIDADE')) { colIng = row.findIndex(c => String(c).toUpperCase().trim() === 'INGREDIENTE'); colQty = row.findIndex(c => String(c).toUpperCase().trim() === 'QUANTIDADE'); colCode = row.findIndex(c => String(c).toUpperCase().trim() === 'CÓDIGO'); readingIngs = true; continue; }
                         
-                        // Extrai Rendimento
-                        if(rowStr.includes('RENDIMENTO')) {
-                            const idxRend = row.findIndex(c => String(c).toUpperCase().includes('RENDIMENTO'));
-                            if(idxRend !== -1) {
-                                yieldQty = parseFloat(row[idxRend+1]) || parseFloat(row[idxRend+2]) || 1;
-                            }
-                        }
-                        
-                        // Encontra Cabeçalhos da Tabela de Ingredientes
-                        if(!readingIngs && rowStr.includes('INGREDIENTE') && rowStr.includes('QUANTIDADE')) {
-                            colIng = row.findIndex(c => String(c).toUpperCase().trim() === 'INGREDIENTE');
-                            colQty = row.findIndex(c => String(c).toUpperCase().trim() === 'QUANTIDADE');
-                            colCode = row.findIndex(c => String(c).toUpperCase().trim() === 'CÓDIGO');
-                            readingIngs = true;
-                            continue;
-                        }
-                        
-                        // Lê os ingredientes linha a linha
                         if(readingIngs && colIng !== -1 && colQty !== -1) {
                             const ingNameRaw = String(row[colIng]).trim();
-                            const qtyRaw = parseFloat(String(row[colQty]).replace(',', '.')); // Garante que a vírgula vire ponto decimal
+                            const qtyRaw = parseFloat(String(row[colQty]).replace(',', '.')); 
                             
-                            // Condições de parada para não ler rodapé
-                            if(ingNameRaw.toUpperCase() === 'TOTAL' || ingNameRaw.toUpperCase() === 'RENDIMENTO' || ingNameRaw.toUpperCase().includes('KG')) {
-                                readingIngs = false;
-                                continue;
-                            }
+                            if(ingNameRaw.toUpperCase() === 'TOTAL' || ingNameRaw.toUpperCase() === 'RENDIMENTO' || ingNameRaw.toUpperCase().includes('KG')) { readingIngs = false; continue; }
                             
                             if(ingNameRaw && !isNaN(qtyRaw) && qtyRaw > 0) {
                                 let code = colCode !== -1 ? String(row[colCode]).trim() : '';
-                                
-                                // Cruzamento 1: Pelo Código
                                 let p = null;
                                 if(code) p = localInventory.find(i => String(i.code) === code);
-                                
-                                // Cruzamento 2: Pelo Nome
                                 if(!p) p = localInventory.find(i => i.name.toLowerCase() === ingNameRaw.toLowerCase());
-                                
-                                // Se não achou de jeito nenhum, cadastra com ⚠️
                                 if(!p) {
                                     const alertName = '⚠️ ' + ingNameRaw;
                                     p = localInventory.find(i => i.name === alertName);
-                                    if(!p) {
-                                        p = { id: crypto.randomUUID(), code: code || '', name: alertName, type: 'insumo', supplier: 'A DEFINIR', totalQuantity: 0, minStock: 0, leadTime: 0 };
-                                        await DB.add('inventory', p);
-                                        localInventory.push(p); // Atualiza cache local pra não duplicar nos próximos
-                                    }
+                                    if(!p) { p = { id: crypto.randomUUID(), code: code || '', name: alertName, type: 'insumo', supplier: 'A DEFINIR', totalQuantity: 0, minStock: 0, leadTime: 0 }; await DB.add('inventory', p); localInventory.push(p); }
                                 }
                                 ingredients.push({ productId: p.id, quantity: qtyRaw });
                             }
                         }
                     }
-                    
                     if(ingredients.length > 0) {
-                        // Verifica se a receita já existe para atualizar ou cria nova
                         let existingRecipe = localRecipes.find(r => r.name === recipeName);
-                        if(existingRecipe) {
-                            existingRecipe.ingredients = ingredients;
-                            existingRecipe.outputYield = yieldQty;
-                            await DB.update('recipes', existingRecipe);
-                        } else {
-                            await DB.add('recipes', {
-                                name: recipeName,
-                                category: 'Importadas',
-                                outputProductId: null,
-                                outputYield: yieldQty,
-                                isSemi: false, // Default
-                                ingredients: ingredients
-                            });
-                        }
+                        if(existingRecipe) { existingRecipe.ingredients = ingredients; existingRecipe.outputYield = yieldQty; await DB.update('recipes', existingRecipe); } 
+                        else { await DB.add('recipes', { name: recipeName, category: 'Importadas', outputProductId: null, outputYield: yieldQty, isSemi: false, ingredients: ingredients }); }
                         importedCount++;
                     }
                 }
-                
-                await refreshData();
-                showNotif(`Sucesso! ${importedCount} receitas foram importadas ou atualizadas.`);
-                
-            } catch(err) {
-                console.error(err); 
-                showNotif('Erro na leitura do arquivo Excel.', true); 
-            } finally { 
-                if(id('recipe-file-input')) id('recipe-file-input').value=''; 
-                hide(id('loading-overlay'));
-            }
+                await refreshData(); showNotif(`Sucesso! ${importedCount} receitas importadas/atualizadas.`);
+            } catch(err) { console.error(err); showNotif('Erro na leitura do Excel.', true); } finally { if(id('recipe-file-input')) id('recipe-file-input').value=''; hide(id('loading-overlay')); }
         }; 
         reader.readAsBinaryString(file);
     });
@@ -1449,7 +1430,6 @@
         
         const chkSemi = id('recipe-is-semi');
         if(chkSemi) { chkSemi.checked = !!r.isSemi; chkSemi.dispatchEvent(new Event('change')); }
-        
         if(r.isSemi && id('recipe-yield')) id('recipe-yield').value = r.outputYield || 1; 
         
         const ingCont = id('ingredients-container');
@@ -1463,10 +1443,7 @@
         const rf = id('recipe-form'); if(rf) rf.reset(); 
         if(id('edit-recipe-id')) id('edit-recipe-id').value=''; 
         const ingCont = id('ingredients-container'); if(ingCont) ingCont.innerHTML=''; 
-        
-        const chkSemi = id('recipe-is-semi');
-        if(chkSemi) { chkSemi.checked = false; chkSemi.dispatchEvent(new Event('change')); }
-        
+        const chkSemi = id('recipe-is-semi'); if(chkSemi) { chkSemi.checked = false; chkSemi.dispatchEvent(new Event('change')); }
         if(id('recipe-yield')) id('recipe-yield').value = 1;
         if(ingCont) addIngRowReq(ingCont); 
         if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Nova Receita'; 
@@ -1475,9 +1452,7 @@
     
     addEvt('btn-export-recipe-book', 'click', () => {
         const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFontSize(22); doc.setTextColor(10, 132, 255); doc.text("Livro de Receitas - Fichas Técnicas", 14, 20);
-        doc.setFontSize(10); doc.setTextColor(150, 150, 150); doc.text("Gerado em: " + new Date().toLocaleDateString('pt-BR') + " | Controle Interno de Produção", 14, 28);
-        doc.setLineWidth(0.5); doc.line(14, 32, 196, 32);
+        doc.setFontSize(22); doc.setTextColor(10, 132, 255); doc.text("Livro de Receitas", 14, 20);
         let yPos = 40; const categories = [...new Set(localRecipes.map(r => r.category))].sort();
         categories.forEach((cat) => {
             const recs = localRecipes.filter(r => r.category === cat).sort((a,b) => a.name.localeCompare(b.name));
@@ -1486,30 +1461,19 @@
             doc.setFontSize(16); doc.setTextColor(0, 0, 0); doc.setFillColor(240, 240, 245); doc.rect(14, yPos-6, 182, 10, 'F'); doc.text("Setor: " + cat.toUpperCase(), 16, yPos+1); yPos += 12;
             recs.forEach(r => {
                 if (yPos > 240) { doc.addPage(); yPos = 20; }
-                doc.setFontSize(14); doc.setTextColor(50, 50, 55); doc.text(r.name, 14, yPos); yPos += 6;
-                doc.setFontSize(10); doc.setTextColor(120, 120, 120); const tipo = r.isSemi ? `Semi-Acabado (Rende: ${r.outputYield || 1})` : "Produto Acabado"; doc.text(`Classificação: ${tipo}`, 14, yPos); yPos += 4;
+                doc.setFontSize(14); doc.text(r.name, 14, yPos); yPos += 6;
                 const tableData = (r.ingredients || []).map(i => { return [localInventory.find(p => p.id == i.productId)?.name || 'Desconhecido', i.quantity]; });
-                doc.autoTable({ startY: yPos, head: [['Ingrediente / Insumo', 'Quantidade Base']], body: tableData, theme: 'striped', headStyles: { fillColor: [44, 44, 46], textColor: [255, 255, 255] }, alternateRowStyles: { fillColor: [248, 248, 250] }, margin: { left: 14, right: 14 }, styles: { fontSize: 9 } });
+                doc.autoTable({ startY: yPos, head: [['Ingrediente / Insumo', 'Qtd Base']], body: tableData, styles: { fontSize: 9 } });
                 yPos = doc.lastAutoTable.finalY + 12;
             }); yPos += 5;
         });
-        doc.save(`Livro_Receitas_${new Date().toISOString().split('T')[0]}.pdf`); showNotif('PDF Gerado e baixado com sucesso!');
+        doc.save(`Livro_Receitas.pdf`); showNotif('PDF Gerado!');
     });
     
     function addIngRowReq(container, prefillId=null, prefillQty='') {
         if(!container) return;
         const div = document.createElement('div'); div.className='req-item flex flex-col gap-2 bg-ios-bg p-3 rounded-xl border border-ios-border z-50';
-        div.innerHTML = `
-            <div class="flex gap-3 items-center w-full">
-                <div class="searchable-container flex-1"></div>
-                <input type="number" step="0.0001" value="${prefillQty}" class="form-input w-24 py-2 text-center req-qty-input font-bold" placeholder="Qtd" required>
-                <button type="button" class="text-ios-red p-2 hover:bg-ios-red/20 rounded-lg transition-colors remove-ing"><i class="fa fa-times"></i></button>
-            </div>
-            <div class="flex justify-between items-center text-xs text-ios-textMuted px-1 req-plan-wrapper hidden mt-1 border-t border-ios-border pt-2">
-                <span class="plan-display font-medium"></span>
-                <button type="button" class="text-ios-blue open-batch-selector hidden bg-ios-card px-2 py-1 rounded"><i class="fa-solid fa-pen mr-1"></i> Mudar Lote</button>
-            </div>
-        `;
+        div.innerHTML = `<div class="flex gap-3 items-center w-full"><div class="searchable-container flex-1"></div><input type="number" step="0.0001" value="${prefillQty}" class="form-input w-24 py-2 text-center req-qty-input font-bold" placeholder="Qtd" required><button type="button" class="text-ios-red p-2 hover:bg-ios-red/20 rounded-lg transition-colors remove-ing"><i class="fa fa-times"></i></button></div><div class="flex justify-between items-center text-xs text-ios-textMuted px-1 req-plan-wrapper hidden mt-1 border-t border-ios-border pt-2"><span class="plan-display font-medium"></span><button type="button" class="text-ios-blue open-batch-selector hidden bg-ios-card px-2 py-1 rounded"><i class="fa-solid fa-pen mr-1"></i> Mudar Lote</button></div>`;
         container.appendChild(div);
         const isRecipe = container.id === 'ingredients-container';
         const planWrap = div.querySelector('.req-plan-wrapper'); const planDisplay = div.querySelector('.plan-display');
@@ -1544,13 +1508,11 @@
         let outId = null;
         if (isSemi) { let prod = localInventory.find(i => i.name.toLowerCase() === recName.toLowerCase() && i.type === 'semi_acabado'); if(!prod) outId = await DB.add('inventory', { name: recName, type: 'semi_acabado', totalQuantity: 0, code: '', supplier: 'Produção Interna' }); else outId = prod.id; } 
 
-        const ingCont = id('ingredients-container');
-        if(!ingCont) return;
+        const ingCont = id('ingredients-container'); if(!ingCont) return;
         const ings = [...ingCont.children].map(r => ({ productId: r.querySelector('input[type="text"]').dataset.selectedId, quantity: parseFloat(r.querySelector('input[type="number"]').value) }));
         const data = {name:recName, category:id('recipe-category')?.value, outputProductId:outId, outputYield: yieldQty, isSemi: isSemi, ingredients:ings};
         if(rId) { data.id = rId; await DB.update('recipes', data); showNotif('Ficha atualizada'); } else { await DB.add('recipes', data); showNotif('Ficha salva'); }
-        await refreshData();
-        hide(id('recipe-modal')); hide(id('loading-overlay'));
+        await refreshData(); hide(id('recipe-modal')); hide(id('loading-overlay'));
     });
 
     // --- SELETOR MANUAL DE LOTES ---
@@ -1571,7 +1533,7 @@
         if(listEl) {
             listEl.innerHTML = batches.map(b => {
                 const inPlan = currentPlan.find(p => p.batchId == b.id); const val = inPlan ? inPlan.quantity : '';
-                return `<div class="flex justify-between items-center mb-3 bg-ios-input p-3 rounded-xl border border-ios-border"><span class="text-white font-medium"><i class="fa-solid fa-box mr-2 text-ios-textMuted"></i>${b.code} <br><span class="text-xs text-ios-textMuted ml-6">Disponível Físico: ${b.quantity.toFixed(2)}</span></span><input type="number" class="form-input w-28 text-right batch-input font-bold" data-bid="${b.id}" data-bcode="${b.code}" max="${b.quantity + (inPlan?inPlan.quantity:0)}" value="${val}" placeholder="0"></div>`;
+                return `<div class="flex justify-between items-center mb-3 bg-ios-input p-3 rounded-xl border border-ios-border"><span class="text-white font-medium"><i class="fa-solid fa-box mr-2 text-ios-textMuted"></i>${b.code} <br><span class="text-xs text-ios-textMuted ml-6">Disponível: ${b.quantity.toFixed(2)}</span></span><input type="number" class="form-input w-28 text-right batch-input font-bold" data-bid="${b.id}" data-bcode="${b.code}" max="${b.quantity + (inPlan?inPlan.quantity:0)}" value="${val}" placeholder="0"></div>`;
             }).join('');
         }
         updateBatchSelectorSum(); show(id('batch-selector-modal'));
@@ -1583,10 +1545,7 @@
             const listEl = id('batch-selector-list'); if(!listEl) return;
             const inputs = [...listEl.querySelectorAll('.batch-input')]; const sum = inputs.reduce((a, b) => a + (parseFloat(b.value) || 0), 0);
             const selEl = id('batch-selector-selected'); const needEl = id('batch-selector-needed');
-            if(selEl && needEl) {
-                selEl.innerText = sum.toFixed(4); const needed = parseFloat(needEl.innerText);
-                selEl.className = Math.abs(sum - needed) < 0.001 ? 'font-bold text-xl text-ios-green' : 'font-bold text-xl text-ios-red';
-            }
+            if(selEl && needEl) { selEl.innerText = sum.toFixed(4); const needed = parseFloat(needEl.innerText); selEl.className = Math.abs(sum - needed) < 0.001 ? 'font-bold text-xl text-ios-green' : 'font-bold text-xl text-ios-red'; }
         }
     }
 
@@ -1604,42 +1563,28 @@
     });
 
     // --- SEPARAÇÃO AGRUPADA (PICKING KITTING) ---
-    // Adicionada Lógica do Scanner Principal e Câmera
     addEvt('picking-scanner', 'keypress', e => {
         if(e.key === 'Enter') {
-            const code = e.target.value.trim();
-            if(!code) return;
-            
+            const code = e.target.value.trim(); if(!code) return;
             const p = localInventory.find(i => i.barcode === code || i.code === code);
-            if (!p) {
-                showNotif('Produto não encontrado no sistema!', true);
-            } else {
+            if (!p) { showNotif('Produto não encontrado no sistema!', true); } 
+            else {
                 const row = document.querySelector(`#picking-checklist-body tr[data-pid="${p.id}"]`);
                 if (row) {
                     const inputQty = row.querySelector('.picking-qty-input');
-                    if(inputQty) {
-                        inputQty.focus();
-                        inputQty.select();
-                    }
-                    row.classList.add('bg-ios-blue/30');
-                    setTimeout(() => row.classList.remove('bg-ios-blue/30'), 2000);
-                    showNotif(`[${p.name}] localizado! Digite a quantidade no carrinho.`);
-                } else {
-                    showNotif('CUIDADO: Este item NÃO pertence a esta linha de separação!', true);
-                }
+                    if(inputQty) { inputQty.focus(); inputQty.select(); }
+                    row.classList.add('bg-ios-blue/30'); setTimeout(() => row.classList.remove('bg-ios-blue/30'), 2000);
+                    showNotif(`[${p.name}] localizado!`);
+                } else { showNotif('CUIDADO: Este item NÃO pertence a esta linha!', true); }
             }
             e.target.value = '';
         }
     });
 
     function renderPickingScreen() {
-        const container = id('picking-lines-container');
-        if(!container) return;
-
+        const container = id('picking-lines-container'); if(!container) return;
         const pendingOps = localProductionOrders.filter(po => po.status === 'pendente');
-        const statPending = id('stat-pending-picking');
-        if(statPending) statPending.innerText = pendingOps.filter(po => po.picking && po.picking.status !== 'concluido').length;
-
+        const statPending = id('stat-pending-picking'); if(statPending) statPending.innerText = pendingOps.filter(po => po.picking && po.picking.status !== 'concluido').length;
         if(!pendingOps.length) { container.innerHTML = `<div class="card text-center py-10"><i class="fa-solid fa-clipboard-check text-5xl text-ios-cardHover mb-4"></i><p class="text-ios-textMuted">Não há Ordens de Produção pendentes.</p></div>`; return; }
 
         const opsByLine = {};
@@ -1652,11 +1597,9 @@
             const hasExtrasPending = ops.filter(o => o.isExtra === true && o.picking?.status !== 'concluido');
             
             let lineStatusHTML = ''; let isLineActive = emAndamento > 0; let allConcluido = concluidas === ops.length;
-            
             if(allConcluido) lineStatusHTML = `<span class="badge bg-ios-green/20 text-ios-green"><i class="fa-solid fa-check-double mr-1"></i>Linha Separada</span>`;
             else if(isLineActive) lineStatusHTML = `<span class="badge bg-ios-blue/20 text-ios-blue animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Em Separação</span>`;
             else lineStatusHTML = `<span class="badge bg-ios-orange/20 text-ios-orange"><i class="fa-solid fa-clock mr-1"></i>A Separar</span>`;
-
             const opIdsStr = JSON.stringify(ops.map(o=>o.id));
 
             return `
@@ -1675,10 +1618,7 @@
                 <div class="p-4 bg-ios-bg grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 border-t border-ios-border/50">
                     ${ops.map(op => {
                         let timerHtml = op.picking?.status === 'concluido' ? '<i class="fa-solid fa-check text-ios-green"></i>' : '<i class="fa-solid fa-clock text-ios-textMuted"></i>';
-                        if(op.picking?.status === 'em_andamento') {
-                            timerHtml = `<div class="live-timer text-ios-orange font-mono font-bold timer-active" data-start="${op.picking.start}">00:00</div>`;
-                        }
-                        
+                        if(op.picking?.status === 'em_andamento') timerHtml = `<div class="live-timer text-ios-orange font-mono font-bold timer-active" data-start="${op.picking.start}">00:00</div>`;
                         return `
                         <div class="bg-ios-card p-3 rounded-lg border border-ios-border text-sm flex justify-between items-center relative overflow-hidden">
                             ${op.isExtra ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-ios-red"></div>' : ''}
@@ -1686,8 +1626,7 @@
                                 <span class="font-bold text-white">${op.recipeName}</span> <span class="text-ios-blue">(${op.multiplier}x)</span>
                                 ${op.isExtra ? '<span class="badge bg-ios-red text-white text-[9px] ml-1">EXTRA</span>' : ''}<br>
                                 <span class="text-[10px] text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>Data: <strong class="text-gray-300">${new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong> | OP-${String(op.id).substring(0,6)}</span>
-                            </div>
-                            <div class="ml-2">${timerHtml}</div>
+                            </div><div class="ml-2">${timerHtml}</div>
                         </div>`;
                     }).join('')}
                 </div>
@@ -1696,11 +1635,8 @@
     }
 
     addEvt('picking-lines-container', 'click', e => {
-        const btnPick = e.target.closest('.btn-open-line-picking');
-        if(btnPick) openGroupedPickingModal(btnPick.dataset.line, JSON.parse(btnPick.dataset.opids));
-        
-        const btnPrint = e.target.closest('.btn-print-extras');
-        if(btnPrint) printExtras(btnPrint.dataset.line);
+        const btnPick = e.target.closest('.btn-open-line-picking'); if(btnPick) openGroupedPickingModal(btnPick.dataset.line, JSON.parse(btnPick.dataset.opids));
+        const btnPrint = e.target.closest('.btn-print-extras'); if(btnPrint) printExtras(btnPrint.dataset.line);
     });
 
     function printExtras(lineName) {
@@ -1708,73 +1644,47 @@
         if(!ops.length) return showNotif('Nenhuma OP Extra pendente para imprimir.', true);
 
         const agg = {};
-        ops.forEach(op => {
-            op.ingredients.forEach(ing => {
-                if (!agg[ing.productId]) agg[ing.productId] = 0;
-                agg[ing.productId] += ing.adjustedQuantity;
-            });
-        });
+        ops.forEach(op => { op.ingredients.forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = 0; agg[ing.productId] += ing.adjustedQuantity; }); });
 
         const { jsPDF } = window.jspdf; const doc = new jsPDF();
         doc.setFontSize(20); doc.setTextColor(255, 69, 58); doc.text(`Folha de Separação: EXTRAS / URGENTES`, 14, 20);
         doc.setFontSize(12); doc.setTextColor(50, 50, 55); doc.text(`Setor: ${lineName.toUpperCase()}`, 14, 28);
-        doc.setFontSize(10); doc.setTextColor(150, 150, 150); doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')} | Inclui ${ops.length} OPs`, 14, 34);
         doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
-
-        const tableData = Object.keys(agg).map(pidStr => {
-            const pName = localInventory.find(p => p.id == pidStr)?.name || 'Desconhecido';
-            return [pName, agg[pidStr].toFixed(4)];
-        });
-
-        doc.autoTable({ startY: 45, head: [['Insumo a Separar', 'Quantidade Total']], body: tableData, theme: 'striped', headStyles: { fillColor: [255, 69, 58], textColor: [255, 255, 255] }, alternateRowStyles: { fillColor: [255, 245, 245] }, margin: { left: 14, right: 14 } });
-        doc.save(`Separacao_Extras_${lineName.replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.pdf`);
-        showNotif('Folha de Extras gerada para impressão!');
-    }
-
-    function getAggregatedIngredients(opIds) {
-        const ops = localProductionOrders.filter(op => opIds.includes(op.id));
-        const agg = {};
-        ops.forEach(op => { op.ingredients.forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = { productId: ing.productId, adjustedQuantity: 0 }; agg[ing.productId].adjustedQuantity += ing.adjustedQuantity; }); });
-        return Object.values(agg);
+        const tableData = Object.keys(agg).map(pidStr => { return [localInventory.find(p => p.id == pidStr)?.name || 'Desconhecido', agg[pidStr].toFixed(4)]; });
+        doc.autoTable({ startY: 45, head: [['Insumo a Separar', 'Qtd Total']], body: tableData, theme: 'striped', headStyles: { fillColor: [255, 69, 58], textColor: [255, 255, 255] } });
+        doc.save(`Separacao_Extras_${lineName.replace(/\s+/g,'_')}.pdf`); showNotif('Folha gerada!');
     }
 
     function openGroupedPickingModal(lineName, opIds) {
         activePickingLine = lineName; activePickingOpIds = opIds;
         const ops = localProductionOrders.filter(op => opIds.includes(op.id));
-        const sampleOp = ops[0];
-        const picking = sampleOp.picking || { status: 'pendente', responsible: '', start: null, end: null, pickedItems: {} };
+        const sampleOp = ops[0]; const picking = sampleOp.picking || { status: 'pendente', responsible: '', start: null, end: null, pickedItems: {} };
 
-        const titleEl = id('picking-modal-title'); if(titleEl) titleEl.innerHTML = `<i class="fa-solid fa-dolly mr-3 text-2xl"></i><span>Check-list Setor: ${lineName.toUpperCase()}</span>`;
-        const subEl = id('picking-modal-subtitle'); if(subEl) subEl.innerText = `Agrupando os insumos de ${ops.length} OP(s) para separação única.`;
-        const respEl = id('picking-responsible'); if(respEl) respEl.value = picking.responsible || '';
+        if(id('picking-modal-title')) id('picking-modal-title').innerHTML = `<i class="fa-solid fa-dolly mr-3 text-2xl"></i><span>Check-list Setor: ${lineName.toUpperCase()}</span>`;
+        if(id('picking-responsible')) id('picking-responsible').value = picking.responsible || '';
 
         const timerEl = id('picking-timer-display');
-        if(timerEl) {
-            timerEl.innerText = '00:00'; 
-            timerEl.classList.remove('timer-active');
-            timerEl.dataset.start = ""; 
-        }
+        if(timerEl) { timerEl.innerText = '00:00'; timerEl.classList.remove('timer-active'); timerEl.dataset.start = ""; }
 
         if(picking.status === 'em_andamento' && picking.start) {
-            hide(id('picking-setup-view')); 
-            show(id('picking-active-view'));
-            const actResp = id('picking-active-resp'); if(actResp) actResp.innerText = picking.responsible;
+            hide(id('picking-setup-view')); show(id('picking-active-view'));
+            if(id('picking-active-resp')) id('picking-active-resp').innerText = picking.responsible;
             if(timerEl) { timerEl.dataset.start = picking.start; timerEl.classList.add('timer-active'); }
             setTimeout(() => id('picking-scanner')?.focus(), 100); 
         } else {
-            show(id('picking-setup-view'));
-            hide(id('picking-active-view'));
-            if(respEl) respEl.focus();
+            show(id('picking-setup-view')); hide(id('picking-active-view'));
+            if(id('picking-responsible')) id('picking-responsible').focus();
         }
 
-        const aggregatedItems = getAggregatedIngredients(opIds);
+        const agg = {};
+        ops.forEach(op => { op.ingredients.forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = { productId: ing.productId, adjustedQuantity: 0 }; agg[ing.productId].adjustedQuantity += ing.adjustedQuantity; }); });
+        
         const checklistBody = id('picking-checklist-body');
         if(checklistBody) {
-            checklistBody.innerHTML = aggregatedItems.map((ing) => {
+            checklistBody.innerHTML = Object.values(agg).map((ing) => {
                 const product = localInventory.find(p => p.id == ing.productId);
-                const needed = ing.adjustedQuantity;
-                let totalPicked = 0;
-                ops.forEach(op => { if(op.picking && op.picking.pickedItems && op.picking.pickedItems[ing.productId]) totalPicked += op.picking.pickedItems[ing.productId]; });
+                const needed = ing.adjustedQuantity; let totalPicked = 0;
+                ops.forEach(op => { if(op.picking?.pickedItems && op.picking.pickedItems[ing.productId]) totalPicked += op.picking.pickedItems[ing.productId]; });
                 const isChecked = totalPicked >= needed - 0.001 && totalPicked > 0;
                 
                 return `
@@ -1784,38 +1694,28 @@
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
                             <input type="number" step="0.001" value="${totalPicked > 0 ? totalPicked : ''}" class="form-input py-2 px-3 w-28 text-center font-bold text-white picking-qty-input bg-ios-bg border-ios-border text-lg transition-all" placeholder="0.000">
-                            <button class="bg-ios-cardHover border border-ios-border text-xs px-3 py-2 rounded-lg hover:text-white btn-fill-all shadow" title="Preencher Total"><i class="fa-solid fa-check-double"></i></button>
+                            <button class="bg-ios-cardHover border border-ios-border text-xs px-3 py-2 rounded-lg hover:text-white btn-fill-all shadow"><i class="fa-solid fa-check-double"></i></button>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-center"><input type="checkbox" class="ui-checkbox ui-checkbox-success picking-row-check" ${isChecked ? 'checked' : ''}></td>
                 </tr>`;
             }).join('');
         }
-
         show(id('picking-modal'));
     }
 
     addEvt('btn-start-picking', 'click', async () => {
-        const respEl = id('picking-responsible');
-        const resp = respEl ? respEl.value.trim() : '';
-        if(!resp) return showNotif('Informe o nome do Estoquista para iniciar a contagem.', true);
-        const now = Date.now();
-        show(id('loading-overlay'));
+        const resp = id('picking-responsible') ? id('picking-responsible').value.trim() : '';
+        if(!resp) return showNotif('Informe o nome do Estoquista para iniciar.', true);
+        const now = Date.now(); show(id('loading-overlay'));
         for(let opId of activePickingOpIds) {
             let op = localProductionOrders.find(x => x.id == opId);
             if(op) { op.picking.status = 'em_andamento'; op.picking.start = now; op.picking.responsible = resp; await DB.update('productionOrders', op); }
         }
-        
-        hide(id('picking-setup-view')); 
-        show(id('picking-active-view'));
-        const actResp = id('picking-active-resp'); if(actResp) actResp.innerText = resp;
-        const timerEl = id('picking-timer-display');
-        if(timerEl) { timerEl.dataset.start = now; timerEl.classList.add('timer-active'); }
-        
-        await refreshData();
-        hide(id('loading-overlay'));
-        showNotif('Cronômetro Iniciado!'); 
-        setTimeout(() => id('picking-scanner')?.focus(), 100);
+        hide(id('picking-setup-view')); show(id('picking-active-view'));
+        if(id('picking-active-resp')) id('picking-active-resp').innerText = resp;
+        if(id('picking-timer-display')) { id('picking-timer-display').dataset.start = now; id('picking-timer-display').classList.add('timer-active'); }
+        await refreshData(); hide(id('loading-overlay')); showNotif('Cronômetro Iniciado!'); setTimeout(() => id('picking-scanner')?.focus(), 100);
     });
 
     addEvt('picking-checklist-body', 'click', e => {
@@ -1832,30 +1732,24 @@
                 const input = row.querySelector('.picking-qty-input');
                 if(input && (!input.value || parseFloat(input.value) === 0)) input.value = parseFloat(row.cells[1].innerText).toFixed(4);
                 row.classList.add('opacity-50'); row.cells[0].classList.add('line-through', 'text-ios-textMuted');
-            } else {
-                row.classList.remove('opacity-50'); row.cells[0].classList.remove('line-through', 'text-ios-textMuted');
-            }
+            } else { row.classList.remove('opacity-50'); row.cells[0].classList.remove('line-through', 'text-ios-textMuted'); }
         }
     });
 
     addEvt('btn-finish-picking', 'click', async () => {
         const pickedTotals = {}; let allChecked = true;
         const bodyEl = id('picking-checklist-body'); if(!bodyEl) return;
-        const rows = bodyEl.querySelectorAll('tr');
-        rows.forEach(row => {
+        bodyEl.querySelectorAll('tr').forEach(row => {
             const pid = row.dataset.pid; const input = row.querySelector('.picking-qty-input'); const qty = input ? (parseFloat(input.value) || 0) : 0;
             const chk = row.querySelector('.picking-row-check'); const isChecked = chk ? chk.checked : false; 
-            pickedTotals[pid] = qty;
-            if(!isChecked || qty <= 0) allChecked = false;
+            pickedTotals[pid] = qty; if(!isChecked || qty <= 0) allChecked = false;
         });
 
         const finishTask = async () => {
-            show(id('loading-overlay'));
-            const now = Date.now();
+            show(id('loading-overlay')); const now = Date.now();
             let opsToUpdate = localProductionOrders.filter(op => activePickingOpIds.includes(op.id));
-            
-            Object.keys(pickedTotals).forEach(pidStr => {
-                const pid = pidStr; let remainingPicked = pickedTotals[pid];
+            Object.keys(pickedTotals).forEach(pid => {
+                let remainingPicked = pickedTotals[pid];
                 opsToUpdate.forEach(op => {
                     const ing = op.ingredients.find(i => i.productId == pid);
                     if(ing) {
@@ -1865,63 +1759,45 @@
                     }
                 });
             });
-
             for(let op of opsToUpdate) {
                 op.picking.end = now; op.picking.status = 'concluido';
                 op.picking.duration = Math.floor((op.picking.end - op.picking.start) / 1000); 
                 await DB.update('productionOrders', op);
             }
-            
-            // Certifique-se de parar a câmera se estiver ligada
             if(qrCodeInstance) { try { await qrCodeInstance.stop(); } catch(e){} qrCodeInstance = null; hide(id('picking-camera-reader')); }
-            
-            await refreshData(); 
-            hide(id('picking-modal')); hide(id('loading-overlay'));
-            showNotif('Check-list Concluído!');
+            await refreshData(); hide(id('picking-modal')); hide(id('loading-overlay')); showNotif('Check-list Concluído!');
         };
-
-        if(!allChecked) showConfirmationModal('Existem itens não marcados!', 'A Linha não foi separada 100%. Deseja finalizar com pendências (Baixa Parcial)?', finishTask);
-        else finishTask();
+        if(!allChecked) showConfirmationModal('Itens pendentes!', 'Deseja finalizar com pendências (Baixa Parcial)?', finishTask); else finishTask();
     });
 
-    // --- LOGICA OP (PRODUCAO TELA E EXTRAS) ---
+    // --- ORDEM DE PRODUÇÃO (OP) ---
     addEvt('po-date', 'change', e => {
-        const selectedDate = new Date(e.target.value);
-        const today = new Date();
-        const diffTime = selectedDate - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        const extraChk = id('po-is-extra'); if (extraChk) extraChk.checked = diffDays <= 2;
+        const diffDays = Math.ceil((new Date(e.target.value) - new Date()) / (1000 * 60 * 60 * 24)); 
+        if (id('po-is-extra')) id('po-is-extra').checked = diffDays <= 2;
     });
 
     addEvt('search-po-by-date', 'change', renderPO);
-    addEvt('btn-clear-po-date', 'click', () => { id('search-po-by-date').value = ''; renderPO(); });
+    addEvt('btn-clear-po-date', 'click', () => { if(id('search-po-by-date')) id('search-po-by-date').value = ''; renderPO(); });
     
     function renderPO() {
         const dateInput = id('search-po-by-date')?.value; 
         let list = [...localProductionOrders];
         const container = id('production-orders-list'); if(!container) return;
         
-        // Exibir sempre TODAS as pendentes + as concluídas da data pesquisada.
-        if (dateInput) {
-            list = list.filter(po => po.status === 'pendente' || po.status === 'em_andamento' || po.date === dateInput);
-        } else {
-            // Se nenhum filtro, mostra apenas as ativas (pendentes/em_andamento)
-            list = list.filter(po => po.status === 'pendente' || po.status === 'em_andamento');
-        }
+        if (dateInput) { list = list.filter(po => po.status === 'pendente' || po.status === 'em_andamento' || po.date === dateInput); } 
+        else { list = list.filter(po => po.status === 'pendente' || po.status === 'em_andamento'); }
 
-        // Ordena: pendentes primeiro, em andamento, depois concluidas, depois por data
         list.sort((a, b) => {
             const sA = a.status === 'pendente' ? 1 : a.status === 'em_andamento' ? 2 : 3;
             const sB = b.status === 'pendente' ? 1 : b.status === 'em_andamento' ? 2 : 3;
-            if (sA !== sB) return sA - sB;
-            return new Date(a.date) - new Date(b.date);
+            if (sA !== sB) return sA - sB; return new Date(a.date) - new Date(b.date);
         });
 
-        if(!list.length) { container.innerHTML = `<div class="col-span-full text-center text-ios-textMuted py-10 bg-ios-card rounded-2xl border border-ios-border">A fila de produção está vazia.</div>`; return; }
+        if(!list.length) { container.innerHTML = `<div class="col-span-full text-center text-ios-textMuted py-10 bg-ios-card rounded-2xl border border-ios-border">Fila vazia.</div>`; return; }
         
         container.innerHTML = list.map(po => {
             const p = po.picking || { status: 'pendente' }; let pickBadge = '';
-            if(p.status === 'concluido') pickBadge = `<span class="badge bg-ios-green/20 text-ios-green text-[10px] mt-1 inline-block"><i class="fa-solid fa-dolly mr-1"></i>Separado (Tempo: ${formatTime(p.duration||0)})</span>`;
+            if(p.status === 'concluido') pickBadge = `<span class="badge bg-ios-green/20 text-ios-green text-[10px] mt-1 inline-block"><i class="fa-solid fa-dolly mr-1"></i>Separado</span>`;
             else if(p.status === 'em_andamento') pickBadge = `<span class="badge bg-ios-blue/20 text-ios-blue text-[10px] mt-1 inline-block"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Em Separação</span>`;
             else pickBadge = `<span class="badge bg-ios-orange/20 text-ios-orange text-[10px] mt-1 inline-block"><i class="fa-solid fa-clock mr-1"></i>A Separar</span>`;
 
@@ -1930,14 +1806,13 @@
                 <div class="absolute top-5 left-3"><input type="checkbox" class="ui-checkbox po-select-checkbox" data-id="${po.id}" ${po.status!=='pendente'?'disabled':''}></div>
                 <div class="flex justify-between items-start mb-3">
                     <div>
-                        <h3 class="text-white font-bold text-lg">${po.recipeName} <span class="text-ios-blue">(${po.multiplier}x)</span> ${po.isExtra?'<span class="badge bg-ios-red text-white ml-2">🚨 EXTRA</span>':''}</h3>
-                        <p class="text-xs text-ios-textMuted mt-1"><i class="fa-regular fa-calendar mr-1"></i>Prog: <strong class="text-white">${new Date(po.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong> ${po.quantityProduced ? `&nbsp;|&nbsp; Rende: <strong class="text-white">${po.quantityProduced} no lote ${po.outputBatch||'-'}</strong>` : ''}</p>
+                        <h3 class="text-white font-bold text-lg">${po.recipeName} <span class="text-ios-blue">(${po.multiplier}x)</span> ${po.isExtra?'<span class="badge bg-ios-red text-white ml-2">EXTRA</span>':''}</h3>
+                        <p class="text-xs text-ios-textMuted mt-1"><i class="fa-regular fa-calendar mr-1"></i>Prog: <strong class="text-white">${new Date(po.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong></p>
                         ${pickBadge}
                     </div>
                     <span class="badge uppercase tracking-wider ${po.status==='pendente'?'bg-ios-orange/20 text-ios-orange':'bg-ios-green/20 text-ios-green'}">${po.status}</span>
                 </div>
                 <div class="bg-ios-bg rounded-lg p-3 mt-auto border border-ios-border">
-                    <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-2">Desconto Físico Necessário</p>
                     <ul class="text-sm text-gray-300 space-y-1">${(po.ingredients || []).map(i=>{
                         const pName = localInventory.find(pd=>pd.id==i.productId)?.name||'?';
                         const pLotes = (i.consumptionPlan||[]).map(x=>x.batchCode).join(', ') || 'PEPS Automático';
@@ -1955,11 +1830,9 @@
     });
 
     function updatePOIngredients() {
-        const searchInput = id('po-recipe-searchable-container')?.querySelector('input');
-        if(!searchInput) return;
-        const rId = searchInput.dataset.selectedId;
-        const rec = localRecipes.find(r=>r.id==rId); 
-        const qtyEl = id('po-quantity'); const mult = qtyEl ? (parseFloat(qtyEl.value) || 1) : 1;
+        const searchInput = id('po-recipe-searchable-container')?.querySelector('input'); if(!searchInput) return;
+        const rec = localRecipes.find(r=>r.id==searchInput.dataset.selectedId); 
+        const mult = parseFloat(id('po-quantity')?.value) || 1;
         const bodyEl = id('po-ingredients-body'); const outEl = id('po-total-output');
         
         if(!rec) { if(bodyEl) bodyEl.innerHTML = ''; if(outEl) outEl.value = '0.0000'; return; }
@@ -1974,7 +1847,7 @@
                 return `<tr class="base-tr" data-product-id="${i.productId}" data-plan='${JSON.stringify(plan)}'>
                     <td class="base-td font-medium text-white">${p?p.name:'?'}</td><td class="base-td">${(p?.totalQuantity||0).toFixed(2)}</td>
                     <td class="base-td"><input type="number" value="${reqQty.toFixed(4)}" class="form-input py-1 text-center font-bold text-ios-blue po-ing-qty bg-ios-bg border-ios-border" readonly></td>
-                    <td class="base-td text-ios-textMuted text-xs"><div class="plan-display ${isSufficient ? 'text-ios-green' : 'text-ios-red font-bold'}">${isSufficient ? '<i class="fa-solid fa-check mr-1"></i>'+planText : '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Faltante/Bloqueado'}</div>
+                    <td class="base-td text-ios-textMuted text-xs"><div class="plan-display ${isSufficient ? 'text-ios-green' : 'text-ios-red font-bold'}">${isSufficient ? '<i class="fa-solid fa-check mr-1"></i>'+planText : '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Faltante'}</div>
                         ${isSufficient ? `<button type="button" class="text-ios-blue mt-2 open-batch-selector bg-ios-bg p-1 rounded border border-ios-border"><i class="fa-solid fa-pen mr-1"></i> Trocar Lote</button>` : ''}
                     </td></tr>`;
             }).join('');
@@ -1995,8 +1868,7 @@
         }
         const d = new Date(); d.setDate(d.getDate() + 2); 
         if(id('po-date')) id('po-date').value = d.toISOString().split('T')[0];
-        const extraChk = id('po-is-extra');
-        if (extraChk) { extraChk.checked = false; }
+        if (id('po-is-extra')) id('po-is-extra').checked = false;
         hide(id('po-output-fields')); show(id('production-order-modal'));
     });
     
@@ -2011,7 +1883,7 @@
         const ingredients = [...bodyEl.children].map(tr => { return { productId: tr.dataset.productId, adjustedQuantity: parseFloat(tr.querySelector('.po-ing-qty').value), consumptionPlan: JSON.parse(tr.dataset.plan || '[]') }; });
         for(const ing of ingredients) {
             const sumPlan = ing.consumptionPlan.reduce((s, x) => s + x.quantity, 0);
-            if(sumPlan < ing.adjustedQuantity - 0.001) return showNotif(`Impossível salvar. Insumo insuficiente ou Lotes Bloqueados para algum ingrediente.`, true);
+            if(sumPlan < ing.adjustedQuantity - 0.001) return showNotif(`Insumo insuficiente.`, true);
         }
         show(id('loading-overlay'));
         const op = {
@@ -2026,25 +1898,22 @@
 
     addEvt('btn-confirm-production', 'click', async () => {
         const checked = document.querySelectorAll('.po-select-checkbox:checked');
-        if(!checked.length) return showNotif('Selecione pelo menos uma OP marcando a caixinha!', true);
+        if(!checked.length) return showNotif('Selecione pelo menos uma OP.', true);
         const selectedIds = Array.from(checked).map(cb => cb.dataset.id);
         const pendentes = localProductionOrders.filter(po => selectedIds.includes(po.id) && po.status === 'pendente');
         if(!pendentes.length) return;
         
         const opsNaoSeparadas = pendentes.filter(po => po.picking && po.picking.status !== 'concluido');
-        let warnMsg = '';
-        if(opsNaoSeparadas.length > 0) { warnMsg = `<p class="text-ios-red mb-3 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Atenção: ${opsNaoSeparadas.length} OP(s) selecionada(s) ainda NÃO tiveram a separação física concluída!</p>`; }
+        let warnMsg = opsNaoSeparadas.length > 0 ? `<p class="text-ios-red mb-3 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Atenção: ${opsNaoSeparadas.length} OP(s) ainda NÃO tiveram a separação concluída!</p>` : '';
 
-        showConfirmationModal('Executar Baixa', `${warnMsg}Isso vai descontar as matérias-primas e gerar as entradas de <strong>${pendentes.length} OP(s)</strong>. Deseja efetivar a produção no sistema?`, async () => {
+        showConfirmationModal('Executar Baixa', `${warnMsg}Efetivar ${pendentes.length} OP(s)?`, async () => {
             show(id('loading-overlay'));
             try {
                 for(const op of pendentes) {
                     for(const ing of op.ingredients) {
-                        const product = await DB.get('inventory', ing.productId);
-                        if(!product || (product.totalQuantity || 0) < ing.adjustedQuantity - 0.001) throw new Error(`Sem saldo Total no estoque para: ${product ? product.name : 'Insumo Excluído'}.`);
                         for(const pl of ing.consumptionPlan) {
                             const b = await DB.get('batches', pl.batchId);
-                            if(!b || b.quantity < pl.quantity - 0.001 || b.isReleased === false) throw new Error(`Lote ${pl.batchCode} bloqueado (quarentena) ou esgotado! Recalcule a OP.`);
+                            if(!b || b.quantity < pl.quantity - 0.001 || b.isReleased === false) throw new Error(`Lote ${pl.batchCode} bloqueado ou esgotado!`);
                         }
                     }
                 }
@@ -2057,7 +1926,7 @@
                         
                         const p = op.date.substring(0,7); let consumptions = await DB.getAll('monthlyConsumption');
                         let record = consumptions.find(x => x.period === p && x.productId == product.id);
-                        if(record) { record.totalConsumed += ing.adjustedQuantity; record.id = record.id; await DB.update('monthlyConsumption', record); }
+                        if(record) { record.totalConsumed += ing.adjustedQuantity; await DB.update('monthlyConsumption', record); }
                         else await DB.add('monthlyConsumption', { period: p, productId: product.id, totalConsumed: ing.adjustedQuantity });
                     }
                     if(op.quantityProduced) {
@@ -2067,7 +1936,7 @@
                             if(outProduct) {
                                 outProduct.totalQuantity += op.quantityProduced; await DB.update('inventory', outProduct);
                                 const lote = op.outputBatch || `OP-${op.id}`;
-                                await DB.add('batches', { productId: rec.outputProductId, code: lote, quantity: op.quantityProduced, expiryDate: op.outputExpiry||null, isReleased: true });
+                                await DB.add('batches', { productId: rec.outputProductId, code: lote, quantity: op.quantityProduced, expiryDate: null, isReleased: true });
                                 await DB.add('history', { productId: rec.outputProductId, batchCode: lote, type: 'entrada', quantity: op.quantityProduced, date: op.date, reason: `Gerado OP-${op.id}` });
                             }
                         }
@@ -2075,24 +1944,24 @@
                     op.status = 'concluído'; await DB.update('productionOrders', op);
                 }
                 showNotif('Sucesso! Movimentações registradas.'); 
-            } catch(e) { showNotif(e.message || 'Erro crítico nas baixas', true); } finally { await refreshData(); hide(id('loading-overlay')); }
+            } catch(e) { showNotif(e.message, true); } finally { await refreshData(); hide(id('loading-overlay')); }
         });
     });
 
-    // --- REQUISICOES AVULSAS ---
+    // --- REQUISIÇÕES E CONSUMO ---
     addEvt('add-requisition-item-btn', 'click', () => { const reqCont = id('requisition-items-container'); if(reqCont) addIngRowReq(reqCont, null, ''); });
     addEvt('requisition-form', 'submit', async e => {
         e.preventDefault();
         const reason = id('requisition-reason')?.value; const resp = id('requisition-responsible')?.value;
         const reqCont = id('requisition-items-container'); if(!reqCont) return;
         const ings = [...reqCont.children].map(r => ({ productId: r.dataset.productId, quantity: parseFloat(r.querySelector('.req-qty-input').value), plan: JSON.parse(r.dataset.plan || '[]') }));
-        if(ings.some(i=>!i.productId || isNaN(i.quantity) || !i.plan.length)) return showNotif('Preencha quantidades e verifique se há físico livre suficiente.', true);
+        if(ings.some(i=>!i.productId || isNaN(i.quantity) || !i.plan.length)) return showNotif('Preencha quantidades e verifique lotes.', true);
         show(id('loading-overlay'));
         try {
             for(const i of ings) {
                 const p = await DB.get('inventory', i.productId);
                 let sumPlan = i.plan.reduce((s, x) => s + x.quantity, 0);
-                if(sumPlan < i.quantity - 0.001) throw new Error(`Sem saldo suficiente ou lote bloqueado de ${p.name}`);
+                if(sumPlan < i.quantity - 0.001) throw new Error(`Sem saldo suficiente para ${p.name}`);
                 for(const pl of i.plan) { const b = await DB.get('batches', pl.batchId); b.quantity -= pl.quantity; await DB.update('batches', b); }
                 p.totalQuantity -= i.quantity; await DB.update('inventory', p);
                 await DB.add('history', { productId: p.id, type: 'requisição', quantity: i.quantity, date: new Date().toISOString().split('T')[0], reason: reason, responsible: resp }); 
@@ -2101,77 +1970,7 @@
         } catch (err) { showNotif(err.message, true); } finally { hide(id('loading-overlay')); }
     });
 
-    // --- DASHBOARD METRICS E CHARTS ---
-    function renderDash() {
-        const invQtd = localInventory.reduce((s,i)=>s+(i.totalQuantity||0),0);
-        const statTotalItems = id('stat-total-items'); if(statTotalItems) statTotalItems.innerText = localInventory.length; 
-        const statTotalQty = id('stat-total-quantity'); if(statTotalQty) statTotalQty.innerText = invQtd.toFixed(2);
-        
-        const quarentaECincoDias = new Date(); quarentaECincoDias.setDate(quarentaECincoDias.getDate() + 45);
-        const expiringBatches = localBatches.filter(b => b.quantity > 0 && b.expiryDate && new Date(b.expiryDate) <= quarentaECincoDias);
-        const statExpSoon = id('stat-expiring-soon');
-        if(statExpSoon) statExpSoon.innerText = expiringBatches.length;
-        
-        const expList = id('expiring-list');
-        if(expList) {
-            if(expiringBatches.length > 0) {
-                expList.innerHTML = expiringBatches.map(b => {
-                    const p = localInventory.find(i => i.id == b.productId);
-                    const diffTime = new Date(b.expiryDate) - new Date();
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    let color = diffDays <= 7 ? 'text-ios-red' : 'text-ios-orange';
-                    return `<li class="bg-ios-cardHover p-4 rounded-xl border-l-4 border-l-ios-red flex flex-wrap justify-between items-center gap-4 cursor-pointer hover:bg-ios-border transition alert-item" data-id="${p?.id}">
-                        <div><h4 class="font-bold text-white text-lg">${p?.name || 'Desconhecido'}</h4><p class="text-xs text-ios-textMuted">Lote: ${b.code} | Qtd: ${b.quantity.toFixed(2)}</p></div>
-                        <div class="text-right"><span class="font-bold ${color} text-lg">${diffDays} dias</span><br><span class="text-xs text-ios-textMuted">${new Date(b.expiryDate+'T00:00:00').toLocaleDateString('pt-BR')}</span></div>
-                    </li>`;
-                }).join('');
-            } else {
-                 expList.innerHTML = '<li class="text-center text-ios-textMuted py-8">Nenhum lote vencendo nos próximos 45 dias.</li>';
-            }
-        }
-
-        const opsSeparadas = localProductionOrders.filter(po => po.picking && po.picking.status === 'concluido');
-        const empStats = {}; const lineStats = {};
-        opsSeparadas.forEach(po => {
-            const resp = po.picking.responsible || 'Desconhecido'; const duration = po.picking.duration || 0; const line = po.recipeCategory || 'Diversos';
-            const formattedResp = capitalize(resp);
-            if(!empStats[formattedResp]) empStats[formattedResp] = { ops: 0, totalTime: 0 }; empStats[formattedResp].ops += 1; empStats[formattedResp].totalTime += duration;
-            if(!lineStats[line]) lineStats[line] = { ops: 0, totalTime: 0 }; lineStats[line].ops += 1; lineStats[line].totalTime += duration;
-        });
-
-        const empSorted = Object.keys(empStats).map(k => ({ name: k, ops: empStats[k].ops, avgTime: empStats[k].totalTime / empStats[k].ops })).sort((a,b) => a.avgTime - b.avgTime);
-        const empRankingBody = id('emp-ranking-body');
-        if (empRankingBody) {
-            if(!empSorted.length) empRankingBody.innerHTML = `<tr><td colspan="3" class="base-td text-center border-none py-6">Sem dados de separação.</td></tr>`;
-            else {
-                const medals = ['🥇', '🥈', '🥉'];
-                empRankingBody.innerHTML = empSorted.map((e, idx) => {
-                    const positionHtml = idx < 3 ? `<span class="mr-2 text-xl">${medals[idx]}</span>` : `<span class="text-ios-textMuted font-normal mr-2">${idx+1}º</span>`;
-                    return `<tr class="base-tr hover:bg-ios-cardHover/50 transition"><td class="base-td font-bold text-white flex items-center">${positionHtml} ${e.name}</td><td class="base-td text-center font-bold text-ios-blue">${e.ops}</td><td class="base-td text-right font-mono">${formatTime(e.avgTime)}</td></tr>`;
-                }).join('');
-            }
-        }
-
-        Chart.defaults.color = 'rgba(235, 235, 245, 0.6)'; Chart.defaults.borderColor = '#38383a';
-        if(lineChart) lineChart.destroy();
-        const ctxLine = id('line-efficiency-chart');
-        if(ctxLine && Object.keys(lineStats).length > 0) {
-            const labels = Object.keys(lineStats); const dataAvg = labels.map(l => Math.floor(lineStats[l].totalTime / lineStats[l].ops / 60));
-            lineChart = new Chart(ctxLine, {type:'bar', data:{labels:labels, datasets:[{label:'Tempo Médio (minutos)', data:dataAvg, backgroundColor:'#ff9f0a', borderRadius: 4}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}});
-        }
-
-        if(dailyChart) dailyChart.destroy(); const ctxD = id('daily-output-chart');
-        if(ctxD) dailyChart = new Chart(ctxD, {type:'bar', data:{labels:['Consumos de Hoje'], datasets:[{label:'Qtd', data:[0], backgroundColor:'#0a84ff', borderRadius: 4}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}});
-        renderABC();
-    }
-    function renderABC() {
-        const ctx = id('abc-curve-chart'); if(abcChart) abcChart.destroy(); if(!ctx) return;
-        abcChart = new Chart(ctx, { type:'doughnut', data:{ labels:['Curva A','Curva B','Curva C'], datasets:[{data:[30,50,20], backgroundColor:['#0a84ff','#30d158','#ff9f0a'], borderColor:'#1c1c1e', borderWidth:4}] }, options:{ responsive:true, maintainAspectRatio:false, cutout: '75%' } });
-    }
-
-    // --- CONSUMO ---
     ['search-consumption', 'consumption-month-filter', 'consumption-year-filter'].forEach(el => { addEvt(el, el === 'search-consumption' ? 'input' : 'change', renderConsum); });
-    
     function renderConsum() {
         const p = `${id('consumption-year-filter')?.value}-${String(id('consumption-month-filter')?.value).padStart(2,'0')}`;
         const term = id('search-consumption')?.value.toLowerCase() || '';
@@ -2182,7 +1981,7 @@
         tbody.innerHTML = list.map(c => `<tr class="base-tr"><td class="base-td text-white">${localInventory.find(i=>i.id==c.productId)?.name||'?'}</td><td class="base-td text-right font-bold text-ios-blue">${c.totalConsumed.toFixed(2)}</td></tr>`).join('');
     }
 
-    // --- AJUSTES MANUAIS E BACKUP ---
+    // --- AJUSTES MANUAIS ---
     addEvt('adjustment-form', 'submit', async e => {
         e.preventDefault();
         const bId = id('adjustment-batch')?.value; const newQtd = parseFloat(id('adjustment-new-quantity')?.value);
@@ -2191,116 +1990,68 @@
         try {
             const batch = await DB.get('batches', bId); batch.quantity = newQtd; await DB.update('batches', batch);
             await DB.add('history', { productId: batch.productId, type: 'ajuste', quantity: newQtd, date: new Date().toISOString().split('T')[0], reason: id('adjustment-reason')?.value, responsible: id('adjustment-responsible')?.value });
-            e.target.reset(); await refreshData(); showNotif('Lote ajustado com sucesso');
+            e.target.reset(); await refreshData(); showNotif('Lote ajustado');
         } catch(err) { showNotif('Erro no ajuste', true); } finally { hide(id('loading-overlay')); }
     });
 
+    // --- BACKUP E IMPORTAÇÃO EXCEL ---
     addEvt('btn-download-backup', 'click', async () => {
         show(id('loading-overlay'));
         try {
-            const inventory = await DB.getAll('inventory'); const batches = await DB.getAll('batches'); const history = await DB.getAll('history');
-            const recipes = await DB.getAll('recipes'); const productionOrders = await DB.getAll('productionOrders'); const monthlyConsumption = await DB.getAll('monthlyConsumption');
-            const data = { inventory, batches, history, recipes, productionOrders, monthlyConsumption };
-            
-            const a = document.createElement('a'); 
-            a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
-            a.download = `EstoqueOS_${new Date().toISOString().split('T')[0]}.json`;
-            a.click(); 
-            showNotif('Backup Salvo em Downloads com sucesso!');
-        } catch(err) {
-            console.error(err); showNotif('Erro ao exportar banco de dados.', true);
-        } finally { hide(id('loading-overlay')); }
+            const data = { inventory: await DB.getAll('inventory'), batches: await DB.getAll('batches'), history: await DB.getAll('history'), recipes: await DB.getAll('recipes'), productionOrders: await DB.getAll('productionOrders'), monthlyConsumption: await DB.getAll('monthlyConsumption') };
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' })); a.download = `EstoqueOS_${new Date().toISOString().split('T')[0]}.json`; a.click(); 
+            showNotif('Backup Salvo!');
+        } catch(err) { showNotif('Erro ao exportar.', true); } finally { hide(id('loading-overlay')); }
     });
 
     addEvt('btn-upload-backup', 'click', () => id('backup-file-input')?.click());
     
-    // IMPORTADOR DE PLANILHAS CSV/XLSX PARA O ESTOQUE
     addEvt('backup-file-input', 'change', e => {
         const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
         reader.onload = async ev => {
             try {
                 show(id('loading-overlay'));
-                const data = ev.target.result;
-                const workbook = XLSX.read(data, {type: 'binary'});
-                const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
+                const data = ev.target.result; const workbook = XLSX.read(data, {type: 'binary'});
+                const sheetName = workbook.SheetNames[0]; const json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {defval: ""});
+                if(!json || json.length === 0) throw new Error("Planilha vazia");
 
-                if(!json || json.length === 0) throw new Error("Planilha vazia ou formato inválido.");
-
-                let countNovos = 0;
-                let countAtualizados = 0;
-
+                let countNovos = 0, countAtualizados = 0;
                 for(const row of json) {
-                    const getVal = (key) => {
-                        const found = Object.keys(row).find(k => k.trim() === key);
-                        return found ? row[found] : "";
-                    };
-
-                    const name = getVal('Nome do Produto');
-                    const code = String(getVal('Código')).trim();
-                    const supplier = getVal('Fornecedor');
-                    const minStock = parseFloat(getVal('Estoque Mínimo')) || 0;
-                    const batchCodeRaw = getVal('Lote');
-                    const batchCode = (!batchCodeRaw || batchCodeRaw === 'N/A') ? 'LT-' + crypto.randomUUID().substring(0,6).toUpperCase() : String(batchCodeRaw).trim();
+                    const getVal = (key) => { const found = Object.keys(row).find(k => k.trim() === key); return found ? row[found] : ""; };
+                    const name = getVal('Nome do Produto'); const code = String(getVal('Código')).trim(); const supplier = getVal('Fornecedor');
+                    const batchCodeRaw = getVal('Lote'); const batchCode = (!batchCodeRaw || batchCodeRaw === 'N/A') ? 'LT-' + crypto.randomUUID().substring(0,6).toUpperCase() : String(batchCodeRaw).trim();
                     const batchQty = parseFloat(getVal('Quantidade do Lote')) || parseFloat(getVal('Quantidade Física')) || 0;
 
                     if(!name || batchQty <= 0) continue;
 
                     let p = null;
-                    if (code && code !== 'N/A') {
-                        p = await DB.getByIndex('inventory', 'code', code);
-                    }
-                    if (!p) {
-                        const allP = await DB.getAll('inventory');
-                        p = allP.find(x => x.name.toLowerCase() === name.toLowerCase());
-                    }
+                    if (code && code !== 'N/A') p = await DB.getByIndex('inventory', 'code', code);
+                    if (!p) p = (await DB.getAll('inventory')).find(x => x.name.toLowerCase() === name.toLowerCase());
 
                     if(!p) {
-                        p = { code: code !== 'N/A' ? code : '', name: name, type: 'insumo', supplier: supplier, totalQuantity: 0, minStock: minStock, leadTime: 0 };
-                        p.id = await DB.add('inventory', p);
-                        countNovos++;
+                        p = { code: code !== 'N/A' ? code : '', name: name, type: 'insumo', supplier: supplier, totalQuantity: 0, minStock: parseFloat(getVal('Estoque Mínimo')) || 0, leadTime: 0 };
+                        p.id = await DB.add('inventory', p); countNovos++;
                     } else {
                         if(supplier && supplier !== 'N/A') p.supplier = supplier;
-                        if(minStock > 0) p.minStock = minStock;
-                        await DB.update('inventory', p);
-                        countAtualizados++;
+                        await DB.update('inventory', p); countAtualizados++;
                     }
 
-                    // Format expiry date
-                    let expiry = null;
-                    const expRaw = getVal('Data de Validade');
+                    let expiry = null; const expRaw = getVal('Data de Validade');
                     if(expRaw && expRaw !== 'N/A') {
-                        if(!isNaN(expRaw) && typeof expRaw === 'number') {
-                             const d = new Date(Math.round((expRaw - 25569)*86400*1000));
-                             expiry = d.toISOString().split('T')[0];
-                        } else if(typeof expRaw === 'string') {
-                             const pts = expRaw.split('/');
-                             if(pts.length === 3) expiry = `${pts[2]}-${pts[1]}-${pts[0]}`;
-                        }
+                        if(!isNaN(expRaw) && typeof expRaw === 'number') { const d = new Date(Math.round((expRaw - 25569)*86400*1000)); expiry = d.toISOString().split('T')[0]; } 
+                        else if(typeof expRaw === 'string') { const pts = expRaw.split('/'); if(pts.length === 3) expiry = `${pts[2]}-${pts[1]}-${pts[0]}`; }
                     }
                     
-                    p.totalQuantity = (p.totalQuantity || 0) + batchQty;
-                    await DB.update('inventory', p);
-                    
-                    const isReleased = (p.code !== '8110'); 
-                    await DB.add('batches', { productId: p.id, code: batchCode, quantity: batchQty, expiryDate: expiry, isReleased: isReleased });
+                    p.totalQuantity = (p.totalQuantity || 0) + batchQty; await DB.update('inventory', p);
+                    await DB.add('batches', { productId: p.id, code: batchCode, quantity: batchQty, expiryDate: expiry, isReleased: (p.code !== '8110') });
                     await DB.add('history', { productId: p.id, batchCode: batchCode, type: 'entrada', quantity: batchQty, date: new Date().toISOString().split('T')[0], reason: `Importação Planilha` });
                 }
 
                 await refreshData();
-                const ds = new Date().toLocaleString('pt-BR'); localStorage.setItem('last_res', ds); 
-                if(id('last-restore-date')) id('last-restore-date').innerText = ds;
-                
-                showNotif(`Importação concluída! ${countNovos} produtos criados, ${countAtualizados} atualizados com entradas geradas.`);
-            } catch(err) {
-                console.error(err); showNotif('Erro na leitura do arquivo. Certifique-se de que é um formato CSV/Excel válido.', true); 
-            } finally { 
-                if(id('backup-file-input')) id('backup-file-input').value=''; 
-                hide(id('loading-overlay'));
-            }
-        }; 
-        reader.readAsBinaryString(file);
+                const ds = new Date().toLocaleString('pt-BR'); localStorage.setItem('last_res', ds); if(id('last-restore-date')) id('last-restore-date').innerText = ds;
+                showNotif(`Importação concluída! ${countNovos} produtos criados, ${countAtualizados} atualizados.`);
+            } catch(err) { showNotif('Erro na leitura do arquivo CSV/Excel.', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; hide(id('loading-overlay')); }
+        }; reader.readAsBinaryString(file);
     });
 
     addEvt('btn-reset-database', 'click', () => {
@@ -2308,11 +2059,9 @@
             show(id('loading-overlay')); 
             try {
                 for(const s of ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption']) await DB.clear(s);
-                localStorage.removeItem('last_res'); 
-                if(id('last-restore-date')) id('last-restore-date').innerText = 'Nunca';
-                await refreshData(); 
-                showNotif('Sistema Formatado com sucesso!');
-            } catch (err) { console.error(err); showNotif('Falha na formatação.', true); } finally { hide(id('loading-overlay')); }
+                localStorage.removeItem('last_res'); if(id('last-restore-date')) id('last-restore-date').innerText = 'Nunca';
+                await refreshData(); showNotif('Sistema Formatado com sucesso!');
+            } catch (err) { showNotif('Falha na formatação.', true); } finally { hide(id('loading-overlay')); }
         });
     });
 
