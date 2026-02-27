@@ -168,16 +168,16 @@
                 <p class="text-ios-textMuted mb-2 italic">"Não se gerencia o que não se mede, não se mede o que não se define, não se define o que não se entende..."</p>
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-green" onclick="navTo('scanner')">
+                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-green" onclick="window.navTo('scanner')">
                         <i class="fa-solid fa-barcode text-4xl text-ios-green mb-3"></i><span class="font-semibold text-white">Ler Código</span>
                     </button>
-                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-blue" onclick="navTo('entry')">
+                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-blue" onclick="window.navTo('entry')">
                         <i class="fa-solid fa-box-open text-4xl text-ios-blue mb-3"></i><span class="font-semibold text-white">Nova Entrada</span>
                     </button>
-                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-orange" onclick="navTo('picking')">
+                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-orange" onclick="window.navTo('picking')">
                         <i class="fa-solid fa-dolly text-4xl text-ios-orange mb-3"></i><span class="font-semibold text-white">Separação</span>
                     </button>
-                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-blue" onclick="navTo('addressing')">
+                    <button class="card flex flex-col items-center justify-center p-6 hover:bg-ios-cardHover transition border border-transparent hover:border-ios-blue" onclick="window.navTo('addressing')">
                         <i class="fa-solid fa-map-location-dot text-4xl text-ios-blue mb-3"></i><span class="font-semibold text-white">Endereços</span>
                     </button>
                 </div>
@@ -302,12 +302,12 @@
                                 <input type="text" id="entry-location" name="location" class="form-input uppercase" placeholder="Ex: RUA-A-01" autocomplete="off">
                                 <div id="entry-loc-camera-reader" class="w-full hidden mt-2 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
                             </div>
-                            <div class="md:col-span-2"><label class="form-label">Nome do Produto</label><input type="text" name="product-name" required class="form-input"></div>
-                            <div><label class="form-label">Tipo</label><select name="product-type" required class="form-input"><option value="insumo">Insumo</option><option value="semi_acabado">Semi-acabado</option></select></div>
-                            <div><label class="form-label">Fornecedor</label><input type="text" name="supplier" required class="form-input" placeholder="Ex: Fornecedor X"></div>
-                            <div><label class="form-label">Prazo Entrega (Dias)</label><input type="number" name="lead-time" min="0" class="form-input text-ios-blue" placeholder="Ex: 5"></div>
-                            <div><label class="form-label">Estoque Mínimo (Alerta)</label><input type="number" name="min-stock" min="0" step="0.01" class="form-input text-ios-orange" placeholder="Opcional"></div>
-                            <div><label class="form-label">Quantidade FÍSICA</label><input type="number" name="quantity" required min="0.01" step="0.01" class="form-input text-ios-blue font-bold"></div>
+                            <div class="md:col-span-2"><label class="form-label">Nome do Produto</label><input type="text" name="product-name" id="entry-product-name" required class="form-input"></div>
+                            <div><label class="form-label">Tipo</label><select name="product-type" id="entry-product-type" required class="form-input"><option value="insumo">Insumo</option><option value="semi_acabado">Semi-acabado</option></select></div>
+                            <div><label class="form-label">Fornecedor</label><input type="text" name="supplier" id="entry-supplier" required class="form-input" placeholder="Ex: Fornecedor X"></div>
+                            <div><label class="form-label">Prazo Entrega (Dias)</label><input type="number" name="lead-time" id="entry-lead-time" min="0" class="form-input text-ios-blue" placeholder="Ex: 5"></div>
+                            <div><label class="form-label">Estoque Mínimo (Alerta)</label><input type="number" name="min-stock" id="entry-min-stock" min="0" step="0.01" class="form-input text-ios-orange" placeholder="Opcional"></div>
+                            <div><label class="form-label">Quantidade FÍSICA</label><input type="number" name="quantity" id="entry-quantity" required min="0.01" step="0.01" class="form-input text-ios-blue font-bold"></div>
                             <div><label class="form-label">Data de Recebimento</label><input type="date" id="receipt-date" required class="form-input"></div>
                             <div><label class="form-label">Data de Fabricação</label><input type="date" id="mfg-date" class="form-input"></div>
                             <div><label class="form-label">Data de Validade</label><input type="date" id="expiry-date" class="form-input"></div>
@@ -346,6 +346,10 @@
                     <div class="flex gap-3">
                         <input type="text" id="search-recipe" placeholder="Buscar receita..." class="form-input w-64">
                         <button id="btn-export-recipe-book" class="btn-secondary"><i class="fa-solid fa-file-pdf mr-2"></i>Livro PDF</button>
+                        
+                        <button id="btn-import-recipe-image" class="btn-secondary text-ios-blue border-ios-blue/50 hover:bg-ios-blue/10"><i class="fa-solid fa-camera mr-2"></i>Ler Foto</button>
+                        <input type="file" id="recipe-image-input" class="hidden" accept="image/*">
+
                         <button id="btn-import-recipes" class="btn-secondary text-ios-green border-ios-green/50 hover:bg-ios-green/10"><i class="fa-solid fa-file-excel mr-2"></i>Importar Excel</button>
                         <input type="file" id="recipe-file-input" class="hidden" accept=".xlsx, .csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
                         <button id="btn-new-recipe" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Criar Receita</button>
@@ -489,14 +493,20 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
     import { getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs, deleteDoc, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyDev8spgKoKZi2pOohmk0r9SFLtLMcePa8", authDomain: "estoque-b50df.firebaseapp.com", projectId: "estoque-b50df", storageBucket: "estoque-b50df.firebasestorage.app", messagingSenderId: "634756791567", appId: "1:634756791567:web:993e61243b57b7e057d27a" };
+    const firebaseConfig = { apiKey: "", authDomain: "estoque-b50df.firebaseapp.com", projectId: "estoque-b50df", storageBucket: "estoque-b50df.firebasestorage.app", messagingSenderId: "634756791567", appId: "1:634756791567:web:993e61243b57b7e057d27a" };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    const db = getFirestore(app);
+    let app, auth, provider, db;
+    // Tenta inicializar Firebase, caso falhe (como em ambientes de preview com CORS), força LocalDB
+    try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        provider = new GoogleAuthProvider();
+        db = getFirestore(app);
+    } catch(e) {
+        console.warn("Firebase Init Failed - Forcing Offline Mode", e);
+    }
 
-    let isOfflineMode = false;
+    let isOfflineMode = false; // Começará como false, mas será mudado se o Firebase não responder
 
     const LocalDB = {
         data: { inventory: [], batches: [], history: [], recipes: [], productionOrders: [], monthlyConsumption: [], locations: [] },
@@ -541,6 +551,45 @@
         async restoreBackup(d) { return isOfflineMode ? await LocalDB.restoreBackup(d) : await FirebaseDB.restoreBackup(d); }
     };
 
+    // --- FUNÇÕES DE UI GLOBALS ---
+    window.showNotif = function(msg, isErr=false) {
+        const nf = id('notification-modal'); if(!nf) return;
+        nf.innerHTML = `<i class="fa-solid ${isErr?'fa-triangle-exclamation':'fa-check-circle'} mr-2"></i> ${msg}`;
+        nf.className = `fixed top-6 left-1/2 transform -translate-x-1/2 z-[2000] py-3 px-6 rounded-full shadow-2xl font-semibold text-white transition-all text-sm backdrop-blur-md ${isErr?'bg-ios-red':'bg-ios-green'}`;
+        show(nf); setTimeout(() => hide(nf), 3000);
+    }
+
+    window.showConfirmationModal = function(title, msg, onConfirm) {
+        if(id('confirm-title')) id('confirm-title').innerHTML = title;
+        if(id('confirm-message')) id('confirm-message').innerHTML = msg;
+        show(id('confirm-action-modal'));
+        const btnOk = id('confirm-action-btn'); const btnCancel = id('cancel-action-btn');
+        const newBtnOk = btnOk.cloneNode(true); const newBtnCancel = btnCancel.cloneNode(true);
+        btnOk.parentNode.replaceChild(newBtnOk, btnOk); btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+        newBtnOk.addEventListener('click', () => { hide(id('confirm-action-modal')); onConfirm(); });
+        newBtnCancel.addEventListener('click', () => { hide(id('confirm-action-modal')); });
+    }
+
+    let qrCodeInstance = null;
+    window.toggleCamera = async function(readerId, inputId) {
+        const readerEl = id(readerId); const inputEl = id(inputId);
+        if(typeof Html5Qrcode === 'undefined') return window.showNotif("Biblioteca da câmera não carregada.", true);
+        if (qrCodeInstance) { try { await qrCodeInstance.stop(); } catch(e) {} qrCodeInstance = null; hide(readerEl); return; }
+        show(readerEl); qrCodeInstance = new Html5Qrcode(readerId);
+        try {
+            await qrCodeInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, 
+            async (decodedText) => {
+                try { await qrCodeInstance.stop(); } catch(e) {}
+                qrCodeInstance = null; hide(readerEl);
+                if(inputEl) {
+                    inputEl.value = decodedText;
+                    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    inputEl.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+                }
+            }, (err) => { });
+        } catch(e) { window.showNotif('Erro ao acessar a câmera.', true); hide(readerEl); }
+    }
+
     // --- CADASTRO DE LOCAIS ---
     addEvt('btn-manage-locations', 'click', () => { renderLocationsManager(); show(id('manage-locations-modal')); });
     function renderLocationsManager() {
@@ -553,7 +602,7 @@
 
     addEvt('locations-table-body', 'click', async e => {
         const delBtn = e.target.closest('.del-loc-btn');
-        if(delBtn) { showConfirmationModal('Excluir Local?', 'Tem certeza que deseja apagar este local do sistema?', async () => { show(id('loading-overlay')); await DB.remove('locations', delBtn.dataset.id); await refreshData(); renderLocationsManager(); hide(id('loading-overlay')); showNotif('Local apagado'); }); }
+        if(delBtn) { window.showConfirmationModal('Excluir Local?', 'Tem certeza que deseja apagar este local do sistema?', async () => { show(id('loading-overlay')); await DB.remove('locations', delBtn.dataset.id); await refreshData(); renderLocationsManager(); hide(id('loading-overlay')); window.showNotif('Local apagado'); }); }
         const editBtn = e.target.closest('.edit-loc-btn');
         if(editBtn) {
             const loc = localLocations.find(l => l.id == editBtn.dataset.id);
@@ -569,75 +618,29 @@
             if(loc) {
                 loc.code = newCode; loc.name = newName; await DB.update('locations', loc);
                 if(oldName && oldName !== newName) { const affectedBatches = localBatches.filter(b => b.location === oldName); for(let b of affectedBatches) { b.location = newName; await DB.update('batches', b); } }
-                await refreshData(); hide(id('edit-location-modal')); renderLocationsManager(); showNotif('Local atualizado com sucesso!');
+                await refreshData(); hide(id('edit-location-modal')); renderLocationsManager(); window.showNotif('Local atualizado com sucesso!');
             }
-        } catch(err) { showNotif('Erro ao atualizar local.', true); } finally { hide(id('loading-overlay')); }
+        } catch(err) { window.showNotif('Erro ao atualizar local.', true); } finally { hide(id('loading-overlay')); }
     });
 
     addEvt('register-location-form', 'submit', async e => {
         e.preventDefault(); show(id('loading-overlay'));
         try {
             const code = id('loc-code').value.trim(); const name = id('loc-name').value.trim().toUpperCase();
-            await DB.add('locations', { code, name }); await refreshData(); hide(id('register-location-modal')); showNotif('Local cadastrado!');
+            await DB.add('locations', { code, name }); await refreshData(); hide(id('register-location-modal')); window.showNotif('Local cadastrado!');
             if(id('entry-location') && !id('screen-entry').classList.contains('hidden')) { id('entry-location').value = name; } 
             else if(id('address-input') && !id('screen-addressing').classList.contains('hidden')) { id('address-input').value = name; id('address-input').dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13 })); }
-        } catch(err) { showNotif('Erro ao cadastrar local', true); } finally { hide(id('loading-overlay')); }
+        } catch(err) { window.showNotif('Erro ao cadastrar local', true); } finally { hide(id('loading-overlay')); }
     });
 
     addEvt('entry-location', 'keypress', e => {
         if(e.key === 'Enter') {
             e.preventDefault(); const val = e.target.value.trim().toUpperCase(); if(!val) return;
             const loc = localLocations.find(l => String(l.code).toUpperCase() === val || String(l.name).toUpperCase() === val);
-            if(loc) { e.target.value = loc.name; showNotif('Local reconhecido: ' + loc.name); } 
+            if(loc) { e.target.value = loc.name; window.showNotif('Local reconhecido: ' + loc.name); } 
             else { id('loc-code').value = val; id('loc-name').value = ''; show(id('register-location-modal')); }
         }
     });
-
-    addEvt('btn-start-camera-entry-loc', 'click', () => {
-        toggleCamera('entry-loc-camera-reader', 'entry-location');
-    });
-
-    // --- FUNÇÕES DE UI E CÂMERA ---
-    function showNotif(msg, isErr=false) {
-        const nf = id('notification-modal'); if(!nf) return;
-        nf.innerHTML = `<i class="fa-solid ${isErr?'fa-triangle-exclamation':'fa-check-circle'} mr-2"></i> ${msg}`;
-        nf.className = `fixed top-6 left-1/2 transform -translate-x-1/2 z-[2000] py-3 px-6 rounded-full shadow-2xl font-semibold text-white transition-all text-sm backdrop-blur-md ${isErr?'bg-ios-red':'bg-ios-green'}`;
-        show(nf); setTimeout(() => hide(nf), 3000);
-    }
-    window.showNotif = showNotif;
-
-    function showConfirmationModal(title, msg, onConfirm) {
-        if(id('confirm-title')) id('confirm-title').innerHTML = title;
-        if(id('confirm-message')) id('confirm-message').innerHTML = msg;
-        show(id('confirm-action-modal'));
-        const btnOk = id('confirm-action-btn'); const btnCancel = id('cancel-action-btn');
-        const newBtnOk = btnOk.cloneNode(true); const newBtnCancel = btnCancel.cloneNode(true);
-        btnOk.parentNode.replaceChild(newBtnOk, btnOk); btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
-        newBtnOk.addEventListener('click', () => { hide(id('confirm-action-modal')); onConfirm(); });
-        newBtnCancel.addEventListener('click', () => { hide(id('confirm-action-modal')); });
-    }
-    window.showConfirmationModal = showConfirmationModal;
-
-    let qrCodeInstance = null;
-    async function toggleCamera(readerId, inputId) {
-        const readerEl = id(readerId); const inputEl = id(inputId);
-        if(typeof Html5Qrcode === 'undefined') return showNotif("Biblioteca da câmera não carregada.", true);
-        if (qrCodeInstance) { try { await qrCodeInstance.stop(); } catch(e) {} qrCodeInstance = null; hide(readerEl); return; }
-        show(readerEl); qrCodeInstance = new Html5Qrcode(readerId);
-        try {
-            await qrCodeInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, 
-            async (decodedText) => {
-                try { await qrCodeInstance.stop(); } catch(e) {}
-                qrCodeInstance = null; hide(readerEl);
-                if(inputEl) {
-                    inputEl.value = decodedText;
-                    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-                    inputEl.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
-                }
-            }, (err) => { });
-        } catch(e) { showNotif('Erro ao acessar a câmera.', true); hide(readerEl); }
-    }
-    window.toggleCamera = toggleCamera;
 
     document.querySelectorAll('.nav-item').forEach(link => {
         link.addEventListener('click', async () => {
@@ -649,12 +652,26 @@
         });
     });
 
-    addEvt('btn-start-camera-main', 'click', () => toggleCamera('main-camera-reader', 'scanner-input'));
-    addEvt('btn-start-camera-entry', 'click', () => toggleCamera('entry-camera-reader', 'entry-product-code'));
-    addEvt('btn-start-camera-picking', 'click', () => toggleCamera('picking-camera-reader', 'picking-scanner'));
+    addEvt('btn-start-camera-main', 'click', () => window.toggleCamera('main-camera-reader', 'scanner-input'));
+    addEvt('btn-start-camera-entry', 'click', () => window.toggleCamera('entry-camera-reader', 'entry-product-code'));
+    addEvt('btn-start-camera-picking', 'click', () => window.toggleCamera('picking-camera-reader', 'picking-scanner'));
+    addEvt('btn-start-camera-entry-loc', 'click', () => window.toggleCamera('entry-loc-camera-reader', 'entry-location'));
+    addEvt('btn-start-camera-address', 'click', () => window.toggleCamera('address-camera-reader', 'address-input'));
 
     // --- AUTENTICAÇÃO E INÍCIO ---
+    async function startOfflineMode() {
+        isOfflineMode = true; LocalDB.init(); 
+        hide(id('login-wrapper')); show(id('app-wrapper'));
+        const nu = id('nome-usuario'); if(nu) nu.innerText = 'Modo Local (Offline)';
+        window.showNotif('Você está usando o banco de dados Local.', false);
+        const t = new Date().toISOString().split('T')[0];
+        if(id('receipt-date')) id('receipt-date').value = t; if(id('mfg-date')) id('mfg-date').value = t;
+        window.navTo('dashboard'); 
+        show(id('loading-overlay')); await refreshData(); hide(id('loading-overlay'));
+    }
+
     addEvt('btn-login-google', 'click', () => {
+        if(!auth) return window.showNotif("Módulo de autenticação offline.", true);
         const msg = id('mensagem-erro'); if(msg) { msg.innerText = "Abrindo pop-up..."; show(msg); }
         signInWithPopup(auth, provider).catch((error) => {
             if(msg) {
@@ -665,46 +682,53 @@
         });
     });
 
-    addEvt('btn-bypass-login', 'click', async () => {
-        isOfflineMode = true; LocalDB.init(); 
-        hide(id('login-wrapper')); show(id('app-wrapper'));
-        const nu = id('nome-usuario'); if(nu) nu.innerText = 'Modo Local (Offline)';
-        showNotif('Você está usando o banco de dados Local.', false);
-        const t = new Date().toISOString().split('T')[0];
-        if(id('receipt-date')) id('receipt-date').value = t; if(id('mfg-date')) id('mfg-date').value = t;
-        navTo('dashboard'); show(id('loading-overlay')); await refreshData(); hide(id('loading-overlay'));
-    });
+    addEvt('btn-bypass-login', 'click', startOfflineMode);
 
     addEvt('btn-sair', 'click', () => {
-        if(isOfflineMode) { location.reload(); }
+        if(isOfflineMode || !auth) { location.reload(); }
         else { signOut(auth).then(() => location.reload()).catch(console.error); }
     });
 
-    onAuthStateChanged(auth, async (user) => {
-        if (user && !isOfflineMode) {
-            hide(id('login-wrapper')); show(id('app-wrapper'));
-            const nu = id('nome-usuario'); if(nu) nu.innerText = user.displayName || 'Estoquista';
-            show(id('loading-overlay'));
-            const t = new Date().toISOString().split('T')[0];
-            if(id('receipt-date')) id('receipt-date').value = t; if(id('mfg-date')) id('mfg-date').value = t;
-            navTo('dashboard'); try { await refreshData(); } catch(e) { console.error(e); } hide(id('loading-overlay'));
-        } else if(!isOfflineMode) {
-            show(id('login-wrapper')); hide(id('app-wrapper')); hide(id('loading-overlay'));
-        }
-    });
+    if(auth) {
+        onAuthStateChanged(auth, async (user) => {
+            if (user && !isOfflineMode) {
+                hide(id('login-wrapper')); show(id('app-wrapper'));
+                const nu = id('nome-usuario'); if(nu) nu.innerText = user.displayName || 'Estoquista';
+                show(id('loading-overlay'));
+                const t = new Date().toISOString().split('T')[0];
+                if(id('receipt-date')) id('receipt-date').value = t; if(id('mfg-date')) id('mfg-date').value = t;
+                window.navTo('dashboard'); 
+                try { 
+                    await refreshData(); 
+                } catch(e) { 
+                    console.error("Falha ao carregar Firebase após login, caindo para Offline", e);
+                    startOfflineMode();
+                } 
+                hide(id('loading-overlay'));
+            } else if(!isOfflineMode) {
+                show(id('login-wrapper')); hide(id('app-wrapper')); hide(id('loading-overlay'));
+            }
+        });
+    } else {
+        // Se falhou o init do firebase por completo, mostre a tela de login para forçar o clique em "offline"
+        show(id('login-wrapper')); hide(id('app-wrapper')); hide(id('loading-overlay'));
+    }
 
     // --- VARIÁVEIS GLOBAIS DE ESTADO E NAVEGAÇÃO ---
     let localInventory=[], localBatches=[], localHistory=[], localRecipes=[], localProductionOrders=[], localMonthlyConsumption=[], localLocations=[];
     let currentBatchTarget=null;
     let invSort = { col: 'name', asc: true };
     let currentHistoryProductId = null;
+    let currentRecipeCategory = 'Todos';
     let activePickingLine = null, activePickingOpIds = [];
     const typeLabels = { insumo: 'Insumo', semi_acabado: 'Semi-acabado' };
 
     document.querySelectorAll('.close-modal').forEach(btn => { btn.addEventListener('click', () => { hide(id(btn.dataset.target)); }); });
 
     const screens = ['dashboard','addressing','scanner','entry','inventory','recipes','production','requisitions','adjustments','consumption','settings','picking'];
-    function navTo(target) {
+    
+    // Função NAVTO Global
+    window.navTo = function(target) {
         screens.forEach(s => { id('screen-'+s)?.classList.add('hidden'); });
         document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('bg-ios-card', 'text-white'); n.classList.add('text-ios-textMuted'); });
         const screenEl = id('screen-'+target); if(screenEl) screenEl.classList.remove('hidden', 'flex-col');
@@ -714,12 +738,13 @@
         if(activeLink) { activeLink.classList.remove('text-ios-textMuted'); activeLink.classList.add('bg-ios-card', 'text-white'); }
         
         if(target==='adjustments') { createSearchableSelect(id('adjustment-searchable-container'), localInventory, 'Buscar produto...', p => { const batchEl = id('adjustment-batch'); if(batchEl) batchEl.innerHTML = '<option value="">Selecione Lote...</option>' + localBatches.filter(b=>b.productId==p.id && b.quantity>0).map(b=>`<option value="${b.id}">${b.code}</option>`).join(''); }); }
-        if(target==='requisitions') { const reqCont = id('requisition-items-container'); if (reqCont) { reqCont.innerHTML=''; addIngRowReq(reqCont); } }
-        if(target==='picking') { renderPickingScreen(); }
+        if(target==='requisitions') { const reqCont = id('requisition-items-container'); if (reqCont) { reqCont.innerHTML=''; window.addIngRowReq(reqCont); } }
+        if(target==='picking') { window.renderPickingScreen(); }
         if(target==='scanner') { setTimeout(() => id('scanner-input')?.focus(), 100); }
         if(target==='addressing') { setTimeout(() => id('address-input')?.focus(), 100); }
     }
-    document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', e => { e.preventDefault(); navTo(link.dataset.target); }); });
+    
+    document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', e => { e.preventDefault(); window.navTo(link.dataset.target); }); });
 
     function createSearchableSelect(container, items, placeholder, onSelect) {
         if(!container) return;
@@ -772,6 +797,11 @@
 
     async function refreshData() {
         try {
+            // Fallback imediato se não for offline mas também DB for undefined
+            if(!isOfflineMode && typeof db === 'undefined') {
+                isOfflineMode = true; LocalDB.init();
+            }
+
             const results = await Promise.allSettled([
                 DB.getAll('inventory'), DB.getAll('batches'), DB.getAll('history'), 
                 DB.getAll('recipes'), DB.getAll('productionOrders'), DB.getAll('monthlyConsumption'), DB.getAll('locations')
@@ -801,25 +831,16 @@
             }
             if(inventoryUpdates.length > 0) await Promise.allSettled(inventoryUpdates);
 
-            let poUpdates = [];
-            for(let op of localProductionOrders) {
-                if(!op || !op.id) continue;
-                let opChanged = false;
-                if(!op.picking) { op.picking = { status: 'pendente', responsible: '', start: null, end: null, duration: 0, pickedItems: {} }; opChanged = true; }
-                if(!op.recipeCategory) { const rec = localRecipes.find(r=>r.id == op.recipeId); op.recipeCategory = rec ? rec.category : 'Diversos'; opChanged = true; }
-                if(typeof op.isExtra === 'undefined') { op.isExtra = false; opChanged = true; }
-                if(!op.ingredients) { op.ingredients = []; opChanged = true; }
-                if(opChanged) poUpdates.push(DB.update('productionOrders', op));
-            }
-            if(poUpdates.length > 0) await Promise.allSettled(poUpdates);
-
             renderAll();
-        } catch(e) { console.error("Erro Crítico:", e); showNotif(`Erro na leitura do Banco. A visualização pode estar incompleta.`, true); }
+        } catch(e) { 
+            console.error("Erro Crítico ao ler DB:", e); 
+            window.showNotif(`Erro na leitura do Banco. Verifique sua conexão.`, true); 
+        }
     }
 
     function renderAll() {
-        populateFilters(); renderInv(); renderRecipes(); renderPO(); renderHome(); renderConsum(); updateSidebarBadges();
-        const scrPicking = id('screen-picking'); if(scrPicking && !scrPicking.classList.contains('hidden')) renderPickingScreen();
+        populateFilters(); renderInv(); renderRecipes(); window.renderPO(); renderHome(); window.renderConsum(); window.updateSidebarBadges();
+        const scrPicking = id('screen-picking'); if(scrPicking && !scrPicking.classList.contains('hidden')) window.renderPickingScreen();
         if(currentHistoryProductId) renderItemDetailsHistory();
     }
 
@@ -836,7 +857,7 @@
     // --- HOME (MENU LEVE E CARDS) ---
     function renderHome() {
         const quarentaECincoDias = new Date(); quarentaECincoDias.setDate(quarentaECincoDias.getDate() + 45);
-        const expiringBatches = localBatches.filter(b => Number(b.quantity) > 0 && b.expiryDate && new Date(b.expiryDate) <= quarentaECincoDias);
+        const expiringBatches = localBatches.filter(b => Number(b.quantity) > 0 && b.expiryDate && new Date(b.expiryDate + 'T00:00:00') <= quarentaECincoDias);
         const lowStockItems = localInventory.filter(i => (Number(i.minStock) || 0) > 0 && (Number(i.totalQuantity) || 0) <= Number(i.minStock));
 
         if(id('home-count-expiring')) id('home-count-expiring').innerText = expiringBatches.length;
@@ -847,7 +868,7 @@
             if(expiringBatches.length > 0) {
                 expList.innerHTML = expiringBatches.map(b => {
                     const p = localInventory.find(i => i.id == b.productId);
-                    const diffDays = Math.ceil((new Date(b.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+                    const diffDays = Math.ceil((new Date(b.expiryDate+'T00:00:00') - new Date()) / (1000 * 60 * 60 * 24));
                     let color = diffDays <= 7 ? 'text-ios-red' : 'text-ios-orange';
                     return `<li class="bg-ios-cardHover p-3 rounded-xl border-l-4 border-l-ios-red flex justify-between items-center cursor-pointer hover:bg-ios-border transition alert-item" data-id="${p?.id}">
                         <div><h4 class="font-bold text-white text-sm">${p?.name || '?'}</h4><p class="text-[10px] text-ios-textMuted font-mono">Lote: ${b.code} | Qtd: ${Number(b.quantity).toFixed(2)}</p></div>
@@ -869,8 +890,8 @@
         }
     }
 
-    addEvt('home-expiring-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { navTo('inventory'); window.openDetails(item.dataset.id); } });
-    addEvt('home-low-stock-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { navTo('inventory'); window.openDetails(item.dataset.id); } });
+    addEvt('home-expiring-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { window.navTo('inventory'); window.openDetails(item.dataset.id); } });
+    addEvt('home-low-stock-list', 'click', e => { const item = e.target.closest('.alert-item'); if (item) { window.navTo('inventory'); window.openDetails(item.dataset.id); } });
 
     // --- ENDEREÇAMENTO ---
     addEvt('address-input', 'keypress', e => {
@@ -944,7 +965,7 @@
                 hide(boxResult); boxResult.classList.add('opacity-0', 'translate-y-4');
                 id('unrecognized-code').innerText = code; createSearchableSelect(id('associate-searchable-container'), localInventory, 'Pesquise pelo nome do insumo...');
                 show(boxAssociate); setTimeout(() => boxAssociate.classList.remove('opacity-0', 'translate-y-4'), 10);
-                showNotif('Código não reconhecido no sistema.', true);
+                window.showNotif('Código não reconhecido no sistema.', true);
             }
             e.target.value = '';
         }
@@ -952,16 +973,81 @@
 
     addEvt('btn-associate-code', 'click', async () => {
         const searchInput = id('associate-searchable-container').querySelector('input'); if(!searchInput) return;
-        const selectedId = searchInput.dataset.selectedId; if(!selectedId) return showNotif('Selecione um produto antes de vincular!', true);
+        const selectedId = searchInput.dataset.selectedId; if(!selectedId) return window.showNotif('Selecione um produto antes de vincular!', true);
         show(id('loading-overlay'));
         try {
             const item = await DB.get('inventory', selectedId);
             if(item) {
                 item.barcode = lastScannedCode; await DB.update('inventory', item); await refreshData();
-                showNotif(`Código salvo com sucesso para ${item.name}!`);
+                window.showNotif(`Código salvo com sucesso para ${item.name}!`);
                 hide(id('scanner-associate-box')); id('scanner-associate-box').classList.add('opacity-0', 'translate-y-4'); id('scanner-input').focus();
             }
-        } catch(e) { showNotif('Erro ao vincular código.', true); } finally { hide(id('loading-overlay')); }
+        } catch(e) { window.showNotif('Erro ao vincular código.', true); } finally { hide(id('loading-overlay')); }
+    });
+
+    // --- FORMULÁRIO DE NOVA ENTRADA ---
+    addEvt('entry-form', 'submit', async (e) => {
+        e.preventDefault();
+        show(id('loading-overlay'));
+        try {
+            const pCode = id('entry-product-code').value.trim();
+            const pName = id('entry-product-name').value.trim();
+            const pType = id('entry-product-type').value;
+            const supplier = id('entry-supplier').value;
+            const loc = id('entry-location').value.toUpperCase();
+            const qty = parseFloat(id('entry-quantity').value);
+            const rDate = id('receipt-date').value;
+            const expDate = id('expiry-date').value;
+            const minStock = parseFloat(id('entry-min-stock').value) || 0;
+            const leadTime = parseInt(id('entry-lead-time').value) || 0;
+
+            if (qty <= 0) throw new Error("Quantidade inválida.");
+
+            let p = null;
+            if (pCode) p = localInventory.find(i => String(i.code) === pCode || String(i.barcode) === pCode);
+            if (!p) p = localInventory.find(i => String(i.name).toLowerCase() === pName.toLowerCase());
+
+            if (!p) {
+                p = { code: pCode, name: pName, type: pType, supplier, totalQuantity: 0, minStock, leadTime };
+                p.id = await DB.add('inventory', p);
+            } else {
+                p.totalQuantity = (Number(p.totalQuantity) || 0); 
+            }
+
+            const batchCode = 'LT-' + crypto.randomUUID().substring(0,6).toUpperCase();
+            await DB.add('batches', { productId: p.id, code: batchCode, location: loc, quantity: qty, expiryDate: expDate, isReleased: true });
+            await DB.add('history', { productId: p.id, batchCode, type: 'entrada', quantity: qty, date: rDate, reason: `Entrada Manual` });
+
+            await refreshData();
+            window.showNotif('Entrada registrada com sucesso!');
+            id('entry-form').reset();
+            const t = new Date().toISOString().split('T')[0];
+            id('receipt-date').value = t; id('mfg-date').value = t;
+            window.navTo('inventory');
+
+        } catch(err) { window.showNotif(err.message || 'Erro ao registrar', true); }
+        finally { hide(id('loading-overlay')); }
+    });
+
+    addEvt('entry-product-code', 'keypress', e => {
+        if(e.key === 'Enter') {
+            e.preventDefault();
+            const code = e.target.value.trim();
+            if(!code) return;
+            const p = localInventory.find(i => String(i.code) === code || String(i.barcode) === code);
+            if(p) {
+                id('entry-product-name').value = p.name || '';
+                id('entry-product-type').value = p.type || 'insumo';
+                id('entry-supplier').value = p.supplier || '';
+                id('entry-lead-time').value = p.leadTime || 0;
+                id('entry-min-stock').value = p.minStock || 0;
+                window.showNotif('Produto encontrado!');
+                id('entry-location').focus();
+            } else {
+                window.showNotif('Produto não cadastrado. Preencha os dados manualmente.', true);
+                id('entry-product-name').focus();
+            }
+        }
     });
 
     // --- ESTOQUE E DETALHES ---
@@ -981,7 +1067,7 @@
             return `<tr class="base-tr cursor-pointer" data-id="${item.id}"><td class="base-td text-white font-medium">${item.name}</td><td class="base-td"><span class="badge border ${typeClass}">${typeLabels[item.type] || 'Insumo'}</span></td><td class="base-td text-ios-textMuted">${item.supplier || '-'}</td><td class="base-td text-right font-bold text-white">${(Number(item.totalQuantity)||0).toFixed(2)}</td><td class="base-td text-ios-textMuted">${expFormat}</td></tr>`;
         }).join('');
     }
-    addEvt('inventory-table-body', 'click', e => { const row = e.target.closest('tr'); if(row && row.dataset.id) openDetails(row.dataset.id); });
+    addEvt('inventory-table-body', 'click', e => { const row = e.target.closest('tr'); if(row && row.dataset.id) window.openDetails(row.dataset.id); });
 
     addEvt('hist-filter-start', 'change', renderItemDetailsHistory); addEvt('hist-filter-end', 'change', renderItemDetailsHistory); addEvt('hist-filter-type', 'change', renderItemDetailsHistory);
     addEvt('btn-clear-hist-filters', 'click', () => { if(id('hist-filter-start')) id('hist-filter-start').value = ''; if(id('hist-filter-end')) id('hist-filter-end').value = ''; if(id('hist-filter-type')) id('hist-filter-type').value = ''; renderItemDetailsHistory(); });
@@ -998,7 +1084,7 @@
         cont.innerHTML = hist.map(h=>`<div class="py-3 border-b border-ios-border text-sm flex justify-between items-center hover:bg-ios-card transition-colors px-2 rounded"><div><span class="font-bold text-xs uppercase ${String(h.type).includes('entrada')?'text-ios-green':h.type==='saída'||h.type==='requisição'?'text-ios-red':'text-ios-blue'}">${h.type}</span><p class="text-xs text-ios-textMuted mt-1 w-48 truncate" title="${h.reason||'Movimentação'}">${h.reason||'Movimentação'}</p></div><div class="text-right"><span class="font-bold text-white ${String(h.type).includes('entrada')?'':'text-ios-red'}">${String(h.type).includes('entrada')?'+':'-'} ${Number(h.quantity).toFixed(2)}</span><br><span class="text-xs text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>${new Date(h.date+'T00:00:00').toLocaleDateString('pt-BR')}</span></div></div>`).join('');
     }
 
-    function openDetails(pId) {
+    window.openDetails = function(pId) {
         currentHistoryProductId = pId; const p = localInventory.find(i=>i.id==pId); if(!p) return;
         if(id('details-product-name')) id('details-product-name').innerText = p.name; 
         if(id('details-product-type-badge')) id('details-product-type-badge').innerText = typeLabels[p.type||'insumo']; 
@@ -1030,7 +1116,32 @@
         }
         renderItemDetailsHistory(); show(id('item-details-view')); hide(id('item-details-edit')); show(id('item-details-modal'));
     }
-    window.openDetails = openDetails;
+
+    // --- FORMULÁRIO DE EDIÇÃO DE DETALHES ---
+    addEvt('btn-edit-item', 'click', () => { hide(id('item-details-view')); show(id('item-details-edit')); });
+    addEvt('btn-cancel-edit', 'click', () => { show(id('item-details-view')); hide(id('item-details-edit')); });
+    
+    addEvt('edit-item-form', 'submit', async (e) => {
+        e.preventDefault(); show(id('loading-overlay'));
+        try {
+            const pId = id('edit-item-id').value;
+            const p = await DB.get('inventory', pId);
+            if(p) {
+                p.name = id('edit-product-name').value;
+                p.type = id('edit-product-type').value;
+                p.code = id('edit-product-code').value;
+                p.barcode = id('edit-product-barcode').value;
+                p.supplier = id('edit-supplier').value;
+                p.leadTime = parseInt(id('edit-lead-time').value) || 0;
+                p.minStock = parseFloat(id('edit-min-stock').value) || 0;
+                await DB.update('inventory', p);
+                await refreshData();
+                window.showNotif('Insumo atualizado!');
+                window.openDetails(pId);
+            }
+        } catch(err) { window.showNotif('Erro ao editar', true); }
+        finally { hide(id('loading-overlay')); }
+    });
 
     // --- RECEITAS (IMPORTAÇÃO INTELIGENTE DE EXCEL MULTIPLAS ABAS) ---
     addEvt('search-recipe', 'input', renderRecipes);
@@ -1076,13 +1187,107 @@
     addEvt('recipe-categories-list', 'click', e => { if(e.target.tagName==='A') { e.preventDefault(); currentRecipeCategory = e.target.dataset.cat; renderRecipes(); }});
     addEvt('recipes-grid', 'click', e => {
         const delBtn = e.target.closest('.del-rec-btn'); const editBtn = e.target.closest('.edit-rec-btn');
-        if(delBtn) showConfirmationModal('Apagar Ficha?', 'Confirma a exclusão da receita?', async () => { show(id('loading-overlay')); await DB.remove('recipes', delBtn.dataset.id); await refreshData(); hide(id('loading-overlay')); showNotif('Excluída'); });
+        if(delBtn) window.showConfirmationModal('Apagar Ficha?', 'Confirma a exclusão da receita?', async () => { show(id('loading-overlay')); await DB.remove('recipes', delBtn.dataset.id); await refreshData(); hide(id('loading-overlay')); window.showNotif('Excluída'); });
         if(editBtn) openEditRecipe(editBtn.dataset.id);
     });
     addEvt('recipe-is-semi', 'change', e => { if(e.target.checked) show(id('yield-wrapper')); else hide(id('yield-wrapper')); });
 
     addEvt('btn-import-recipes', 'click', () => id('recipe-file-input')?.click());
-    
+    addEvt('btn-import-recipe-image', 'click', () => id('recipe-image-input')?.click());
+
+    async function fetchWithRetry(url, options, retries = 5) {
+        let delay = 1000;
+        for (let i = 0; i < retries; i++) {
+            try {
+                const res = await fetch(url, options);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return await res.json();
+            } catch (err) {
+                if (i === retries - 1) throw err;
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            }
+        }
+    }
+
+    addEvt('recipe-image-input', 'change', e => {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async ev => {
+            try {
+                show(id('loading-overlay'));
+                if(id('loading-text')) id('loading-text').innerText = "Extraindo dados da Imagem com IA...";
+                
+                const base64Data = ev.target.result.split(',')[1];
+                const mimeType = file.type;
+                const apiKey = ""; 
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                
+                const prompt = `Você é um assistente de leitura de fichas técnicas para a indústria. Extraia os ingredientes desta tabela de receita. Procure especificamente pela coluna 'CÓDIGO' (ou 'COD') e a coluna de quantidade final requerida na receita ('QTD/RECEITA' ou 'QTD').
+                Retorne estritamente um array JSON de objetos, onde cada objeto tenha:
+                - "codigo": string (o código exato do produto, sem formatações estranhas)
+                - "nome": string (o nome e descrição do produto)
+                - "quantidade": number (a quantidade formatada apenas como número de ponto flutuante, não inclua "kg" ou "L")`;
+
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: mimeType, data: base64Data } }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                };
+
+                const result = await fetchWithRetry(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("A IA não conseguiu interpretar a imagem.");
+                
+                const items = JSON.parse(text);
+                if (!items || items.length === 0) throw new Error("Nenhum item detectado na imagem.");
+
+                // Clica no botão para abrir o Modal de nova receita
+                id('btn-new-recipe').click();
+                if(id('recipe-name')) id('recipe-name').value = "Receita Importada (Foto)";
+                const ingCont = id('ingredients-container');
+                ingCont.innerHTML = ''; // Limpa as linhas padões vazias
+
+                let missingCodes = 0;
+
+                for(let item of items) {
+                    if (!item.codigo) continue;
+                    // Procura o item no estoque pelo código
+                    let p = localInventory.find(i => String(i.code).toUpperCase() === String(item.codigo).toUpperCase());
+                    
+                    if(!p) {
+                        missingCodes++;
+                        const alertName = '⚠️ ' + (item.nome || 'Desconhecido');
+                        p = { id: crypto.randomUUID(), code: String(item.codigo), name: alertName, type: 'insumo', supplier: 'A DEFINIR', totalQuantity: 0, minStock: 0, leadTime: 0 };
+                        // Registra código faltante preventivamente para o usuário conseguir ver o erro na tela e editar
+                        await DB.add('inventory', p);
+                        localInventory.push(p);
+                    }
+                    
+                    window.addIngRowReq(ingCont, p.id, item.quantidade || 0);
+                }
+
+                await refreshData();
+                
+                if (missingCodes > 0) {
+                    window.showNotif(`Foto Lida! CUIDADO: ${missingCodes} código(s) da receita não existem no seu estoque. Foram marcados com ⚠️.`, true);
+                } else {
+                    window.showNotif('Leitura perfeita! Todos os códigos foram cruzados com o estoque.');
+                }
+
+            } catch (err) {
+                console.error(err);
+                window.showNotif('Falha ao processar imagem. Tente novamente com uma foto mais nítida.', true);
+            } finally {
+                if(id('recipe-image-input')) id('recipe-image-input').value = '';
+                if(id('loading-text')) id('loading-text').innerText = "Processando...";
+                hide(id('loading-overlay'));
+            }
+        };
+        reader.readAsDataURL(file); 
+    });
+
     addEvt('recipe-file-input', 'change', e => {
         const file = e.target.files[0]; if(!file) return; 
         const reader = new FileReader();
@@ -1163,9 +1368,9 @@
                     }
                 }
                 await refreshData();
-                showNotif(`Sucesso! ${importedCount} receitas importadas.`);
+                window.showNotif(`Sucesso! ${importedCount} receitas importadas.`);
             } catch(err) {
-                console.error(err); showNotif('Erro na leitura do arquivo Excel.', true); 
+                console.error(err); window.showNotif('Erro na leitura do arquivo Excel.', true); 
             } finally { 
                 if(id('recipe-file-input')) id('recipe-file-input').value=''; hide(id('loading-overlay'));
             }
@@ -1181,7 +1386,7 @@
         const chkSemi = id('recipe-is-semi'); if(chkSemi) { chkSemi.checked = !!r.isSemi; chkSemi.dispatchEvent(new Event('change')); }
         if(r.isSemi && id('recipe-yield')) id('recipe-yield').value = r.outputYield || 1; 
         const ingCont = id('ingredients-container');
-        if(ingCont) { ingCont.innerHTML = ''; (r.ingredients || []).forEach(ing => { addIngRowReq(ingCont, ing.productId, ing.quantity); }); }
+        if(ingCont) { ingCont.innerHTML = ''; (r.ingredients || []).forEach(ing => { window.addIngRowReq(ingCont, ing.productId, ing.quantity); }); }
         if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Editar Receita'; 
         show(id('recipe-modal'));
     }
@@ -1192,10 +1397,651 @@
         const ingCont = id('ingredients-container'); if(ingCont) ingCont.innerHTML=''; 
         const chkSemi = id('recipe-is-semi'); if(chkSemi) { chkSemi.checked = false; chkSemi.dispatchEvent(new Event('change')); }
         if(id('recipe-yield')) id('recipe-yield').value = 1;
-        if(ingCont) addIngRowReq(ingCont); 
+        if(ingCont) window.addIngRowReq(ingCont); 
         if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Nova Receita'; 
         show(id('recipe-modal'));
     });
+
+    // --- FUNÇÕES COMPLEMENTARES QUE FALTAVAM (LINHA DINÂMICA) ---
+    window.addIngRowReq = function(container, productId = '', qty = '') {
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 items-center';
+        div.innerHTML = `
+            <div class="flex-1 searchable-container relative"></div>
+            <input type="number" min="0.01" step="0.01" class="form-input w-24 text-center ing-qty" placeholder="Qtd" value="${qty}" required>
+            <button type="button" class="text-ios-red p-2 hover:bg-ios-red/10 rounded-lg transition-colors remove-ing-btn"><i class="fa-solid fa-trash"></i></button>
+        `;
+        container.appendChild(div);
+        createSearchableSelect(div.querySelector('.searchable-container'), localInventory, 'Buscar insumo...', (item) => { div.dataset.productId = item.id; });
+        if(productId) {
+            const p = localInventory.find(i=>i.id == productId);
+            if(p) {
+                const input = div.querySelector('input[type="text"]');
+                if(input) { input.value = p.name; input.dataset.selectedId = p.id; div.dataset.productId = p.id; }
+            }
+        }
+        div.querySelector('.remove-ing-btn').addEventListener('click', () => div.remove());
+    }
+
+    addEvt('add-requisition-item-btn', 'click', () => window.addIngRowReq(id('requisition-items-container')));
+    addEvt('add-ingredient-btn', 'click', () => window.addIngRowReq(id('ingredients-container')));
+
+    // --- REQUISIÇÃO E BAIXA AVULSA ---
+    addEvt('requisition-form', 'submit', async (e) => {
+        e.preventDefault();
+        const reason = id('requisition-reason').value;
+        const resp = id('requisition-responsible').value;
+        const rows = document.querySelectorAll('#requisition-items-container > div');
+        let items = [];
+        for(let row of rows) {
+            const input = row.querySelector('input[type="text"]');
+            const pId = input?.dataset.selectedId;
+            const qty = parseFloat(row.querySelector('.ing-qty').value);
+            if(pId && qty > 0) items.push({pId, qty});
+        }
+        if(!items.length) return window.showNotif('Adicione pelo menos um item', true);
+
+        show(id('loading-overlay'));
+        try {
+            for(let item of items) {
+                let {plan, isSufficient} = getFIFOPlan(item.pId, item.qty);
+                if(!isSufficient) throw new Error('Saldo insuficiente ou bloqueado para um dos itens selecionados.');
+                for(let p of plan) {
+                    let b = await DB.get('batches', p.batchId);
+                    b.quantity -= p.quantity;
+                    await DB.update('batches', b);
+                    await DB.add('history', { productId: item.pId, batchCode: b.code, type: 'requisição', quantity: p.quantity, date: new Date().toISOString().split('T')[0], reason: reason + ' - ' + resp });
+                }
+            }
+            await refreshData();
+            window.showNotif('Requisição concluída!');
+            id('requisition-form').reset();
+            window.navTo('inventory');
+        } catch(err) {
+            window.showNotif(err.message, true);
+        } finally {
+            hide(id('loading-overlay'));
+        }
+    });
+
+    // --- AJUSTE MANUAL DE LOTE ---
+    addEvt('adjustment-form', 'submit', async (e) => {
+        e.preventDefault();
+        const bId = id('adjustment-batch').value;
+        const newQty = parseFloat(id('adjustment-new-quantity').value);
+        const reason = id('adjustment-reason').value;
+        const resp = id('adjustment-responsible').value;
+
+        if(!bId) return window.showNotif('Selecione um lote.', true);
+
+        show(id('loading-overlay'));
+        try {
+            const b = await DB.get('batches', bId);
+            const diff = newQty - (Number(b.quantity)||0);
+            
+            b.quantity = newQty;
+            await DB.update('batches', b);
+            
+            if(diff !== 0) {
+                await DB.add('history', { 
+                    productId: b.productId, 
+                    batchCode: b.code, 
+                    type: 'ajuste', 
+                    quantity: Math.abs(diff), 
+                    date: new Date().toISOString().split('T')[0], 
+                    reason: `Ajuste (${diff > 0 ? '+' : ''}${diff}): ${reason} - Resp: ${resp}` 
+                });
+            }
+            await refreshData();
+            window.showNotif('Lote ajustado com sucesso!');
+            id('adjustment-form').reset();
+            window.navTo('inventory');
+        } catch(err) { window.showNotif('Erro no ajuste.', true); }
+        finally { hide(id('loading-overlay')); }
+    });
+
+    // --- PRODUÇÃO (OP) - EVENTOS E LÓGICA ---
+    window.currentPoPlan = {};
+
+    window.updatePoPreview = function(recipeId) {
+        const rec = localRecipes.find(r => r.id == recipeId);
+        const mult = parseFloat(id('po-quantity').value) || 1;
+        window.currentPoPlan = {};
+        
+        if(!rec) return;
+        
+        if(rec.isSemi) {
+            show(id('po-output-fields'));
+            id('po-total-output').value = ((parseFloat(rec.outputYield)||1) * mult).toFixed(4);
+        } else {
+            hide(id('po-output-fields'));
+        }
+        
+        if(rec.ingredients && rec.ingredients.length > 0) {
+            rec.ingredients.forEach(ing => {
+                const reqQty = ing.quantity * mult;
+                const { plan, isSufficient } = getFIFOPlan(ing.productId, reqQty);
+                window.currentPoPlan[ing.productId] = { reqQty, plan, isSufficient };
+            });
+        }
+        window.renderPoTableOnly(rec);
+    };
+
+    window.renderPoTableOnly = function(rec) {
+        const tbody = id('po-ingredients-body');
+        if(!rec || !rec.ingredients || rec.ingredients.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="base-td text-center text-ios-textMuted">Receita sem ingredientes.</td></tr>';
+            return;
+        }
+
+        const mult = parseFloat(id('po-quantity').value) || 1;
+        
+        tbody.innerHTML = rec.ingredients.map(ing => {
+            const p = localInventory.find(i => i.id == ing.productId);
+            const pName = p ? p.name : 'Insumo Excluído';
+            const reqQty = ing.quantity * mult;
+            const avail = p ? (Number(p.totalQuantity)||0) : 0;
+            const planData = window.currentPoPlan[ing.productId];
+            
+            let badges = `<span class="text-ios-textMuted">-</span>`;
+            if(planData && planData.plan && planData.plan.length > 0) {
+                badges = planData.plan.map(pl => `<span class="bg-ios-blue/20 text-ios-blue border border-ios-blue/50 px-2 py-0.5 rounded-md text-[10px] whitespace-nowrap">${pl.batchCode}: ${pl.quantity.toFixed(2)}</span>`).join(' ');
+            } else if (planData && planData.reqQty > 0) {
+                badges = `<span class="text-ios-red text-xs">Estoque Insuficiente</span>`;
+            }
+
+            const planHtml = `<div class="flex items-center flex-wrap gap-1">${badges} <button type="button" class="btn-edit-po-batch text-ios-textMuted hover:text-white p-1 ml-1 rounded transition" data-pid="${ing.productId}" title="Editar Lotes"><i class="fa-solid fa-pen"></i></button></div>`;
+
+            return `<tr>
+                <td class="base-td font-medium text-white">${pName}</td>
+                <td class="base-td">${avail.toFixed(2)}</td>
+                <td class="base-td font-bold ${planData?.isSufficient?'text-white':'text-ios-red'}">${reqQty.toFixed(4)}</td>
+                <td class="base-td">${planHtml}</td>
+            </tr>`;
+        }).join('');
+    };
+
+    addEvt('po-ingredients-body', 'click', e => {
+        const btn = e.target.closest('.btn-edit-po-batch');
+        if(btn) {
+            const pId = btn.dataset.pid;
+            const planData = window.currentPoPlan[pId];
+            if(!planData) return;
+            
+            const p = localInventory.find(i=>i.id == pId);
+            id('batch-selector-title').innerText = `Lotes: ${p?.name}`;
+            id('batch-selector-needed').innerText = planData.reqQty.toFixed(4);
+            currentBatchTarget = pId;
+
+            const allBatches = localBatches.filter(b => b.productId == pId && Number(b.quantity) > 0 && b.isReleased !== false);
+            const list = id('batch-selector-list');
+            
+            list.innerHTML = allBatches.map(b => {
+                const reservedOther = getReservedQty(b.id);
+                const available = (Number(b.quantity) || 0) - reservedOther;
+                const inPlan = planData.plan.find(x => x.batchId == b.id);
+                const qtyVal = inPlan ? inPlan.quantity : 0;
+                const maxAllowed = available + qtyVal;
+                
+                return `<div class="flex justify-between items-center bg-ios-cardHover p-3 rounded-xl border border-ios-border mb-2">
+                    <div><p class="font-bold text-white text-sm">${b.code} <span class="text-[10px] text-ios-textMuted bg-black px-1 rounded ml-1">${b.location||'Sem local'}</span></p><p class="text-xs text-ios-textMuted">Livre: ${available.toFixed(4)}</p></div>
+                    <input type="number" class="form-input w-24 text-right batch-select-input text-ios-blue font-bold" data-bid="${b.id}" data-bcode="${b.code}" max="${maxAllowed}" min="0" step="0.001" value="${qtyVal > 0 ? qtyVal : ''}">
+                </div>`;
+            }).join('');
+            
+            if(!allBatches.length) list.innerHTML = '<div class="text-center text-ios-textMuted py-4">Nenhum lote liberado disponível.</div>';
+            
+            show(id('batch-selector-modal'));
+        }
+    });
+
+    addEvt('confirm-batch-selection', 'click', () => {
+        const pId = currentBatchTarget;
+        const inputs = document.querySelectorAll('.batch-select-input');
+        let newPlan = [];
+        let total = 0;
+        inputs.forEach(inp => {
+            const val = parseFloat(inp.value);
+            if(val > 0) {
+                newPlan.push({ batchId: inp.dataset.bid, batchCode: inp.dataset.bcode, quantity: val });
+                total += val;
+            }
+        });
+        window.currentPoPlan[pId].plan = newPlan;
+        window.currentPoPlan[pId].isSufficient = (total >= window.currentPoPlan[pId].reqQty - 0.001);
+        
+        hide(id('batch-selector-modal'));
+        const container = id('po-recipe-searchable-container');
+        const recipeInput = container?.querySelector('input');
+        const rId = recipeInput?.dataset.selectedId;
+        const rec = localRecipes.find(r => r.id == rId);
+        window.renderPoTableOnly(rec);
+    });
+
+    addEvt('po-quantity', 'input', () => {
+        const container = id('po-recipe-searchable-container');
+        const input = container?.querySelector('input');
+        if(input && input.dataset.selectedId) {
+            window.updatePoPreview(input.dataset.selectedId);
+        }
+    });
+
+    addEvt('btn-new-production-order', 'click', () => {
+        const poForm = id('production-order-form'); if(poForm) poForm.reset();
+        id('edit-po-id').value = '';
+        id('po-ingredients-body').innerHTML = '<tr><td colspan="4" class="base-td text-center text-ios-textMuted py-4">Selecione uma receita primeiro.</td></tr>';
+        hide(id('po-output-fields'));
+        id('po-total-output').value = '0.0000';
+        id('po-date').value = new Date().toISOString().split('T')[0];
+        window.currentPoPlan = {};
+        
+        createSearchableSelect(id('po-recipe-searchable-container'), localRecipes, 'Buscar receita...', (item) => {
+            window.updatePoPreview(item.id);
+        });
+        
+        show(id('production-order-modal'));
+    });
+
+    addEvt('production-order-form', 'submit', async (e) => {
+        e.preventDefault();
+        const container = id('po-recipe-searchable-container');
+        const recipeInput = container?.querySelector('input');
+        const rId = recipeInput?.dataset.selectedId;
+        
+        if(!rId) return window.showNotif('Selecione uma receita válida.', true);
+        
+        const rec = localRecipes.find(r => r.id == rId);
+        if(!rec) return;
+
+        const hasShortage = rec.ingredients.some(ing => !window.currentPoPlan[ing.productId]?.isSufficient);
+        if(hasShortage) return window.showNotif('Estoque insuficiente para um ou mais ingredientes!', true);
+
+        const mult = parseFloat(id('po-quantity').value) || 1;
+        const poDate = id('po-date').value;
+        const isExtra = id('po-is-extra').checked;
+        const outBatch = id('po-output-batch').value || ('OP-' + crypto.randomUUID().substring(0,6).toUpperCase());
+        const outExpiry = id('po-output-expiry').value;
+
+        show(id('loading-overlay'));
+        try {
+            const mappedIngredients = rec.ingredients.map(ing => ({
+                productId: ing.productId,
+                quantity: ing.quantity,
+                consumptionPlan: window.currentPoPlan[ing.productId]?.plan || []
+            }));
+
+            const newOp = {
+                recipeId: rId,
+                recipeCategory: rec.category || 'Diversos',
+                quantityMultiplier: mult,
+                date: poDate,
+                isExtra: isExtra,
+                status: 'pendente',
+                ingredients: mappedIngredients,
+                outputBatch: outBatch,
+                outputExpiry: outExpiry,
+                totalOutput: parseFloat(id('po-total-output').value) || 0,
+                picking: { status: 'pendente', responsible: '', start: null, end: null, duration: 0, pickedItems: {} }
+            };
+            
+            await DB.add('productionOrders', newOp);
+            await refreshData();
+            hide(id('production-order-modal'));
+            window.showNotif('OP Gerada com Sucesso e Itens Reservados!');
+        } catch(err) {
+            window.showNotif('Erro ao gerar OP.', true);
+        } finally {
+            hide(id('loading-overlay'));
+        }
+    });
+
+    // --- EFETIVAR (CONSUMIR/GERAR) OPs ---
+    window.renderPO = function() {
+        const list = id('production-orders-list');
+        if(!list) return;
+        
+        const activeOps = localProductionOrders.filter(o => o.status === 'pendente' || o.status === 'em_andamento').sort((a,b) => new Date(a.date) - new Date(b.date));
+        
+        if(activeOps.length === 0) {
+            list.innerHTML = `<div class="md:col-span-2 text-center py-10 text-ios-textMuted border border-dashed border-ios-border rounded-xl">Nenhuma Ordem de Produção pendente.</div>`;
+            return;
+        }
+        
+        list.innerHTML = activeOps.map(op => {
+            const r = localRecipes.find(x => x.id === op.recipeId);
+            const poDate = new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR');
+            return `
+            <div class="card p-5 hover:border-ios-blue transition-colors flex gap-4 items-start ${op.isExtra ? 'border-ios-orange/50 bg-ios-orange/5' : ''}">
+                <div class="mt-1">
+                    <input type="checkbox" class="ui-checkbox ui-checkbox-success po-checkbox" value="${op.id}">
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg text-white leading-tight">${r ? r.name : 'Desconhecida'}</h3>
+                        ${op.isExtra ? `<span class="badge bg-ios-orange text-white text-[10px] ml-2 shrink-0">Extra</span>` : ''}
+                    </div>
+                    <p class="text-sm text-ios-textMuted mb-2">Multiplicador: <span class="font-bold text-white">${op.quantityMultiplier}x</span> | Data: ${poDate}</p>
+                    <div class="bg-ios-bg p-3 rounded-lg border border-ios-border text-xs">
+                        <p class="text-ios-textMuted mb-1 font-semibold uppercase">Progresso Separação (Picking):</p>
+                        ${renderPickingProgressMini(op)}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    };
+
+    function renderPickingProgressMini(op) {
+        let req = 0, picked = 0;
+        if(op.ingredients) {
+            op.ingredients.forEach(i => {
+                req += (i.quantity * op.quantityMultiplier);
+                picked += (op.picking?.pickedItems?.[i.productId] || 0);
+            });
+        }
+        if (req === 0) return '<span class="text-ios-textMuted">Sem insumos</span>';
+        
+        const displayPct = Math.round((picked / req) * 100);
+        let color = displayPct >= 100 ? 'bg-ios-green' : 'bg-ios-blue';
+        return `
+            <div class="w-full bg-ios-cardHover rounded-full h-2 mt-1 relative overflow-hidden">
+                <div class="${color} h-2 rounded-full transition-all" style="width: ${Math.min(100, displayPct)}%"></div>
+            </div>
+            <p class="text-right text-[10px] mt-1 ${displayPct >= 100 ? 'text-ios-green font-bold' : 'text-ios-textMuted'}">${displayPct}% Completo</p>
+        `;
+    }
+
+    addEvt('btn-confirm-production', 'click', async () => {
+        const checkboxes = document.querySelectorAll('.po-checkbox:checked');
+        if(checkboxes.length === 0) return window.showNotif('Selecione pelo menos uma OP marcando a caixa.', true);
+
+        window.showConfirmationModal('Efetivar OPs Selecionadas?', 'Isso consumirá os insumos considerando o volume SEPARADO. Para semi-acabados, gerará saldo no estoque.', async () => {
+            show(id('loading-overlay'));
+            try {
+                for(let cb of checkboxes) {
+                    const op = localProductionOrders.find(o => o.id === cb.value);
+                    if(!op) continue;
+                    const rec = localRecipes.find(r => r.id === op.recipeId);
+                    
+                    // 1. Dar saída (consumir) ingredientes baseados no que foi SEPARADO
+                    for(let ing of (op.ingredients || [])) {
+                        const pickedAmount = op.picking?.pickedItems?.[ing.productId];
+                        const amountToConsume = pickedAmount !== undefined ? pickedAmount : (ing.quantity * op.quantityMultiplier);
+
+                        if(amountToConsume <= 0) continue; 
+
+                        let remainingToConsume = amountToConsume;
+                        
+                        // A. Consome primeiro dos lotes que haviam sido reservados no plano
+                        for(let plan of (ing.consumptionPlan || [])) {
+                            if(remainingToConsume <= 0) break;
+                            const batch = await DB.get('batches', plan.batchId);
+                            if(batch) {
+                                const planDeduct = Math.min(plan.quantity, remainingToConsume);
+                                if(planDeduct > 0) {
+                                    batch.quantity -= planDeduct;
+                                    await DB.update('batches', batch);
+                                    await DB.add('history', { productId: ing.productId, batchCode: batch.code, type: 'saída', quantity: planDeduct, date: new Date().toISOString().split('T')[0], reason: `OP: ${rec?.name}` });
+                                    remainingToConsume -= planDeduct;
+                                }
+                            }
+                        }
+
+                        // B. Se sobrou quantidade para consumir (excesso na separação), consome via FIFO dos lotes disponíveis
+                        if(remainingToConsume > 0) {
+                            const { plan: extraPlan } = getFIFOPlan(ing.productId, remainingToConsume);
+                            for(let p of extraPlan) {
+                                const batch = await DB.get('batches', p.batchId);
+                                if(batch) {
+                                    batch.quantity -= p.quantity;
+                                    await DB.update('batches', batch);
+                                    await DB.add('history', { productId: ing.productId, batchCode: batch.code, type: 'saída', quantity: p.quantity, date: new Date().toISOString().split('T')[0], reason: `OP (Excesso): ${rec?.name}` });
+                                    remainingToConsume -= p.quantity;
+                                }
+                            }
+                            
+                            // C. Se o estoque físico zerou mas ainda tem que consumir, força um lote para absorver o negativo
+                            if(remainingToConsume > 0) {
+                                let anyBatch = (await DB.getAll('batches')).find(b => b.productId === ing.productId);
+                                if(!anyBatch) {
+                                    anyBatch = { productId: ing.productId, code: 'LT-FANTASMA', location: 'S/ LOCAL', quantity: 0, expiryDate: null, isReleased: true };
+                                    anyBatch.id = await DB.add('batches', anyBatch);
+                                }
+                                anyBatch.quantity -= remainingToConsume;
+                                await DB.update('batches', anyBatch);
+                                await DB.add('history', { productId: ing.productId, batchCode: anyBatch.code, type: 'saída', quantity: remainingToConsume, date: new Date().toISOString().split('T')[0], reason: `OP (Falta Estoque): ${rec?.name}` });
+                            }
+                        }
+                    }
+
+                    // 2. Dar entrada do produto se for semi-acabado
+                    if(rec && rec.isSemi) {
+                        let prod = localInventory.find(i => String(i.name).toLowerCase() === String(rec.name).toLowerCase() && i.type === 'semi_acabado');
+                        if(!prod) {
+                            prod = { code: '', name: rec.name, type: 'semi_acabado', supplier: 'Produção Interna', totalQuantity: 0, minStock: 0, leadTime: 0 };
+                            prod.id = await DB.add('inventory', prod);
+                        }
+                        const outQty = parseFloat(op.totalOutput) || (parseFloat(rec.outputYield || 1) * op.quantityMultiplier);
+                        await DB.add('batches', { productId: prod.id, code: op.outputBatch, location: 'PRODUÇÃO', quantity: outQty, expiryDate: op.outputExpiry, isReleased: true });
+                        await DB.add('history', { productId: prod.id, batchCode: op.outputBatch, type: 'entrada', quantity: outQty, date: new Date().toISOString().split('T')[0], reason: `OP Concluída` });
+                    }
+
+                    // 3. Muda Status da OP
+                    op.status = 'concluida';
+                    await DB.update('productionOrders', op);
+                }
+
+                await refreshData();
+                window.showNotif('OPs Efetivadas com Sucesso! Estoque atualizado.');
+            } catch(e) {
+                console.error(e);
+                window.showNotif('Erro ao efetivar OP. Tente novamente.', true);
+            } finally {
+                hide(id('loading-overlay'));
+            }
+        });
+    });
+
+    // --- SEPARAÇÃO (PICKING) ---
+    window.lastPickerName = '';
+
+    window.renderPickingScreen = function() {
+        const cont = id('picking-lines-container');
+        if(!cont) return;
+        
+        const activeOps = localProductionOrders.filter(o => o.status === 'pendente' || o.status === 'em_andamento');
+        if(activeOps.length === 0) {
+            cont.innerHTML = `<div class="card border border-dashed border-ios-border flex items-center justify-center p-10"><div class="text-center"><i class="fa-solid fa-dolly text-4xl text-ios-textMuted mb-4"></i><p class="text-ios-textMuted font-medium">Nenhuma OP ativa para separação.</p></div></div>`;
+            return;
+        }
+
+        const lines = {};
+        activeOps.forEach(op => {
+            const cat = op.recipeCategory || 'Diversos';
+            if(!lines[cat]) lines[cat] = { ops: [], items: {} };
+            lines[cat].ops.push(op.id);
+            
+            (op.ingredients || []).forEach(ing => {
+                if(!lines[cat].items[ing.productId]) {
+                    const p = localInventory.find(i=>i.id===ing.productId);
+                    lines[cat].items[ing.productId] = { req: 0, picked: 0, name: p?.name || 'Desconhecido', barcode: p?.barcode || p?.code || '' };
+                }
+                lines[cat].items[ing.productId].req += (ing.quantity * op.quantityMultiplier);
+                lines[cat].items[ing.productId].picked += (op.picking?.pickedItems?.[ing.productId] || 0);
+            });
+        });
+
+        let html = '';
+        for(let cat in lines) {
+            const line = lines[cat];
+            
+            const itemsHtml = Object.keys(line.items).map(pId => {
+                const item = line.items[pId];
+                const isComplete = item.picked >= item.req;
+                return `<div class="flex justify-between items-center py-3 border-b border-ios-border last:border-0">
+                    <div>
+                        <p class="font-bold text-sm text-white ${isComplete ? 'line-through text-ios-green' : ''}">${item.name}</p>
+                        <p class="text-xs text-ios-textMuted font-mono">Cód: ${item.barcode || 'N/D'}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-ios-textMuted">Separado:</span> 
+                        <span class="font-bold text-lg ${isComplete ? 'text-ios-green' : 'text-ios-blue'}">${item.picked.toFixed(2)}</span> 
+                        <span class="text-xs text-ios-textMuted">/ ${item.req.toFixed(2)}</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            html += `<div class="card mb-6 border-l-4 border-l-ios-orange">
+                <div class="flex justify-between items-center mb-4 border-b border-ios-border pb-4">
+                    <h2 class="title-md mb-0 text-white"><i class="fa-solid fa-layer-group mr-2 text-ios-orange"></i>Linha: ${cat}</h2>
+                    <span class="badge bg-ios-orange/20 text-ios-orange">${line.ops.length} OPs na fila</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5 bg-ios-bg p-4 rounded-xl border border-ios-border items-end">
+                    <div class="md:col-span-1">
+                        <label class="form-label text-xs">Responsável</label>
+                        <input type="text" id="picker-name-${cat.replace(/\s+/g, '-')}" class="form-input py-2 text-sm picker-name-input" placeholder="Seu Nome" value="${window.lastPickerName || ''}">
+                    </div>
+                    <div class="md:col-span-2 relative">
+                        <label class="form-label text-xs flex justify-between">
+                            <span>Cód. Insumo / Barras</span>
+                            <button type="button" class="text-ios-blue text-[10px] bg-ios-blue/10 px-2 py-0.5 rounded hover:bg-ios-blue/20 btn-scan-cam-pick" data-cat="${cat.replace(/\s+/g, '-')}"><i class="fa-solid fa-camera mr-1"></i>Câmera</button>
+                        </label>
+                        <input type="text" id="picking-scan-${cat.replace(/\s+/g, '-')}" class="form-input py-2 text-sm font-mono text-ios-green focus:border-ios-green" placeholder="Bipe o item...">
+                        <div id="cam-reader-${cat.replace(/\s+/g, '-')}" class="w-full hidden mt-2 border border-ios-border rounded-xl bg-black overflow-hidden absolute z-50 shadow-2xl"></div>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="form-label text-xs">Quantidade</label>
+                            <input type="number" id="picking-qty-${cat.replace(/\s+/g, '-')}" class="form-input py-2 text-sm text-center font-bold" value="1" min="0.01" step="0.01">
+                        </div>
+                        <button class="btn-primary py-2 px-4 h-[38px] w-[38px] flex items-center justify-center btn-pick-add shrink-0" data-cat="${cat}" data-cid="${cat.replace(/\s+/g, '-')}">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xs font-semibold text-ios-textMuted uppercase mb-2">Lista Agregada de Insumos</h3>
+                    <div class="bg-ios-bg border border-ios-border rounded-xl px-4 py-1">${itemsHtml}</div>
+                </div>
+            </div>`;
+        }
+        cont.innerHTML = html;
+    };
+
+    addEvt('picking-lines-container', 'click', async e => {
+        const btnCam = e.target.closest('.btn-scan-cam-pick');
+        if(btnCam) {
+            const cid = btnCam.dataset.cat;
+            window.toggleCamera(`cam-reader-${cid}`, `picking-scan-${cid}`);
+            return;
+        }
+
+        const btnAdd = e.target.closest('.btn-pick-add');
+        if(!btnAdd) return;
+        
+        const cat = btnAdd.dataset.cat;
+        const cid = btnAdd.dataset.cid;
+        const pickerName = id(`picker-name-${cid}`).value.trim();
+        const scanCode = id(`picking-scan-${cid}`).value.trim();
+        const qty = parseFloat(id(`picking-qty-${cid}`).value);
+
+        if(!pickerName) return window.showNotif('Informe o nome do responsável.', true);
+        if(!scanCode || qty <= 0 || isNaN(qty)) return window.showNotif('Informe o código e quantidade válida.', true);
+        
+        window.lastPickerName = pickerName;
+        document.querySelectorAll('.picker-name-input').forEach(i => i.value = pickerName);
+
+        const prod = localInventory.find(i => String(i.code) === scanCode || String(i.barcode) === scanCode);
+        if(!prod) return window.showNotif('Produto não encontrado no sistema.', true);
+
+        show(id('loading-overlay'));
+        try {
+            let remainingToAdd = qty;
+            const activeOps = localProductionOrders.filter(o => (o.status === 'pendente' || o.status === 'em_andamento') && o.recipeCategory === cat);
+            
+            let itemBelongsToLine = false;
+
+            for(let op of activeOps) {
+                if(remainingToAdd <= 0) break;
+                
+                const opIng = (op.ingredients || []).find(i => i.productId === prod.id);
+                if(opIng) {
+                    itemBelongsToLine = true;
+                    if(!op.picking) op.picking = { status: 'em_andamento', responsible: pickerName, pickedItems: {} };
+                    if(!op.picking.pickedItems) op.picking.pickedItems = {};
+                    
+                    const neededForThisOp = opIng.quantity * op.quantityMultiplier;
+                    const pickedSoFar = op.picking.pickedItems[prod.id] || 0;
+                    const missing = neededForThisOp - pickedSoFar;
+                    
+                    if(missing > 0) {
+                        const addHere = Math.min(missing, remainingToAdd);
+                        op.picking.pickedItems[prod.id] = pickedSoFar + addHere;
+                        op.picking.responsible = pickerName;
+                        op.status = 'em_andamento';
+                        remainingToAdd -= addHere;
+                        await DB.update('productionOrders', op);
+                    }
+                }
+            }
+
+            if(remainingToAdd > 0 && itemBelongsToLine) {
+                for(let op of activeOps) {
+                    const opIng = (op.ingredients || []).find(i => i.productId === prod.id);
+                    if(opIng) {
+                        if(!op.picking) op.picking = { status: 'em_andamento', responsible: pickerName, pickedItems: {} };
+                        if(!op.picking.pickedItems) op.picking.pickedItems = {};
+                        op.picking.pickedItems[prod.id] = (op.picking.pickedItems[prod.id] || 0) + remainingToAdd;
+                        op.picking.responsible = pickerName;
+                        op.status = 'em_andamento';
+                        remainingToAdd = 0;
+                        await DB.update('productionOrders', op);
+                        break;
+                    }
+                }
+            }
+
+            if(!itemBelongsToLine) {
+                window.showNotif(`O item ${prod.name} não faz parte das receitas desta linha!`, true);
+            } else {
+                window.showNotif(`+${qty} de ${prod.name} separado!`);
+                id(`picking-scan-${cid}`).value = '';
+                id(`picking-qty-${cid}`).value = 1;
+                id(`picking-scan-${cid}`).focus();
+                await refreshData();
+            }
+        } catch(err) {
+            window.showNotif('Erro ao processar separação.', true);
+        } finally {
+            hide(id('loading-overlay'));
+        }
+    });
+
+    addEvt('picking-lines-container', 'keypress', e => {
+        if(e.key === 'Enter' && e.target.id && e.target.id.startsWith('picking-scan-')) {
+            e.preventDefault();
+            const cid = e.target.id.replace('picking-scan-', '');
+            const btn = document.querySelector(`.btn-pick-add[data-cid="${cid}"]`);
+            if(btn) btn.click();
+        }
+    });
+
+    // --- CONSUMO MENSAL ---
+    window.renderConsum = function() {
+        const body = id('consumption-table-body');
+        if(!body) return;
+        body.innerHTML = `<tr><td colspan="2" class="base-td text-center text-ios-textMuted py-8">Os relatórios mensais são gerados no fechamento do período.</td></tr>`;
+    }
+
+    window.updateSidebarBadges = function() {
+        const badgeProd = id('badge-nav-prod');
+        const activeOps = localProductionOrders.filter(o => o.status === 'pendente' || o.status === 'em_andamento');
+        if(badgeProd) { activeOps.length > 0 ? show(badgeProd) : hide(badgeProd); }
+        
+        const badgePick = id('badge-nav-picking');
+        if(badgePick) { activeOps.length > 0 ? show(badgePick) : hide(badgePick); }
+    }
 
     // --- ENTRADA DE ESTOQUE EM MASSA (CSV/XLSX) ---
     addEvt('btn-upload-backup', 'click', () => id('backup-file-input')?.click());
@@ -1251,10 +2097,10 @@
                 }
 
                 await refreshData();
-                showNotif(`Importação concluída! ${countNovos} produtos criados, ${countAtualizados} atualizados.`);
-            } catch(err) { showNotif('Erro na leitura do arquivo CSV/Excel. Verifique o formato.', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; hide(id('loading-overlay')); }
+                window.showNotif(`Importação concluída! ${countNovos} produtos criados, ${countAtualizados} atualizados.`);
+            } catch(err) { window.showNotif('Erro na leitura do arquivo CSV/Excel. Verifique o formato.', true); } finally { if(id('backup-file-input')) id('backup-file-input').value=''; hide(id('loading-overlay')); }
         }; 
-        reader.readAsArrayBuffer(file); // Correção chave para não corromper caracteres de CSV
+        reader.readAsArrayBuffer(file);
     });
 
 </script>
