@@ -98,7 +98,7 @@
         
         .form-input { transition: all 0.4s ease; }
         
-        #main-camera-reader video, #picking-camera-reader video, #entry-camera-reader video { border-radius: 0.75rem; width: 100% !important; height: auto !important; object-fit: cover;}
+        #main-camera-reader video, #picking-camera-reader video, #entry-camera-reader video, #entry-loc-camera-reader video, #address-camera-reader video { border-radius: 0.75rem; width: 100% !important; height: auto !important; object-fit: cover;}
     </style>
 </head>
 <body class="bg-ios-bg text-ios-text font-sans antialiased flex h-screen overflow-hidden w-full relative">
@@ -152,7 +152,8 @@
             </div>
             <nav class="flex-1 w-full px-3 space-y-2 overflow-y-auto">
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="dashboard"><i class="fa-solid fa-chart-pie w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Visão Geral</span></a>
-                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="scanner"><i class="fa-solid fa-barcode w-6 text-center text-lg text-ios-green"></i><span class="ml-3 hidden lg:block font-medium text-ios-green">Cód. Barras (Leitura)</span></a>
+                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="addressing"><i class="fa-solid fa-map-location-dot w-6 text-center text-lg text-ios-blue"></i><span class="ml-3 hidden lg:block font-medium text-ios-blue">Endereçamento (Local)</span></a>
+                <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="scanner"><i class="fa-solid fa-barcode w-6 text-center text-lg text-ios-green"></i><span class="ml-3 hidden lg:block font-medium text-ios-green">Cód. Barras (Item)</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="entry"><i class="fa-solid fa-box-open w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Entrada Lote</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="inventory"><i class="fa-solid fa-boxes-stacked w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Estoque Geral</span></a>
                 <a href="#" class="nav-item p-3 rounded-xl flex items-center w-full text-ios-textMuted hover:bg-ios-card hover:text-white transition-all" data-target="recipes"><i class="fa-solid fa-book-bookmark w-6 text-center text-lg"></i><span class="ml-3 hidden lg:block font-medium">Receitas</span></a>
@@ -248,7 +249,47 @@
                 <div class="card"><h2 class="title-md">Curva ABC de Consumo</h2><div class="h-64"><canvas id="abc-curve-chart"></canvas></div></div>
             </div>
 
-            <!-- NOVO: Leitor de Scanner (Cadastro e Associação) -->
+            <!-- Consulta Endereçamento -->
+            <div id="screen-addressing" class="screen-panel hidden flex-col items-center max-w-5xl mx-auto py-10">
+                <h1 class="title-lg w-full text-center text-ios-blue mb-2"><i class="fa-solid fa-map-location-dot mr-3"></i>Consulta de Endereçamento</h1>
+                <p class="text-ios-textMuted mb-8 text-center">Bipe o local (Rua/Prateleira) para ver os insumos armazenados e as reservas de produção.</p>
+                
+                <div class="flex gap-4 w-full max-w-md mx-auto mb-4">
+                    <button id="btn-start-camera-address" class="btn-secondary w-full py-4 text-ios-blue border-ios-blue/30 bg-ios-blue/10" onclick="toggleCamera('address-camera-reader', 'address-input')"><i class="fa-solid fa-camera mr-2"></i>Ler Câmera</button>
+                </div>
+                
+                <div id="address-camera-reader" class="w-full max-w-md mx-auto hidden mb-6 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
+                
+                <div class="w-full card bg-ios-cardHover border-2 border-ios-blue/30 p-8 shadow-2xl relative overflow-hidden">
+                    <input type="text" id="address-input" class="w-full bg-ios-bg border-2 border-ios-border text-white text-3xl font-mono text-center py-6 rounded-2xl focus:border-ios-blue focus:ring-4 focus:ring-ios-blue/20 transition-all outline-none uppercase" placeholder="Bipe o Código do Local..." autocomplete="off">
+                </div>
+
+                <div id="address-result-box" class="w-full card mt-6 hidden flex-col transition-all duration-300 opacity-0 transform translate-y-4">
+                    <div class="flex justify-between items-center border-b border-ios-border pb-4 mb-4">
+                        <h2 class="text-2xl font-bold text-white mb-1"><i class="fa-solid fa-location-dot mr-2 text-ios-blue"></i> Local: <span id="address-res-name" class="text-ios-blue"></span></h2>
+                        <span class="badge bg-ios-cardHover border border-ios-border text-ios-textMuted px-3 py-1" id="address-res-count">0 Lotes</span>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="base-table">
+                            <thead class="base-thead">
+                                <tr>
+                                    <th class="base-th">Produto</th>
+                                    <th class="base-th">Lote</th>
+                                    <th class="base-th">Validade</th>
+                                    <th class="base-th text-right">Físico Total</th>
+                                    <th class="base-th text-right text-ios-orange">Reservado (OP)</th>
+                                    <th class="base-th text-right text-ios-green">Saldo Livre</th>
+                                </tr>
+                            </thead>
+                            <tbody id="address-table-body" class="divide-y divide-ios-border">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leitor de Scanner (Cadastro e Associação) -->
             <div id="screen-scanner" class="screen-panel hidden flex-col items-center max-w-4xl mx-auto py-10">
                 <h1 class="title-lg w-full text-center text-ios-green mb-2"><i class="fa-solid fa-barcode mr-3"></i>Leitor de Código de Barras</h1>
                 <p class="text-ios-textMuted mb-8 text-center">Bipe a embalagem da matéria-prima com a câmera ou leitor físico. O sistema vai reconhecer ou pedir para você associar ao cadastro.</p>
@@ -257,7 +298,6 @@
                     <button id="btn-start-camera-main" class="btn-secondary w-full py-4 text-ios-blue border-ios-blue/30 bg-ios-blue/10"><i class="fa-solid fa-camera mr-2"></i>Usar Câmera do Dispositivo</button>
                 </div>
 
-                <!-- Container do Leitor da Câmera -->
                 <div id="main-camera-reader" class="w-full max-w-md mx-auto hidden mb-6 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
                 
                 <div class="w-full card bg-ios-cardHover border-2 border-ios-green/30 p-8 shadow-2xl relative overflow-hidden">
@@ -265,7 +305,7 @@
                     <input type="text" id="scanner-input" class="w-full bg-ios-bg border-2 border-ios-border text-white text-3xl font-mono text-center py-6 rounded-2xl focus:border-ios-green focus:ring-4 focus:ring-ios-green/20 transition-all outline-none" placeholder="Aguardando código..." autocomplete="off">
                 </div>
 
-                <!-- Resultado de Leitura (Produto Conhecido) -->
+                <!-- Resultado de Leitura -->
                 <div id="scanner-result-box" class="w-full card mt-6 hidden flex-col transition-all duration-300 opacity-0 transform translate-y-4">
                     <div class="flex justify-between items-start">
                         <div>
@@ -283,7 +323,7 @@
                     </div>
                 </div>
 
-                <!-- Associação de Leitura (Produto NÃO Conhecido) -->
+                <!-- Associação de Leitura -->
                 <div id="scanner-associate-box" class="w-full card mt-6 hidden flex-col border-ios-orange/50 transition-all duration-300 opacity-0 transform translate-y-4">
                     <div class="flex items-center text-ios-orange mb-4">
                         <i class="fa-solid fa-triangle-exclamation text-2xl mr-3"></i>
@@ -309,14 +349,23 @@
                     </div>
                     <form id="entry-form">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div class="md:col-span-2">
+                            <div class="md:col-span-1">
                                 <label class="form-label flex justify-between items-end mb-1">
-                                    <span>Código do Produto / Código de Barras</span>
+                                    <span>Código do Produto / Barras</span>
                                     <button type="button" id="btn-start-camera-entry" class="text-ios-blue text-xs flex items-center bg-ios-blue/10 px-2 py-1 rounded hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-camera mr-1"></i>Ler Câmera</button>
                                 </label>
-                                <input type="text" id="entry-product-code" name="product-code" class="form-input text-lg font-mono placeholder:text-sm placeholder:font-sans" placeholder="Busca automática ao digitar...">
-                                <div id="entry-camera-reader" class="w-full max-w-sm mx-auto hidden mt-2 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
+                                <input type="text" id="entry-product-code" name="product-code" class="form-input text-lg font-mono placeholder:text-sm placeholder:font-sans" placeholder="Busca automática...">
+                                <div id="entry-camera-reader" class="w-full hidden mt-2 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
                             </div>
+                            <div class="md:col-span-1">
+                                <label class="form-label flex justify-between items-end mb-1">
+                                    <span>Endereço (Rua/Prateleira)</span>
+                                    <button type="button" onclick="toggleCamera('entry-loc-camera-reader', 'entry-location')" class="text-ios-blue text-xs flex items-center bg-ios-blue/10 px-2 py-1 rounded hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-camera mr-1"></i>Ler Câmera</button>
+                                </label>
+                                <input type="text" id="entry-location" name="location" class="form-input uppercase" placeholder="Ex: RUA-A-01">
+                                <div id="entry-loc-camera-reader" class="w-full hidden mt-2 border border-ios-border rounded-xl bg-black overflow-hidden"></div>
+                            </div>
+                            
                             <div class="md:col-span-2">
                                 <label class="form-label">Nome do Produto</label>
                                 <input type="text" name="product-name" required class="form-input">
@@ -338,7 +387,7 @@
                             <div><label class="form-label">Data de Fabricação</label><input type="date" id="mfg-date" class="form-input"></div>
                             <div><label class="form-label">Data de Validade</label><input type="date" id="expiry-date" class="form-input"></div>
                         </div>
-                        <div class="mt-8 flex justify-end"><button type="submit" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Registrar no Estoque</button></div>
+                        <div class="mt-8 flex justify-end"><button type="submit" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Registrar Entrada</button></div>
                     </form>
                 </div>
             </div>
@@ -411,7 +460,7 @@
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="title-lg mb-0">Ordens de Produção (OP)</h1>
                     <div class="flex gap-3">
-                        <button id="btn-confirm-production" class="btn-success"><i class="fa-solid fa-check-double mr-2"></i>Efetivar OPs Selecionadas</button>
+                        <button id="btn-confirm-production" class="btn-success"><i class="fa-solid fa-check-double mr-2"></i>Efetivar OPs</button>
                         <button id="btn-new-production-order" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Nova OP</button>
                     </div>
                 </div>
@@ -463,7 +512,7 @@
                 </div>
             </div>
 
-            <!-- Ajustes -->
+            <!-- Ajustes Lote -->
             <div id="screen-adjustments" class="screen-panel hidden">
                 <h1 class="title-lg">Ajuste Manual de Lote</h1>
                 <div class="card max-w-2xl mx-auto">
@@ -489,8 +538,8 @@
                     </div>
                     <div class="pt-8">
                         <h2 class="title-md mb-1"><i class="fa-solid fa-file-excel mr-2 text-ios-green"></i>Importar Planilha (Entrada em Massa)</h2>
-                        <p class="text-sm text-ios-textMuted mb-3">Faça o upload do seu relatório de estoque (<b>.csv</b> ou <b>.xlsx</b>) para dar entrada automática em todos os produtos, quantidades e lotes.</p>
-                        <button id="btn-upload-backup" class="w-full btn-secondary text-ios-green border-ios-green/30 bg-ios-green/10"><i class="fa-solid fa-file-import mr-2"></i>Selecionar Arquivo (.csv / .xlsx)</button>
+                        <p class="text-sm text-ios-textMuted mb-3">Faça o upload do seu relatório de estoque (<b>.csv</b> ou <b>.xlsx</b>) para dar entrada automática.</p>
+                        <button id="btn-upload-backup" class="w-full btn-secondary text-ios-green border-ios-green/30 bg-ios-green/10"><i class="fa-solid fa-file-import mr-2"></i>Selecionar Arquivo</button>
                         <input type="file" id="backup-file-input" class="hidden" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
                     </div>
                     <div class="pt-8">
@@ -503,7 +552,9 @@
         </main>
     </div>
 
-    <!-- Modais -->
+    <!-- Modais Picking, Recipes, PO, DB Alerts (simplificados para não travar o visual) -->
+    
+    <!-- Picking Modal -->
     <div id="picking-modal" class="modal z-[60]">
         <div class="modal-content max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0 bg-ios-bg border border-ios-border">
             <div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover">
@@ -517,7 +568,6 @@
             <div id="picking-setup-view" class="p-10 flex flex-col items-center justify-center bg-ios-card h-[50vh]">
                 <i class="fa-solid fa-clipboard-user text-6xl text-ios-orange mb-6"></i>
                 <h3 class="text-2xl font-bold text-white mb-2">Quem vai separar esta linha?</h3>
-                <p class="text-ios-textMuted text-sm mb-8 text-center max-w-md">Insira o seu nome abaixo para iniciar o cronômetro independente desta linha.</p>
                 <input type="text" id="picking-responsible" class="form-input max-w-xs text-center text-xl py-4 mb-6 shadow-inner border border-ios-border" placeholder="O seu nome aqui" autocomplete="off">
                 <button id="btn-start-picking" class="btn-success py-4 px-10 text-lg rounded-full shadow-lg shadow-ios-green/20 hover:-translate-y-1 transform transition"><i class="fa-solid fa-play mr-2"></i> Iniciar Cronômetro</button>
             </div>
@@ -566,31 +616,21 @@
         </div>
     </div>
 
-    <!-- Modal Receita -->
+    <!-- Recipe Modal -->
     <div id="recipe-modal" class="modal">
         <div class="modal-content max-w-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6"><h2 id="recipe-modal-title" class="title-md mb-0">Nova Receita</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="recipe-modal">&times;</button></div>
             <form id="recipe-form" class="space-y-5">
                 <input type="hidden" id="edit-recipe-id">
                 <div><label class="form-label">Nome da Ficha Técnica / Receita</label><input type="text" id="recipe-name" required class="form-input font-semibold text-lg" placeholder="Ex: Massa de Coxinha ou Bolo de Cenoura"></div>
-                <div>
-                    <label class="form-label">Linha Produtiva</label>
-                    <input type="text" id="recipe-category" list="category-options" required class="form-input" placeholder="Selecione ou digite uma nova linha (ex: Salgados, Pães...)">
-                    <datalist id="category-options">
-                        <option value="Salgados"></option>
-                        <option value="Pães"></option>
-                        <option value="Confeitaria"></option>
-                        <option value="Bases"></option>
-                    </datalist>
-                </div>
+                <div><label class="form-label">Linha Produtiva</label><input type="text" id="recipe-category" list="category-options" required class="form-input" placeholder="Selecione ou digite..."><datalist id="category-options"><option value="Salgados"></option><option value="Pães"></option><option value="Confeitaria"></option><option value="Bases"></option></datalist></div>
                 <div class="p-5 bg-ios-blue/10 border border-ios-blue/30 rounded-xl">
                     <label class="flex items-center space-x-3 cursor-pointer mb-2">
                         <input type="checkbox" id="recipe-is-semi" class="ui-checkbox">
                         <span class="text-sm font-semibold text-white ml-1">Esta receita gera um produto Semi-Acabado</span>
                     </label>
-                    <p class="text-xs text-ios-textMuted mb-4 mt-2">Se marcado, a receita entra no estoque como Insumo. Se NÃO marcado, é Acabado.</p>
                     <div id="yield-wrapper" class="hidden pt-4 border-t border-ios-blue/20">
-                        <label class="form-label text-ios-blue font-bold">Rendimento (Quantidade FÍSICA que entra no estoque ao processar 1 receita)</label>
+                        <label class="form-label text-ios-blue font-bold">Rendimento (Quantidade gerada)</label>
                         <input type="number" id="recipe-yield" min="0.001" step="0.001" value="1" class="form-input text-ios-blue font-bold text-lg" placeholder="Ex: 2.5">
                     </div>
                 </div>
@@ -604,127 +644,84 @@
         </div>
     </div>
 
-    <!-- Modal OP -->
+    <!-- OP Modal -->
     <div id="production-order-modal" class="modal">
         <div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6"><h2 id="production-order-modal-title" class="title-md mb-0">Gerar Ordem de Produção (OP)</h2><button class="text-ios-textMuted hover:text-white text-2xl close-modal" data-target="production-order-modal">&times;</button></div>
             <form id="production-order-form">
                 <input type="hidden" id="edit-po-id">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-ios-bg border border-ios-border p-5 rounded-2xl mb-6 shadow-inner items-start relative z-50">
-                    <div class="md:col-span-2 relative">
-                        <label class="form-label">Receita / Produto a Fabricar</label>
-                        <div id="po-recipe-searchable-container" class="searchable-container"></div>
-                    </div>
-                    <div><label class="form-label">Multiplicador (Qtd Receitas)</label><input type="number" id="po-quantity" value="1" min="0.01" step="0.01" required class="form-input text-ios-blue font-bold text-lg"></div>
+                    <div class="md:col-span-2 relative"><label class="form-label">Receita / Produto</label><div id="po-recipe-searchable-container" class="searchable-container"></div></div>
+                    <div><label class="form-label">Multiplicador</label><input type="number" id="po-quantity" value="1" min="0.01" step="0.01" required class="form-input text-ios-blue font-bold text-lg"></div>
                     <div class="md:col-span-1 mt-2"><label class="form-label">Data Agendada</label><input type="date" id="po-date" required class="form-input"></div>
                     <div class="md:col-span-4 mt-2">
-                        <label class="flex items-center gap-3 cursor-pointer bg-ios-orange/10 p-3 rounded-xl border border-ios-orange/30 w-max hover:bg-ios-orange/20 transition-colors">
-                            <input type="checkbox" id="po-is-extra" class="ui-checkbox">
-                            <span class="text-sm font-bold text-ios-orange ml-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> OP Extra / Urgente (Menos de 48h)</span>
-                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer bg-ios-orange/10 p-3 rounded-xl border border-ios-orange/30 w-max hover:bg-ios-orange/20 transition-colors"><input type="checkbox" id="po-is-extra" class="ui-checkbox"><span class="text-sm font-bold text-ios-orange ml-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> OP Extra (Menos de 48h)</span></label>
                     </div>
                     <div id="po-output-fields" class="col-span-1 md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-4 border-t border-ios-border hidden">
-                        <div><label class="form-label">Total Gerado (Entrada Físico)</label><input type="text" id="po-total-output" readonly class="form-input bg-gray-800 text-ios-green font-bold text-lg border-none" value="0.0000" title="Calculado = Rendimento x Multiplicador"></div>
-                        <div><label class="form-label">Lote Sugerido (Saída)</label><input type="text" id="po-output-batch" class="form-input"></div>
-                        <div><label class="form-label">Validade Lote Gerado</label><input type="date" id="po-output-expiry" class="form-input"></div>
+                        <div><label class="form-label">Total Gerado (Entrada)</label><input type="text" id="po-total-output" readonly class="form-input bg-gray-800 text-ios-green font-bold text-lg border-none" value="0.0000"></div>
+                        <div><label class="form-label">Lote Sugerido</label><input type="text" id="po-output-batch" class="form-input"></div>
+                        <div><label class="form-label">Validade Gerado</label><input type="date" id="po-output-expiry" class="form-input"></div>
                     </div>
                 </div>
                 <h3 class="title-md text-sm uppercase text-ios-textMuted mb-3">Previsão de Consumo</h3>
-                <div class="table-container mb-6">
-                    <table class="base-table">
-                        <thead class="base-thead"><tr><th class="base-th">Insumo</th><th class="base-th">Estoque Atual</th><th class="base-th">Qtd a Descontar</th><th class="base-th">Lotes Reservados</th></tr></thead>
-                        <tbody id="po-ingredients-body"></tbody>
-                    </table>
-                </div>
-                <div class="flex justify-end"><button type="submit" class="btn-primary">Salvar OP na Fila</button></div>
+                <div class="table-container mb-6"><table class="base-table"><thead class="base-thead"><tr><th class="base-th">Insumo</th><th class="base-th">Estoque Atual</th><th class="base-th">Qtd a Descontar</th><th class="base-th">Lotes Reservados</th></tr></thead><tbody id="po-ingredients-body"></tbody></table></div>
+                <div class="flex justify-end"><button type="submit" class="btn-primary">Salvar OP</button></div>
             </form>
         </div>
     </div>
 
-    <!-- Demais Modais -->
-    <div id="low-stock-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-bell mr-3 text-2xl"></i><span>Itens Abaixo do Mínimo</span></h2><p class="text-sm text-ios-textMuted font-medium">Atenção para reposição imediata. Você define o que mede!</p></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="low-stock-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="low-stock-list" class="space-y-3"></ul></div></div></div>
-    <div id="expiring-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-clock mr-3 text-2xl"></i><span>Lotes Vencendo (Próx. 45 Dias)</span></h2><p class="text-sm text-ios-textMuted font-medium">Acompanhamento e priorização de saída PEPS.</p></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="expiring-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="expiring-list" class="space-y-3"></ul></div></div></div>
+    <!-- Alert Modals -->
+    <div id="low-stock-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-bell mr-3 text-2xl"></i><span>Itens Abaixo do Mínimo</span></h2></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="low-stock-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="low-stock-list" class="space-y-3"></ul></div></div></div>
+    <div id="expiring-modal" class="modal z-[60]"><div class="modal-content max-w-2xl max-h-[80vh] flex flex-col p-0 overflow-hidden"><div class="flex justify-between items-start shrink-0 p-6 border-b border-ios-border bg-ios-cardHover"><div><h2 class="title-md mb-1 text-ios-red flex items-center"><i class="fa-solid fa-clock mr-3 text-2xl"></i><span>Lotes Vencendo (Próx. 45 Dias)</span></h2></div><button class="text-ios-textMuted hover:text-white text-4xl ml-4 close-modal leading-none" data-target="expiring-modal">&times;</button></div><div class="overflow-y-auto p-6 bg-ios-bg"><ul id="expiring-list" class="space-y-3"></ul></div></div></div>
 
-    <!-- Modal Detalhes Item (Estoque) -->
+    <!-- Details Modal -->
     <div id="item-details-modal" class="modal">
         <div class="modal-content max-w-5xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h2 class="title-md flex items-center mb-1 text-2xl tracking-tight"><span id="details-product-name"></span></h2>
-                    <span id="details-product-type-badge" class="badge bg-ios-cardHover text-ios-textMuted border border-ios-border"></span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button id="btn-edit-item" class="text-ios-blue bg-ios-blue/10 p-3 rounded-full hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-pen"></i></button>
-                    <button id="btn-delete-item" class="text-ios-red bg-ios-red/10 p-3 rounded-full hover:bg-ios-red/20 transition-colors"><i class="fa-solid fa-trash"></i></button>
-                    <button class="text-ios-textMuted hover:text-white text-3xl ml-2 close-modal" data-target="item-details-modal">&times;</button>
-                </div>
+                <div><h2 class="title-md flex items-center mb-1 text-2xl tracking-tight"><span id="details-product-name"></span></h2><span id="details-product-type-badge" class="badge bg-ios-cardHover text-ios-textMuted border border-ios-border"></span></div>
+                <div class="flex items-center gap-3"><button id="btn-edit-item" class="text-ios-blue bg-ios-blue/10 p-3 rounded-full hover:bg-ios-blue/20 transition-colors"><i class="fa-solid fa-pen"></i></button><button id="btn-delete-item" class="text-ios-red bg-ios-red/10 p-3 rounded-full hover:bg-ios-red/20 transition-colors"><i class="fa-solid fa-trash"></i></button><button class="text-ios-textMuted hover:text-white text-3xl ml-2 close-modal" data-target="item-details-modal">&times;</button></div>
             </div>
             <div id="item-details-view" class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm bg-ios-bg p-5 rounded-2xl mb-6 shadow-inner border border-ios-border">
-                <div><span class="text-ios-textMuted block mb-1">Cód Padrão</span><span id="details-product-code" class="text-white font-medium font-mono"></span></div>
-                <div><span class="text-ios-textMuted block mb-1">Cód Leitor</span><span id="details-product-barcode" class="text-white font-medium font-mono"></span></div>
+                <div><span class="text-ios-textMuted block mb-1">Cód.</span><span id="details-product-code" class="text-white font-medium font-mono"></span></div>
+                <div><span class="text-ios-textMuted block mb-1">Cód. Barras</span><span id="details-product-barcode" class="text-white font-medium font-mono"></span></div>
                 <div class="md:col-span-2"><span class="text-ios-textMuted block mb-1">Fornecedor</span><span id="details-supplier" class="text-white font-medium"></span></div>
-                <div><span class="text-ios-textMuted block mb-1">Estoque Mín.</span><span id="details-min-stock" class="text-ios-orange font-medium"></span></div>
-                <div><span class="text-ios-textMuted block mb-1">Saldo Físico</span><span id="details-total-quantity" class="text-ios-green font-bold text-xl"></span></div>
+                <div><span class="text-ios-textMuted block mb-1">Mínimo</span><span id="details-min-stock" class="text-ios-orange font-medium"></span></div>
+                <div><span class="text-ios-textMuted block mb-1">Saldo</span><span id="details-total-quantity" class="text-ios-green font-bold text-xl"></span></div>
             </div>
             <div id="item-details-edit" class="hidden mb-6 bg-ios-bg p-5 rounded-2xl border border-ios-border shadow-inner">
                 <form id="edit-item-form" class="grid grid-cols-1 md:grid-cols-6 gap-5">
                     <input type="hidden" id="edit-item-id">
-                    <div class="md:col-span-6"><label class="form-label">Classificação</label><select id="edit-product-type" required class="form-input"><option value="insumo">Insumo</option><option value="semi_acabado">Semi-acabado</option></select></div>
                     <div class="md:col-span-6"><label class="form-label">Nome</label><input type="text" id="edit-product-name" required class="form-input"></div>
-                    <div class="md:col-span-3"><label class="form-label">Cód. Interno</label><input type="text" id="edit-product-code" class="form-input"></div>
-                    <div class="md:col-span-3"><label class="form-label">Cód. Barras (Leitor)</label><input type="text" id="edit-product-barcode" class="form-input text-ios-green"></div>
+                    <div class="md:col-span-3"><label class="form-label">Cód.</label><input type="text" id="edit-product-code" class="form-input"></div>
+                    <div class="md:col-span-3"><label class="form-label">Cód. Barras</label><input type="text" id="edit-product-barcode" class="form-input text-ios-green"></div>
                     <div class="md:col-span-3"><label class="form-label">Fornecedor</label><input type="text" id="edit-supplier" class="form-input"></div>
-                    <div class="md:col-span-1"><label class="form-label" title="Prazo de Entrega do Fornecedor em Dias">Prazo (Dias)</label><input type="number" id="edit-lead-time" min="0" class="form-input"></div>
-                    <div class="md:col-span-2 relative border border-ios-border p-3 rounded-xl bg-ios-cardHover">
-                        <div class="flex gap-2 mb-2 items-end">
-                            <div class="flex-1"><label class="text-[10px] text-ios-textMuted uppercase mb-1 block">Margem Seg. (Dias)</label><input type="number" id="edit-safety-margin" min="0" class="form-input py-1 px-2 text-sm" value="2"></div>
-                            <button type="button" id="btn-calc-min-stock" class="text-ios-blue text-[10px] bg-ios-blue/10 px-2 py-1 rounded hover:bg-ios-blue/20 transition-colors h-8" title="Calcula baseado no consumo médio diário"><i class="fa-solid fa-calculator mr-1"></i>Sugerir Ideal</button>
-                        </div>
-                        <label class="text-xs text-ios-orange font-bold mb-1 block">Estoque Mínimo (Ponto de Pedido)</label>
-                        <input type="number" step="0.01" id="edit-min-stock" class="form-input text-ios-orange font-bold">
-                    </div>
+                    <div class="md:col-span-1"><label class="form-label">Classificação</label><select id="edit-product-type" required class="form-input"><option value="insumo">Insumo</option><option value="semi_acabado">Semi-acabado</option></select></div>
+                    <div class="md:col-span-2 relative border border-ios-border p-3 rounded-xl bg-ios-cardHover"><label class="text-xs text-ios-orange font-bold mb-1 block">Estoque Mínimo</label><input type="number" step="0.01" id="edit-min-stock" class="form-input text-ios-orange font-bold"></div>
                     <div class="md:col-span-6 flex justify-end gap-3 mt-2"><button type="button" id="btn-cancel-edit" class="btn-secondary">Cancelar</button><button type="submit" class="btn-primary">Salvar Edição</button></div>
                 </form>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
                     <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3">Lotes Físicos na Prateleira</h3>
-                    <div class="table-container mb-8 max-h-96 overflow-y-auto">
-                        <table class="base-table">
-                            <thead class="base-thead"><tr><th class="base-th">Lote</th><th class="base-th">Status</th><th class="base-th">Volume</th><th class="base-th">Validade</th><th class="base-th text-center">Gestão</th></tr></thead>
-                            <tbody id="details-batches-table"></tbody>
-                        </table>
-                    </div>
+                    <div class="table-container mb-8 max-h-96 overflow-y-auto"><table class="base-table"><thead class="base-thead"><tr><th class="base-th">Lote</th><th class="base-th">Local (Rua)</th><th class="base-th">Status</th><th class="base-th">Volume</th><th class="base-th text-center">Ações</th></tr></thead><tbody id="details-batches-table"></tbody></table></div>
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3 flex justify-between items-center">Extrato de Movimentação <button id="btn-clear-hist-filters" class="text-xs text-ios-blue hover:text-blue-300 font-normal underline hidden">Limpar Filtros</button></h3>
-                    <div class="flex flex-wrap gap-2 mb-3 bg-ios-bg p-3 rounded-xl border border-ios-border shadow-inner">
-                        <div class="w-full text-xs text-ios-textMuted font-medium mb-1">Filtrar por Período:</div>
-                        <input type="date" id="hist-filter-start" class="form-input py-1 px-2 text-xs w-auto border-ios-border">
-                        <span class="text-ios-textMuted flex items-center text-xs">até</span>
-                        <input type="date" id="hist-filter-end" class="form-input py-1 px-2 text-xs w-auto border-ios-border">
-                        <select id="hist-filter-type" class="form-input py-1 px-2 text-xs w-auto border-ios-border ml-auto">
-                            <option value="">Todas Movimentações</option>
-                            <option value="entrada">Entradas (Todas)</option>
-                            <option value="saída">Saídas / Consumo</option>
-                            <option value="requisição">Requisição Avulsa</option>
-                            <option value="ajuste">Ajustes</option>
-                        </select>
-                    </div>
+                    <h3 class="text-sm font-semibold text-ios-textMuted uppercase mb-3 flex justify-between items-center">Extrato Movimentação <button id="btn-clear-hist-filters" class="text-xs text-ios-blue hover:text-blue-300 font-normal underline hidden">Limpar Filtros</button></h3>
+                    <div class="flex flex-wrap gap-2 mb-3 bg-ios-bg p-3 rounded-xl border border-ios-border shadow-inner"><input type="date" id="hist-filter-start" class="form-input py-1 px-2 text-xs w-auto border-ios-border"><span class="text-ios-textMuted flex items-center text-xs">até</span><input type="date" id="hist-filter-end" class="form-input py-1 px-2 text-xs w-auto border-ios-border"><select id="hist-filter-type" class="form-input py-1 px-2 text-xs w-auto border-ios-border ml-auto"><option value="">Todas Movimentações</option><option value="entrada">Entradas</option><option value="saída">Saídas / Consumo</option></select></div>
                     <div class="table-container max-h-72 overflow-y-auto bg-ios-bg p-2" id="details-history-container"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="edit-batch-modal" class="modal z-[60]"><div class="modal-content max-w-sm"><h2 class="title-md mb-4">Editar Lote</h2><form id="edit-batch-form" class="space-y-4"><input type="hidden" id="edit-batch-id"><input type="hidden" id="edit-batch-product-id"><div><label class="form-label">Código do Lote</label><input type="text" id="edit-batch-code" required class="form-input bg-ios-bg border-ios-border"></div><div><label class="form-label">Quantidade</label><input type="number" step="0.001" id="edit-batch-qty" required class="form-input text-ios-blue font-bold bg-ios-bg border-ios-border"></div><div><label class="form-label">Validade</label><input type="date" id="edit-batch-expiry" class="form-input bg-ios-bg border-ios-border"></div><div class="flex justify-end gap-2 mt-2"><button type="button" class="btn-secondary close-modal" data-target="edit-batch-modal">Cancelar</button><button type="submit" class="btn-primary">Salvar</button></div></form></div></div>
+    <!-- Edit Batch / Selector / Confirm -->
+    <div id="edit-batch-modal" class="modal z-[60]"><div class="modal-content max-w-sm"><h2 class="title-md mb-4">Editar Lote</h2><form id="edit-batch-form" class="space-y-4"><input type="hidden" id="edit-batch-id"><input type="hidden" id="edit-batch-product-id"><div><label class="form-label">Código do Lote</label><input type="text" id="edit-batch-code" required class="form-input bg-ios-bg border-ios-border"></div><div><label class="form-label">Local (Rua/Endereço)</label><input type="text" id="edit-batch-location" class="form-input uppercase bg-ios-bg border-ios-border"></div><div><label class="form-label">Quantidade</label><input type="number" step="0.001" id="edit-batch-qty" required class="form-input text-ios-blue font-bold bg-ios-bg border-ios-border"></div><div><label class="form-label">Validade</label><input type="date" id="edit-batch-expiry" class="form-input bg-ios-bg border-ios-border"></div><div class="flex justify-end gap-2 mt-2"><button type="button" class="btn-secondary close-modal" data-target="edit-batch-modal">Cancelar</button><button type="submit" class="btn-primary">Salvar</button></div></form></div></div>
 
     <div id="batch-selector-modal" class="modal z-[60]"><div class="modal-content max-w-xl"><h2 id="batch-selector-title" class="title-md mb-4">Descontar de quais lotes?</h2><div class="bg-ios-bg border border-ios-border p-4 rounded-xl flex justify-between mb-5 items-center"><span class="text-ios-textMuted text-sm">Alvo: <span id="batch-selector-needed" class="text-white font-semibold"></span></span><span class="text-ios-textMuted text-sm">Marcado: <span id="batch-selector-selected" class="font-bold text-lg text-ios-blue"></span></span></div><div id="batch-selector-list" class="max-h-64 overflow-y-auto mb-6 pr-2 space-y-2"></div><div class="flex justify-end gap-3"><button class="btn-secondary close-modal" data-target="batch-selector-modal">Cancelar</button><button id="confirm-batch-selection" class="btn-primary">Aplicar Seleção</button></div></div></div>
 
     <div id="confirm-action-modal" class="modal z-[9999]"><div class="modal-content max-w-md text-center flex flex-col items-center"><div class="w-16 h-16 rounded-full bg-ios-cardHover border border-ios-border flex items-center justify-center mb-5"><i class="fa-solid fa-circle-question text-3xl text-ios-blue"></i></div><h3 id="confirm-title" class="title-md mb-2"></h3><p id="confirm-message" class="text-ios-textMuted text-sm mb-8 leading-relaxed"></p><div class="flex gap-3 w-full justify-center"><button id="cancel-action-btn" class="btn-secondary flex-1">Cancelar</button><button id="confirm-action-btn" class="btn-primary flex-1">Sim, Continuar</button></div></div></div>
     
 <script type="module">
-    // Utility and Element Selection
     const id = n => document.getElementById(n);
     const show = el => { if(el) { el.style.display = 'flex'; el.classList.remove('hidden'); } };
     const hide = el => { if(el) { el.style.display = 'none'; el.classList.add('hidden'); } };
@@ -742,8 +739,7 @@
         projectId: "estoque-b50df",
         storageBucket: "estoque-b50df.firebasestorage.app",
         messagingSenderId: "634756791567",
-        appId: "1:634756791567:web:993e61243b57b7e057d27a",
-        measurementId: "G-JFHTWJJQE9"
+        appId: "1:634756791567:web:993e61243b57b7e057d27a"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -751,7 +747,6 @@
     const provider = new GoogleAuthProvider();
     const db = getFirestore(app);
 
-    // --- BANCO DE DADOS (LOCAL / FIREBASE) ---
     let isOfflineMode = false;
 
     const LocalDB = {
@@ -762,8 +757,8 @@
         async update(coll, item) { const idx = this.data[coll].findIndex(x => x.id == item.id); if(idx > -1) { this.data[coll][idx] = item; this.save(); } },
         async remove(coll, id) { this.data[coll] = this.data[coll].filter(x => x.id != id); this.save(); },
         async get(coll, id) { return this.data[coll].find(x => x.id == id); },
-        async getAll(coll) { return [...this.data[coll]]; },
-        async getByIndex(coll, idx, val) { return this.data[coll].find(x => x[idx] == val); },
+        async getAll(coll) { return [...(this.data[coll] || [])]; },
+        async getByIndex(coll, idx, val) { return (this.data[coll] || []).find(x => x[idx] == val); },
         async clear(coll) { this.data[coll] = []; this.save(); },
         async restoreBackup(newData) { this.data = {...this.data, ...newData}; this.save(); }
     };
@@ -777,8 +772,7 @@
         async getByIndex(coll, idx, val) { const q = query(collection(db, coll), where(idx, "==", val)); const qs = await getDocs(q); return qs.empty ? null : qs.docs[0].data(); },
         async clear(coll) { const qs = await getDocs(collection(db, coll)); const batch = writeBatch(db); qs.docs.forEach(d => batch.delete(d.ref)); await batch.commit(); },
         async restoreBackup(data) {
-            const stores = ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption'];
-            for (const s of stores) {
+            for (const s of ['inventory', 'batches', 'history', 'recipes', 'productionOrders', 'monthlyConsumption']) {
                 const qs = await getDocs(collection(db, s));
                 for (const d of qs.docs) { await deleteDoc(d.ref); } 
                 if (data[s] && Array.isArray(data[s])) {
@@ -805,12 +799,10 @@
 
     // --- FUNÇÕES GLOBAIS DE UI ---
     function showNotif(msg, isErr=false) {
-        const nf = id('notification-modal');
-        if(!nf) return;
+        const nf = id('notification-modal'); if(!nf) return;
         nf.innerHTML = `<i class="fa-solid ${isErr?'fa-triangle-exclamation':'fa-check-circle'} mr-2"></i> ${msg}`;
         nf.className = `fixed top-6 left-1/2 transform -translate-x-1/2 z-[2000] py-3 px-6 rounded-full shadow-2xl font-semibold text-white transition-all text-sm backdrop-blur-md ${isErr?'bg-ios-red':'bg-ios-green'}`;
-        show(nf);
-        setTimeout(() => hide(nf), 3000);
+        show(nf); setTimeout(() => hide(nf), 3000);
     }
     window.showNotif = showNotif;
 
@@ -818,21 +810,16 @@
         if(id('confirm-title')) id('confirm-title').innerHTML = title;
         if(id('confirm-message')) id('confirm-message').innerHTML = msg;
         show(id('confirm-action-modal'));
-        const btnOk = id('confirm-action-btn');
-        const btnCancel = id('cancel-action-btn');
-        
-        // Remove old listeners to prevent double execution
-        const newBtnOk = btnOk.cloneNode(true);
-        const newBtnCancel = btnCancel.cloneNode(true);
-        btnOk.parentNode.replaceChild(newBtnOk, btnOk);
-        btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
-        
+        const btnOk = id('confirm-action-btn'); const btnCancel = id('cancel-action-btn');
+        const newBtnOk = btnOk.cloneNode(true); const newBtnCancel = btnCancel.cloneNode(true);
+        btnOk.parentNode.replaceChild(newBtnOk, btnOk); btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
         newBtnOk.addEventListener('click', () => { hide(id('confirm-action-modal')); onConfirm(); });
         newBtnCancel.addEventListener('click', () => { hide(id('confirm-action-modal')); });
     }
     window.showConfirmationModal = showConfirmationModal;
 
     function formatTime(sec) {
+        if (isNaN(sec) || sec < 0) return "00:00";
         const h = Math.floor(sec / 3600); const m = Math.floor((sec % 3600) / 60); const s = sec % 60;
         if (h > 0) return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
@@ -841,58 +828,38 @@
     // --- CÂMERA (LEITOR DE CÓDIGO) ---
     let qrCodeInstance = null;
     async function toggleCamera(readerId, inputId) {
-        const readerEl = id(readerId);
-        const inputEl = id(inputId);
-        
+        const readerEl = id(readerId); const inputEl = id(inputId);
         if(typeof Html5Qrcode === 'undefined') return showNotif("Biblioteca da câmera não carregada.", true);
-
-        if (qrCodeInstance) {
-            try { await qrCodeInstance.stop(); } catch(e) {}
-            qrCodeInstance = null; hide(readerEl); return;
-        }
-        
-        show(readerEl);
-        qrCodeInstance = new Html5Qrcode(readerId);
-        
+        if (qrCodeInstance) { try { await qrCodeInstance.stop(); } catch(e) {} qrCodeInstance = null; hide(readerEl); return; }
+        show(readerEl); qrCodeInstance = new Html5Qrcode(readerId);
         try {
             await qrCodeInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, 
             async (decodedText) => {
                 try { await qrCodeInstance.stop(); } catch(e) {}
                 qrCodeInstance = null; hide(readerEl);
-                
                 if(inputEl) {
                     inputEl.value = decodedText;
                     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
                     inputEl.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
                 }
             }, (err) => { });
-        } catch(e) {
-            console.error(e);
-            showNotif('Erro ao acessar a câmera.', true);
-            hide(readerEl);
-        }
+        } catch(e) { showNotif('Erro ao acessar a câmera.', true); hide(readerEl); }
     }
-
-    addEvt('btn-start-camera-main', 'click', () => toggleCamera('main-camera-reader', 'scanner-input'));
-    addEvt('btn-start-camera-entry', 'click', () => toggleCamera('entry-camera-reader', 'entry-product-code'));
-    addEvt('btn-start-camera-picking', 'click', () => toggleCamera('picking-camera-reader', 'picking-scanner'));
+    window.toggleCamera = toggleCamera; // Expor pro HTML onclick
 
     document.querySelectorAll('.nav-item').forEach(link => {
         link.addEventListener('click', async () => {
             if(qrCodeInstance) {
                 try { await qrCodeInstance.stop(); } catch(e) {}
                 qrCodeInstance = null;
-                hide(id('main-camera-reader'));
-                hide(id('entry-camera-reader'));
-                hide(id('picking-camera-reader'));
+                hide(id('main-camera-reader')); hide(id('entry-camera-reader')); hide(id('picking-camera-reader')); hide(id('entry-loc-camera-reader')); hide(id('address-camera-reader'));
             }
         });
     });
 
     // --- AUTENTICAÇÃO E INÍCIO ---
     addEvt('btn-login-google', 'click', () => {
-        const msg = id('mensagem-erro');
-        if(msg) { msg.innerText = "Abrindo pop-up do Google..."; show(msg); }
+        const msg = id('mensagem-erro'); if(msg) { msg.innerText = "Abrindo pop-up..."; show(msg); }
         signInWithPopup(auth, provider).catch((error) => {
             if(msg) {
                 if (error.code === 'auth/unauthorized-domain') { msg.innerHTML = "<b>Domínio não autorizado.</b> Use Modo Offline."; } 
@@ -907,13 +874,9 @@
         hide(id('login-wrapper')); show(id('app-wrapper'));
         const nu = id('nome-usuario'); if(nu) nu.innerText = 'Modo Local (Offline)';
         showNotif('Você está usando o banco de dados Local.', false);
-        
         const t = new Date().toISOString().split('T')[0];
-        if(id('receipt-date')) id('receipt-date').value = t; 
-        if(id('mfg-date')) id('mfg-date').value = t;
-        
-        navTo('dashboard'); show(id('loading-overlay'));
-        await refreshData(); hide(id('loading-overlay'));
+        if(id('receipt-date')) id('receipt-date').value = t; if(id('mfg-date')) id('mfg-date').value = t;
+        navTo('dashboard'); show(id('loading-overlay')); await refreshData(); hide(id('loading-overlay'));
     });
 
     addEvt('btn-sair', 'click', () => {
@@ -925,15 +888,10 @@
         if (user && !isOfflineMode) {
             hide(id('login-wrapper')); show(id('app-wrapper'));
             const nu = id('nome-usuario'); if(nu) nu.innerText = user.displayName || 'Estoquista';
-            
             show(id('loading-overlay'));
             const t = new Date().toISOString().split('T')[0];
-            if(id('receipt-date')) id('receipt-date').value = t; 
-            if(id('mfg-date')) id('mfg-date').value = t;
-            
-            navTo('dashboard');
-            try { await refreshData(); } catch(e) { console.error(e); }
-            hide(id('loading-overlay'));
+            if(id('receipt-date')) id('receipt-date').value = t; if(id('mfg-date')) id('mfg-date').value = t;
+            navTo('dashboard'); try { await refreshData(); } catch(e) { console.error(e); } hide(id('loading-overlay'));
         } else if(!isOfflineMode) {
             show(id('login-wrapper')); hide(id('app-wrapper')); hide(id('loading-overlay'));
         }
@@ -948,26 +906,23 @@
     let activePickingLine = null, activePickingOpIds = [];
     const typeLabels = { insumo: 'Insumo', semi_acabado: 'Semi-acabado' };
 
-    // --- FECHAR MODAIS ---
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', () => { hide(id(btn.dataset.target)); });
-    });
+    document.querySelectorAll('.close-modal').forEach(btn => { btn.addEventListener('click', () => { hide(id(btn.dataset.target)); }); });
 
-    // --- NAVEGAÇÃO ---
-    const screens = ['dashboard','scanner','entry','inventory','recipes','production','requisitions','adjustments','consumption','settings','picking'];
+    const screens = ['dashboard','addressing','scanner','entry','inventory','recipes','production','requisitions','adjustments','consumption','settings','picking'];
     function navTo(target) {
         screens.forEach(s => { id('screen-'+s)?.classList.add('hidden'); });
         document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('bg-ios-card', 'text-white'); n.classList.add('text-ios-textMuted'); });
         const screenEl = id('screen-'+target); if(screenEl) screenEl.classList.remove('hidden', 'flex-col');
-        if(target === 'scanner') screenEl.classList.add('flex', 'flex-col');
+        if(target === 'scanner' || target === 'addressing') screenEl.classList.add('flex', 'flex-col');
         
         const activeLink = document.querySelector(`.nav-item[data-target="${target}"]`);
         if(activeLink) { activeLink.classList.remove('text-ios-textMuted'); activeLink.classList.add('bg-ios-card', 'text-white'); }
         
-        if(target==='adjustments') { createSearchableSelect(id('adjustment-searchable-container'), localInventory, 'Buscar produto...', p => { const batchEl = id('adjustment-batch'); if(batchEl) batchEl.innerHTML = '<option value="">Selecione Lote...</option>' + localBatches.filter(b=>b.productId===p.id && b.quantity>0).map(b=>`<option value="${b.id}">${b.code}</option>`).join(''); }); }
+        if(target==='adjustments') { createSearchableSelect(id('adjustment-searchable-container'), localInventory, 'Buscar produto...', p => { const batchEl = id('adjustment-batch'); if(batchEl) batchEl.innerHTML = '<option value="">Selecione Lote...</option>' + localBatches.filter(b=>b.productId==p.id && b.quantity>0).map(b=>`<option value="${b.id}">${b.code}</option>`).join(''); }); }
         if(target==='requisitions') { const reqCont = id('requisition-items-container'); if (reqCont) { reqCont.innerHTML=''; addIngRowReq(reqCont); } }
         if(target==='picking') { renderPickingScreen(); }
         if(target==='scanner') { setTimeout(() => id('scanner-input')?.focus(), 100); }
+        if(target==='addressing') { setTimeout(() => id('address-input')?.focus(), 100); }
     }
     document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', e => { e.preventDefault(); navTo(link.dataset.target); }); });
 
@@ -979,7 +934,7 @@
         
         const renderList = (searchTerm) => {
             let filtered = items;
-            if(searchTerm) { const term = searchTerm.toLowerCase(); filtered = filtered.filter(i => (i.searchName || i.name).toLowerCase().includes(term) || (i.code && i.code.toLowerCase().includes(term)) || (i.barcode && i.barcode.includes(term))); }
+            if(searchTerm) { const term = searchTerm.toLowerCase(); filtered = filtered.filter(i => (i.searchName || i.name).toLowerCase().includes(term) || (i.code && String(i.code).toLowerCase().includes(term)) || (i.barcode && String(i.barcode).includes(term))); }
             if(filtered.length) { dropdown.innerHTML = filtered.map(i => `<div class="searchable-item flex justify-between items-center" data-id="${i.id}"><span class="font-medium">${i.searchName || i.name}</span>${i.type ? `<span class="text-xs text-ios-textMuted bg-black/30 px-2 py-1 rounded">${typeLabels[i.type]||''}</span>` : ''}</div>`).join(''); dropdown.classList.remove('hidden'); } 
             else { dropdown.innerHTML = `<div class="p-3 text-ios-textMuted text-sm">Nenhum resultado...</div>`; dropdown.classList.remove('hidden'); }
         };
@@ -988,46 +943,94 @@
         document.addEventListener('click', e => { if(!container.contains(e.target)) dropdown.classList.add('hidden'); });
     }
 
-    function getFIFOPlan(productId, qtyNeeded) {
-        const batches = localBatches.filter(b => b.productId == productId && b.quantity > 0 && b.isReleased !== false).sort((a,b) => new Date(a.expiryDate || '9999-01-01') - new Date(b.expiryDate || '9999-01-01'));
+    // Calcula a quantidade reservada de um lote específico
+    function getReservedQty(batchId, ignoreOpId = null) {
+        let res = 0;
+        localProductionOrders.forEach(op => {
+            if (op.id == ignoreOpId) return;
+            if (op.status === 'pendente' || op.status === 'em_andamento') {
+                (op.ingredients || []).forEach(ing => {
+                    (ing.consumptionPlan || []).forEach(pl => {
+                        if (pl.batchId == batchId) res += pl.quantity;
+                    });
+                });
+            }
+        });
+        return res;
+    }
+
+    function getFIFOPlan(productId, qtyNeeded, currentOpId = null) {
+        const batches = localBatches.filter(b => b.productId == productId && b.isReleased !== false).map(b => {
+            const reserved = getReservedQty(b.id, currentOpId);
+            const available = b.quantity - reserved;
+            return { ...b, available: available > 0 ? available : 0 };
+        }).filter(b => b.available > 0).sort((a,b) => new Date(a.expiryDate || '9999-01-01') - new Date(b.expiryDate || '9999-01-01'));
+        
         let remaining = qtyNeeded; let plan = [];
-        for (let b of batches) { if (remaining <= 0) break; const take = Math.min(b.quantity, remaining); plan.push({ batchId: b.id, batchCode: b.code, quantity: take }); remaining -= take; }
+        for (let b of batches) { 
+            if (remaining <= 0) break; 
+            const take = Math.min(b.available, remaining); 
+            plan.push({ batchId: b.id, batchCode: b.code, quantity: take }); 
+            remaining -= take; 
+        }
         return { plan, isSufficient: remaining <= 0.0001 };
     }
 
+    // FUNÇÃO PRINCIPAL DE SINCRONIZAÇÃO E SEGURANÇA CONTRA ERROS DE DB
     async function refreshData() {
         try {
-            [localInventory, localBatches, localHistory, localRecipes, localProductionOrders, localMonthlyConsumption] = await Promise.all([DB.getAll('inventory'), DB.getAll('batches'), DB.getAll('history'), DB.getAll('recipes'), DB.getAll('productionOrders'), DB.getAll('monthlyConsumption')]);
+            const results = await Promise.allSettled([
+                DB.getAll('inventory'), DB.getAll('batches'), DB.getAll('history'), 
+                DB.getAll('recipes'), DB.getAll('productionOrders'), DB.getAll('monthlyConsumption')
+            ]);
             
-            let changed = false;
-            const ghostBatches = localBatches.filter(b => b.code === 'AJUSTE-SYS'); 
-            for(let gb of ghostBatches) { await DB.remove('batches', gb.id); changed = true; }
-            if(changed) localBatches = await DB.getAll('batches');
-
+            localInventory = results[0].status === 'fulfilled' ? results[0].value || [] : [];
+            localBatches = results[1].status === 'fulfilled' ? results[1].value || [] : [];
+            localHistory = results[2].status === 'fulfilled' ? results[2].value || [] : [];
+            localRecipes = results[3].status === 'fulfilled' ? results[3].value || [] : [];
+            localProductionOrders = results[4].status === 'fulfilled' ? results[4].value || [] : [];
+            localMonthlyConsumption = results[5].status === 'fulfilled' ? results[5].value || [] : [];
+            
+            // Segurança e recálculo
+            let inventoryUpdates = [];
             for(let i of localInventory) {
+                if(!i || !i.id) continue;
+                let changed = false;
                 if(!i.type || i.type === 'acabado') { i.type = 'insumo'; changed = true; } 
-                const batches = localBatches.filter(b => b.productId == i.id); const batchSum = batches.reduce((sum, b) => sum + Math.max(0, b.quantity), 0);
-                if (Math.abs((i.totalQuantity || 0) - batchSum) > 0.001) { i.totalQuantity = batchSum; await DB.update('inventory', i); changed = true; }
+                const batches = localBatches.filter(b => b.productId == i.id); 
+                const batchSum = batches.reduce((sum, b) => sum + Math.max(0, b.quantity), 0);
+                if (Math.abs((i.totalQuantity || 0) - batchSum) > 0.001) { i.totalQuantity = batchSum; changed = true; }
+                if(changed) inventoryUpdates.push(DB.update('inventory', i));
             }
-            if(changed) { localInventory = await DB.getAll('inventory'); localBatches = await DB.getAll('batches'); }
+            if(inventoryUpdates.length > 0) await Promise.allSettled(inventoryUpdates);
 
+            let poUpdates = [];
             for(let op of localProductionOrders) {
+                if(!op || !op.id) continue;
                 let opChanged = false;
                 if(!op.picking) { op.picking = { status: 'pendente', responsible: '', start: null, end: null, duration: 0, pickedItems: {} }; opChanged = true; }
-                if(!op.recipeCategory) { const rec = localRecipes.find(r=>r.id == op.recipeId); if(rec) { op.recipeCategory = rec.category; opChanged = true; } }
-                if(typeof op.isExtra === 'undefined') { op.isExtra = false; opChanged = true; } 
-                if(opChanged) await DB.update('productionOrders', op);
+                if(!op.recipeCategory) { 
+                    const rec = localRecipes.find(r=>r.id == op.recipeId); 
+                    op.recipeCategory = rec ? rec.category : 'Diversos'; 
+                    opChanged = true; 
+                }
+                if(typeof op.isExtra === 'undefined') { op.isExtra = false; opChanged = true; }
+                if(!op.ingredients) { op.ingredients = []; opChanged = true; }
+                if(opChanged) poUpdates.push(DB.update('productionOrders', op));
             }
+            if(poUpdates.length > 0) await Promise.allSettled(poUpdates);
 
             renderAll();
-        } catch(e) { showNotif('Erro ao processar dados.', true); console.error(e); }
+            
+        } catch(e) { 
+            console.error("Erro Crítico no Refresh:", e); 
+            showNotif(`Erro na leitura do Banco: ${e.message}`, true); 
+        }
     }
 
     function renderAll() {
-        populateFilters(); renderInv(); renderRecipes(); renderPO(); renderDash(); renderConsum();
-        updateSidebarBadges();
-        const scrPicking = id('screen-picking');
-        if(scrPicking && !scrPicking.classList.contains('hidden')) renderPickingScreen();
+        populateFilters(); renderInv(); renderRecipes(); renderPO(); renderDash(); renderConsum(); updateSidebarBadges();
+        const scrPicking = id('screen-picking'); if(scrPicking && !scrPicking.classList.contains('hidden')) renderPickingScreen();
         if(currentHistoryProductId) renderItemDetailsHistory();
     }
 
@@ -1043,18 +1046,58 @@
         const mf = id('consumption-month-filter'); if(mf) { mf.innerHTML = months.map((m,i)=>`<option value="${i+1}">${m}</option>`).join(''); mf.value = cm; }
     }
 
-    // --- LEITOR GERAL (SCANNER TELA PRINCIPAL) ---
+    // --- NOVA TELA: ENDEREÇAMENTO (Consulta por Localização) ---
+    addEvt('address-input', 'keypress', e => {
+        if(e.key === 'Enter') {
+            const code = e.target.value.trim().toUpperCase();
+            if(!code) return;
+            
+            const box = id('address-result-box');
+            // Procura lotes com aquele exato endereço (ou que contenham, para flexibilidade)
+            const foundBatches = localBatches.filter(b => b.location && b.location.toUpperCase() === code && b.quantity > 0);
+            
+            if(foundBatches.length > 0) {
+                id('address-res-name').innerText = code;
+                id('address-res-count').innerText = `${foundBatches.length} Lote(s)`;
+                
+                const tbody = id('address-table-body');
+                tbody.innerHTML = foundBatches.map(b => {
+                    const p = localInventory.find(i => i.id == b.productId);
+                    const pName = p ? p.name : 'Insumo Excluído';
+                    const reserved = getReservedQty(b.id);
+                    const livre = b.quantity - reserved;
+                    const expFormat = b.expiryDate ? new Date(b.expiryDate+'T00:00:00').toLocaleDateString('pt-BR') : '-';
+                    
+                    return `
+                    <tr class="base-tr hover:bg-ios-cardHover/50 transition">
+                        <td class="base-td font-bold text-white">${pName}</td>
+                        <td class="base-td font-mono text-xs text-ios-textMuted">${b.code}</td>
+                        <td class="base-td">${expFormat}</td>
+                        <td class="base-td text-right font-bold">${b.quantity.toFixed(2)}</td>
+                        <td class="base-td text-right font-bold text-ios-orange">${reserved > 0 ? reserved.toFixed(2) : '-'}</td>
+                        <td class="base-td text-right font-bold text-ios-green">${livre > 0 ? livre.toFixed(2) : '0.00'}</td>
+                    </tr>`;
+                }).join('');
+                
+                show(box);
+                setTimeout(() => box.classList.remove('opacity-0', 'translate-y-4'), 10);
+            } else {
+                hide(box); box.classList.add('opacity-0', 'translate-y-4');
+                showNotif('Nenhum lote válido encontrado neste local.', true);
+            }
+            e.target.value = '';
+        }
+    });
+
+    // --- LEITOR GERAL (SCANNER TELA PRINCIPAL - Associação) ---
     let lastScannedCode = '';
-    
     addEvt('scanner-input', 'keypress', e => {
         if(e.key === 'Enter') {
-            const code = e.target.value.trim();
-            if(!code) return;
+            const code = e.target.value.trim(); if(!code) return;
             lastScannedCode = code;
             
-            const p = localInventory.find(i => i.barcode === code || i.code === code);
-            const boxResult = id('scanner-result-box');
-            const boxAssociate = id('scanner-associate-box');
+            const p = localInventory.find(i => i.barcode === code || String(i.code) === code);
+            const boxResult = id('scanner-result-box'); const boxAssociate = id('scanner-associate-box');
             
             if(p) {
                 hide(boxAssociate); boxAssociate.classList.add('opacity-0', 'translate-y-4');
@@ -1063,14 +1106,12 @@
                 id('scan-res-barcode').innerText = p.barcode || 'N/D';
                 id('scan-res-type').innerText = typeLabels[p.type] || 'Insumo';
                 id('scan-res-stock').innerText = (p.totalQuantity||0).toFixed(2);
-                show(boxResult);
-                setTimeout(() => boxResult.classList.remove('opacity-0', 'translate-y-4'), 10);
+                show(boxResult); setTimeout(() => boxResult.classList.remove('opacity-0', 'translate-y-4'), 10);
             } else {
                 hide(boxResult); boxResult.classList.add('opacity-0', 'translate-y-4');
                 id('unrecognized-code').innerText = code;
                 createSearchableSelect(id('associate-searchable-container'), localInventory, 'Pesquise pelo nome do insumo...');
-                show(boxAssociate);
-                setTimeout(() => boxAssociate.classList.remove('opacity-0', 'translate-y-4'), 10);
+                show(boxAssociate); setTimeout(() => boxAssociate.classList.remove('opacity-0', 'translate-y-4'), 10);
                 showNotif('Código não reconhecido no sistema.', true);
             }
             e.target.value = '';
@@ -1078,21 +1119,15 @@
     });
 
     addEvt('btn-associate-code', 'click', async () => {
-        const searchInput = id('associate-searchable-container').querySelector('input');
-        if(!searchInput) return;
-        const selectedId = searchInput.dataset.selectedId;
-        if(!selectedId) return showNotif('Selecione um produto da lista antes de vincular!', true);
-
+        const searchInput = id('associate-searchable-container').querySelector('input'); if(!searchInput) return;
+        const selectedId = searchInput.dataset.selectedId; if(!selectedId) return showNotif('Selecione um produto antes de vincular!', true);
         show(id('loading-overlay'));
         try {
             const item = await DB.get('inventory', selectedId);
             if(item) {
-                item.barcode = lastScannedCode;
-                await DB.update('inventory', item);
-                await refreshData();
-                showNotif(`Código de barras salvo com sucesso para ${item.name}!`);
-                hide(id('scanner-associate-box')); id('scanner-associate-box').classList.add('opacity-0', 'translate-y-4');
-                id('scanner-input').focus();
+                item.barcode = lastScannedCode; await DB.update('inventory', item); await refreshData();
+                showNotif(`Código salvo com sucesso para ${item.name}!`);
+                hide(id('scanner-associate-box')); id('scanner-associate-box').classList.add('opacity-0', 'translate-y-4'); id('scanner-input').focus();
             }
         } catch(e) { showNotif('Erro ao vincular código.', true); } finally { hide(id('loading-overlay')); }
     });
@@ -1102,11 +1137,9 @@
         const isPickingActive = localProductionOrders.some(op => op.picking?.status === 'em_andamento');
         const badgeProd = id('badge-nav-prod'); const badgePicking = id('badge-nav-picking');
         if (isPickingActive) {
-            if(badgeProd) badgeProd.classList.remove('hidden');
-            if(badgePicking) badgePicking.classList.remove('hidden');
+            if(badgeProd) badgeProd.classList.remove('hidden'); if(badgePicking) badgePicking.classList.remove('hidden');
         } else {
-            if(badgeProd) badgeProd.classList.add('hidden');
-            if(badgePicking) badgePicking.classList.add('hidden');
+            if(badgeProd) badgeProd.classList.add('hidden'); if(badgePicking) badgePicking.classList.add('hidden');
         }
 
         const lowStockItems = localInventory.filter(i => (i.minStock || 0) > 0 && (i.totalQuantity || 0) <= i.minStock);
@@ -1126,7 +1159,7 @@
                         <div class="text-right"><p class="text-[10px] uppercase text-ios-textMuted mb-1 font-bold">Atual / Mínimo</p><p class="font-mono"><span class="text-ios-red font-bold text-xl">${(item.totalQuantity || 0).toFixed(2)}</span> <span class="text-ios-textMuted text-sm">/ ${item.minStock.toFixed(2)}</span></p></div>
                     </li>`).join('');
             } else {
-                listAlerts.innerHTML = '<li class="text-center text-ios-textMuted py-8"><i class="fa-solid fa-check-circle text-4xl text-ios-green mb-3 block"></i>Todos os itens estão acima do estoque mínimo.</li>';
+                listAlerts.innerHTML = '<li class="text-center text-ios-textMuted py-8"><i class="fa-solid fa-check-circle text-4xl text-ios-green mb-3 block"></i>Todos os itens acima do mínimo.</li>';
             }
         }
     }
@@ -1147,15 +1180,11 @@
     }, 1000);
 
     // --- ESTOQUE E DETALHES ---
-    addEvt('search-inventory', 'input', renderInv);
-    addEvt('supplier-filter', 'input', renderInv);
-    addEvt('type-filter', 'input', renderInv);
-    
+    addEvt('search-inventory', 'input', renderInv); addEvt('supplier-filter', 'input', renderInv); addEvt('type-filter', 'input', renderInv);
     document.querySelectorAll('#screen-inventory .table-header-sortable').forEach(th => { th.addEventListener('click', () => { if (invSort.col === th.dataset.sort) invSort.asc = !invSort.asc; else { invSort.col = th.dataset.sort; invSort.asc = true; } renderInv(); }); });
     function renderInv() {
         const tbody = id('inventory-table-body'); if(!tbody) return;
         const term = id('search-inventory')?.value.toLowerCase() || ''; const sup = id('supplier-filter')?.value || ''; const typ = id('type-filter')?.value || '';
-        
         document.querySelectorAll('#screen-inventory .table-header-sortable').forEach(th => { const icon = th.querySelector('i'); if(icon) { if (th.dataset.sort === invSort.col) icon.className = invSort.asc ? 'fa-solid fa-sort-up ml-1 text-ios-blue' : 'fa-solid fa-sort-down ml-1 text-ios-blue'; else icon.className = 'fa-solid fa-sort ml-1 text-ios-textMuted'; } });
         let list = localInventory.filter(i => i.name.toLowerCase().includes(term) && (!sup || i.supplier === sup) && (!typ || i.type === typ));
         const getExp = item => localBatches.filter(bt=>bt.productId==item.id && bt.quantity>0 && bt.expiryDate).sort((x,y)=>new Date(x.expiryDate)-new Date(y.expiryDate))[0]?.expiryDate || '9999-12-31';
@@ -1211,7 +1240,7 @@
                 let statusHtml = `<span class="text-xs text-ios-green font-bold"><i class="fa-solid fa-check mr-1"></i>Liberado</span>`;
                 if(is8110) { statusHtml = `<div class="flex items-center gap-2" title="Lotes não liberados não entram em OP nem Requisição"><input type="checkbox" class="toggle-status toggle-release-batch" data-bid="${b.id}" ${b.isReleased?'checked':''}><span class="text-xs font-bold ${b.isReleased?'text-ios-green':'text-ios-orange'} w-16">${b.isReleased?'Liberado':'Quarentena'}</span></div>`; } 
                 else if (b.isReleased === false) { statusHtml = `<div class="flex items-center gap-2"><input type="checkbox" class="toggle-status toggle-release-batch" data-bid="${b.id}"><span class="text-xs font-bold text-ios-orange w-16">Bloqueado</span></div>`; }
-                return `<tr class="base-tr"><td class="base-td font-medium text-white">${b.code}</td><td class="base-td">${statusHtml}</td><td class="base-td font-bold text-ios-blue">${b.quantity.toFixed(2)}</td><td class="base-td text-ios-textMuted">${b.expiryDate?new Date(b.expiryDate+'T00:00:00').toLocaleDateString('pt-BR'):'-'}</td><td class="base-td text-center"><button class="text-ios-blue hover:text-blue-400 p-2 edit-batch-btn bg-ios-bg rounded-lg border border-ios-border mr-1" data-id="${b.id}"><i class="fa-solid fa-pen"></i></button><button class="text-ios-red hover:text-red-400 p-2 del-batch-btn bg-ios-bg rounded-lg border border-ios-border" data-id="${b.id}"><i class="fa-solid fa-trash"></i></button></td></tr>`
+                return `<tr class="base-tr"><td class="base-td font-medium text-white">${b.code}</td><td class="base-td text-ios-textMuted uppercase font-mono text-xs">${b.location||'-'}</td><td class="base-td">${statusHtml}</td><td class="base-td font-bold text-ios-blue">${b.quantity.toFixed(2)}</td><td class="base-td text-ios-textMuted">${b.expiryDate?new Date(b.expiryDate+'T00:00:00').toLocaleDateString('pt-BR'):'-'}</td><td class="base-td text-center"><button class="text-ios-blue hover:text-blue-400 p-2 edit-batch-btn bg-ios-bg rounded-lg border border-ios-border mr-1" data-id="${b.id}"><i class="fa-solid fa-pen"></i></button><button class="text-ios-red hover:text-red-400 p-2 del-batch-btn bg-ios-bg rounded-lg border border-ios-border" data-id="${b.id}"><i class="fa-solid fa-trash"></i></button></td></tr>`
             }).join('');
         }
         renderItemDetailsHistory(); show(id('item-details-view')); hide(id('item-details-edit')); show(id('item-details-modal'));
@@ -1231,13 +1260,13 @@
         const delBtn = e.target.closest('.del-batch-btn');
         if(delBtn) showConfirmationModal('Excluir Lote?', 'Apagar remove do saldo sem registrar saída.', async () => { show(id('loading-overlay')); await DB.remove('batches', delBtn.dataset.id); await refreshData(); openDetails(id('edit-item-id').value); hide(id('loading-overlay')); showNotif('Lote apagado'); });
         const editBtn = e.target.closest('.edit-batch-btn');
-        if(editBtn) { const b = localBatches.find(x => x.id == editBtn.dataset.id); if(b) { if(id('edit-batch-id')) id('edit-batch-id').value = b.id; if(id('edit-batch-product-id')) id('edit-batch-product-id').value = b.productId; if(id('edit-batch-code')) id('edit-batch-code').value = b.code; if(id('edit-batch-qty')) id('edit-batch-qty').value = b.quantity; if(id('edit-batch-expiry')) id('edit-batch-expiry').value = b.expiryDate || ''; show(id('edit-batch-modal')); } }
+        if(editBtn) { const b = localBatches.find(x => x.id == editBtn.dataset.id); if(b) { if(id('edit-batch-id')) id('edit-batch-id').value = b.id; if(id('edit-batch-product-id')) id('edit-batch-product-id').value = b.productId; if(id('edit-batch-code')) id('edit-batch-code').value = b.code; if(id('edit-batch-location')) id('edit-batch-location').value = b.location || ''; if(id('edit-batch-qty')) id('edit-batch-qty').value = b.quantity; if(id('edit-batch-expiry')) id('edit-batch-expiry').value = b.expiryDate || ''; show(id('edit-batch-modal')); } }
     });
 
     addEvt('edit-batch-form', 'submit', async e => {
         e.preventDefault(); show(id('loading-overlay')); const bId = id('edit-batch-id')?.value; const pId = id('edit-batch-product-id')?.value;
         if(!bId || !pId) return;
-        const b = await DB.get('batches', bId); if(b) { b.code = id('edit-batch-code').value; b.quantity = parseFloat(id('edit-batch-qty').value); b.expiryDate = id('edit-batch-expiry').value; await DB.update('batches', b); hide(id('edit-batch-modal')); await refreshData(); openDetails(pId); showNotif('Lote atualizado!'); }
+        const b = await DB.get('batches', bId); if(b) { b.code = id('edit-batch-code').value; b.location = id('edit-batch-location').value.toUpperCase(); b.quantity = parseFloat(id('edit-batch-qty').value); b.expiryDate = id('edit-batch-expiry').value; await DB.update('batches', b); hide(id('edit-batch-modal')); await refreshData(); openDetails(pId); showNotif('Lote atualizado!'); }
         hide(id('loading-overlay'));
     });
 
@@ -1245,35 +1274,28 @@
     addEvt('btn-cancel-edit', 'click', () => { show(id('item-details-view')); hide(id('item-details-edit')); });
     
     addEvt('btn-calc-min-stock', 'click', () => {
-        const pId = id('edit-item-id').value; 
-        const leadTime = parseInt(id('edit-lead-time').value) || 0;
-        const safetyMargin = parseInt(id('edit-safety-margin')?.value) || 0;
+        const pId = id('edit-item-id').value; const leadTime = parseInt(id('edit-lead-time').value) || 0; const safetyMargin = parseInt(id('edit-safety-margin')?.value) || 0;
         if(leadTime === 0) return showNotif('Informe o Prazo de Entrega (Dias) primeiro!', true);
-        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const startDateStr = thirtyDaysAgo.toISOString().split('T')[0];
+        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); const startDateStr = thirtyDaysAgo.toISOString().split('T')[0];
         const recentOut = localHistory.filter(h => h.productId == pId && (h.type === 'saída' || h.type === 'requisição') && h.date >= startDateStr);
-        const totalOut = recentOut.reduce((sum, h) => sum + h.quantity, 0);
-        const dailyAvg = totalOut / 30; 
-        const finalSuggestion = dailyAvg * (leadTime + safetyMargin);
-        if(id('edit-min-stock')) id('edit-min-stock').value = finalSuggestion.toFixed(2);
-        showNotif(`Ponto Calculado: ${finalSuggestion.toFixed(2)} (Média: ${dailyAvg.toFixed(2)}/dia x ${leadTime + safetyMargin} dias)`);
+        const totalOut = recentOut.reduce((sum, h) => sum + h.quantity, 0); const dailyAvg = totalOut / 30; const finalSuggestion = dailyAvg * (leadTime + safetyMargin);
+        if(id('edit-min-stock')) id('edit-min-stock').value = finalSuggestion.toFixed(2); showNotif(`Ponto Calculado: ${finalSuggestion.toFixed(2)} (Média: ${dailyAvg.toFixed(2)}/dia x ${leadTime + safetyMargin} dias)`);
     });
 
     addEvt('edit-item-form', 'submit', async e => { 
-        e.preventDefault(); show(id('loading-overlay')); const p = await DB.get('inventory', id('edit-item-id').value); 
-        if(!p) return;
+        e.preventDefault(); show(id('loading-overlay')); const p = await DB.get('inventory', id('edit-item-id').value); if(!p) return;
         p.name = id('edit-product-name').value; p.type = id('edit-product-type').value; p.code = id('edit-product-code').value; p.barcode = id('edit-product-barcode').value; p.supplier = id('edit-supplier').value; 
         p.leadTime = parseInt(id('edit-lead-time').value) || 0; p.minStock = parseFloat(id('edit-min-stock').value) || 0;
         await DB.update('inventory', p); await refreshData(); openDetails(p.id); showNotif('Atualizado!'); hide(id('item-details-edit')); show(id('item-details-view')); hide(id('loading-overlay'));
     });
     addEvt('btn-delete-item', 'click', () => { const pId = id('edit-item-id').value; showConfirmationModal('Excluir?', 'Histórico e lotes serão perdidos.', async () => { show(id('loading-overlay')); await DB.remove('inventory', pId); await refreshData(); hide(id('item-details-modal')); hide(id('loading-overlay')); showNotif('Excluído'); }); });
 
-    // --- ENTRADA LOTE ---
+    // --- ENTRADA LOTE (COM ENDEREÇAMENTO) ---
     const entryCodeInput = document.querySelector('#entry-product-code');
     if(entryCodeInput) {
         entryCodeInput.addEventListener('input', e => {
             const code = e.target.value.trim(); if(!code) return;
-            const p = localInventory.find(i => i.code === code || i.barcode === code);
+            const p = localInventory.find(i => String(i.code) === code || String(i.barcode) === code);
             if(p) {
                 const form = id('entry-form');
                 form.elements['product-name'].value = p.name || ''; form.elements['product-type'].value = p.type || 'insumo'; form.elements['supplier'].value = p.supplier || ''; form.elements['lead-time'].value = p.leadTime || ''; form.elements['min-stock'].value = p.minStock || '';
@@ -1284,11 +1306,11 @@
     }
 
     addEvt('entry-form', 'submit', async e => {
-        e.preventDefault(); 
-        show(id('loading-overlay')); 
+        e.preventDefault(); show(id('loading-overlay')); 
         try {
             const fd = new FormData(e.target); 
             const autoBatch = 'LT-' + new Date().getTime().toString(36).toUpperCase();
+            const location = (fd.get('location') || '').toUpperCase().trim();
             const data = {code:fd.get('product-code'), type:fd.get('product-type'), name:fd.get('product-name'), supplier:fd.get('supplier'), qtd:parseFloat(fd.get('quantity')), valid:id('expiry-date').value, minStock: parseFloat(fd.get('min-stock')) || 0, leadTime: parseInt(fd.get('lead-time')) || 0 };
             
             let p = await DB.getByIndex('inventory','code',data.code); 
@@ -1300,11 +1322,9 @@
                 await DB.update('inventory', p);
             }
 
-            p.totalQuantity = (p.totalQuantity || 0) + data.qtd; 
-            await DB.update('inventory', p);
-            
+            p.totalQuantity = (p.totalQuantity || 0) + data.qtd; await DB.update('inventory', p);
             const isReleased = (p.code !== '8110');
-            await DB.add('batches', {productId:p.id, code:autoBatch, quantity:data.qtd, expiryDate:data.valid, isReleased: isReleased});
+            await DB.add('batches', {productId:p.id, code:autoBatch, location: location, quantity:data.qtd, expiryDate:data.valid, isReleased: isReleased});
             await DB.add('history', {productId:p.id, batchCode:autoBatch, type:'entrada', quantity:data.qtd, date:id('receipt-date').value, reason: `Recepção Forn. ${p.supplier}`});
             
             await refreshData();
@@ -1331,8 +1351,7 @@
         grid.innerHTML = f.map(r => {
             const isSemi = r.isSemi;
             const ingredientsHTML = (r.ingredients || []).map(i=> {
-                const prod = localInventory.find(p=>p.id==i.productId);
-                const isWarning = prod && prod.name.startsWith('⚠️');
+                const prod = localInventory.find(p=>p.id==i.productId); const isWarning = prod && prod.name.startsWith('⚠️');
                 return `<li class="flex justify-between py-1 border-b border-ios-border/30 last:border-0"><span class="truncate pr-2 ${isWarning ? 'text-ios-orange font-bold' : ''}">${prod?prod.name:'?'}</span><span class="font-bold text-ios-blue bg-ios-bg px-2 rounded">${i.quantity}</span></li>`;
             }).join('');
             
@@ -1343,13 +1362,8 @@
                     <button class="del-rec-btn text-ios-red bg-ios-red/10 p-2 w-8 h-8 rounded-full hover:bg-ios-red/20 flex items-center justify-center" data-id="${r.id}"><i class="fa-solid fa-trash text-xs"></i></button>
                 </div>
                 <h3 class="text-lg font-bold text-white mb-1 pr-20 leading-tight">${r.name}</h3>
-                <div class="mb-4 mt-1 inline-flex">
-                    ${isSemi ? `<span class="bg-ios-orange/10 border border-ios-orange/50 text-ios-orange text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-box mr-1"></i>Semi-Acabado (Rende: ${r.outputYield||1})</span>` : `<span class="bg-gray-800 border border-gray-600 text-gray-300 text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-utensils mr-1"></i>Produto Acabado</span>`}
-                </div>
-                <div class="mt-auto border-t border-ios-border pt-4 bg-ios-bg -mx-6 -mb-6 px-6 pb-6 rounded-b-2xl">
-                    <p class="text-[10px] text-ios-textMuted uppercase font-bold mb-3 tracking-wider"><i class="fa-solid fa-list-ul mr-1"></i> Ingredientes</p>
-                    <ul class="text-sm text-ios-textMuted">${ingredientsHTML}</ul>
-                </div>
+                <div class="mb-4 mt-1 inline-flex">${isSemi ? `<span class="bg-ios-orange/10 border border-ios-orange/50 text-ios-orange text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-box mr-1"></i>Semi-Acabado (Rende: ${r.outputYield||1})</span>` : `<span class="bg-gray-800 border border-gray-600 text-gray-300 text-xs px-2 py-1 rounded-md"><i class="fa-solid fa-utensils mr-1"></i>Produto Acabado</span>`}</div>
+                <div class="mt-auto border-t border-ios-border pt-4 bg-ios-bg -mx-6 -mb-6 px-6 pb-6 rounded-b-2xl"><p class="text-[10px] text-ios-textMuted uppercase font-bold mb-3 tracking-wider"><i class="fa-solid fa-list-ul mr-1"></i> Ingredientes</p><ul class="text-sm text-ios-textMuted">${ingredientsHTML}</ul></div>
             </div>`;
         }).join('');
     }
@@ -1362,23 +1376,19 @@
     });
     addEvt('recipe-is-semi', 'change', e => { if(e.target.checked) show(id('yield-wrapper')); else hide(id('yield-wrapper')); });
 
-    // NOVO: Importação Inteligente de Receitas
+    // IMPORTAÇÃO EXCEL (Receitas)
     addEvt('btn-import-recipes', 'click', () => id('recipe-file-input')?.click());
-    
     addEvt('recipe-file-input', 'change', e => {
         const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
         reader.onload = async ev => {
             try {
                 show(id('loading-overlay'));
-                const data = ev.target.result;
-                const workbook = XLSX.read(data, {type: 'binary'});
+                const data = ev.target.result; const workbook = XLSX.read(data, {type: 'binary'});
                 let importedCount = 0;
-                
                 for (const sheetName of workbook.SheetNames) {
                     const worksheet = workbook.Sheets[sheetName];
                     const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
                     if(rows.length < 2) continue; 
-                    
                     let recipeName = sheetName; let yieldQty = 1; let ingredients = [];
                     let readingIngs = false; let colIng = -1, colCode = -1, colQty = -1;
                     
@@ -1392,19 +1402,13 @@
                         if(readingIngs && colIng !== -1 && colQty !== -1) {
                             const ingNameRaw = String(row[colIng]).trim();
                             const qtyRaw = parseFloat(String(row[colQty]).replace(',', '.')); 
-                            
                             if(ingNameRaw.toUpperCase() === 'TOTAL' || ingNameRaw.toUpperCase() === 'RENDIMENTO' || ingNameRaw.toUpperCase().includes('KG')) { readingIngs = false; continue; }
                             
                             if(ingNameRaw && !isNaN(qtyRaw) && qtyRaw > 0) {
-                                let code = colCode !== -1 ? String(row[colCode]).trim() : '';
-                                let p = null;
+                                let code = colCode !== -1 ? String(row[colCode]).trim() : ''; let p = null;
                                 if(code) p = localInventory.find(i => String(i.code) === code);
                                 if(!p) p = localInventory.find(i => i.name.toLowerCase() === ingNameRaw.toLowerCase());
-                                if(!p) {
-                                    const alertName = '⚠️ ' + ingNameRaw;
-                                    p = localInventory.find(i => i.name === alertName);
-                                    if(!p) { p = { id: crypto.randomUUID(), code: code || '', name: alertName, type: 'insumo', supplier: 'A DEFINIR', totalQuantity: 0, minStock: 0, leadTime: 0 }; await DB.add('inventory', p); localInventory.push(p); }
-                                }
+                                if(!p) { const alertName = '⚠️ ' + ingNameRaw; p = localInventory.find(i => i.name === alertName); if(!p) { p = { id: crypto.randomUUID(), code: code || '', name: alertName, type: 'insumo', supplier: 'A DEFINIR', totalQuantity: 0, minStock: 0, leadTime: 0 }; await DB.add('inventory', p); localInventory.push(p); } }
                                 ingredients.push({ productId: p.id, quantity: qtyRaw });
                             }
                         }
@@ -1416,27 +1420,18 @@
                         importedCount++;
                     }
                 }
-                await refreshData(); showNotif(`Sucesso! ${importedCount} receitas importadas/atualizadas.`);
+                await refreshData(); showNotif(`Sucesso! ${importedCount} receitas importadas.`);
             } catch(err) { console.error(err); showNotif('Erro na leitura do Excel.', true); } finally { if(id('recipe-file-input')) id('recipe-file-input').value=''; hide(id('loading-overlay')); }
-        }; 
-        reader.readAsBinaryString(file);
+        }; reader.readAsBinaryString(file);
     });
 
     function openEditRecipe(rId) {
         const r = localRecipes.find(x => x.id == rId); if(!r) return;
-        if(id('edit-recipe-id')) id('edit-recipe-id').value = r.id; 
-        if(id('recipe-name')) id('recipe-name').value = r.name; 
-        if(id('recipe-category')) id('recipe-category').value = r.category;
-        
-        const chkSemi = id('recipe-is-semi');
-        if(chkSemi) { chkSemi.checked = !!r.isSemi; chkSemi.dispatchEvent(new Event('change')); }
+        if(id('edit-recipe-id')) id('edit-recipe-id').value = r.id; if(id('recipe-name')) id('recipe-name').value = r.name; if(id('recipe-category')) id('recipe-category').value = r.category;
+        const chkSemi = id('recipe-is-semi'); if(chkSemi) { chkSemi.checked = !!r.isSemi; chkSemi.dispatchEvent(new Event('change')); }
         if(r.isSemi && id('recipe-yield')) id('recipe-yield').value = r.outputYield || 1; 
-        
-        const ingCont = id('ingredients-container');
-        if(ingCont) { ingCont.innerHTML = ''; (r.ingredients || []).forEach(ing => { addIngRowReq(ingCont, ing.productId, ing.quantity); }); }
-        
-        if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Editar Receita'; 
-        show(id('recipe-modal'));
+        const ingCont = id('ingredients-container'); if(ingCont) { ingCont.innerHTML = ''; (r.ingredients || []).forEach(ing => { addIngRowReq(ingCont, ing.productId, ing.quantity); }); }
+        if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Editar Receita'; show(id('recipe-modal'));
     }
 
     addEvt('btn-new-recipe', 'click', () => {
@@ -1446,8 +1441,7 @@
         const chkSemi = id('recipe-is-semi'); if(chkSemi) { chkSemi.checked = false; chkSemi.dispatchEvent(new Event('change')); }
         if(id('recipe-yield')) id('recipe-yield').value = 1;
         if(ingCont) addIngRowReq(ingCont); 
-        if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Nova Receita'; 
-        show(id('recipe-modal'));
+        if(id('recipe-modal-title')) id('recipe-modal-title').innerText = 'Nova Receita'; show(id('recipe-modal'));
     });
     
     addEvt('btn-export-recipe-book', 'click', () => {
@@ -1463,7 +1457,7 @@
                 if (yPos > 240) { doc.addPage(); yPos = 20; }
                 doc.setFontSize(14); doc.text(r.name, 14, yPos); yPos += 6;
                 const tableData = (r.ingredients || []).map(i => { return [localInventory.find(p => p.id == i.productId)?.name || 'Desconhecido', i.quantity]; });
-                doc.autoTable({ startY: yPos, head: [['Ingrediente / Insumo', 'Qtd Base']], body: tableData, styles: { fontSize: 9 } });
+                doc.autoTable({ startY: yPos, head: [['Ingrediente', 'Qtd']], body: tableData, styles: { fontSize: 9 } });
                 yPos = doc.lastAutoTable.finalY + 12;
             }); yPos += 5;
         });
@@ -1483,17 +1477,15 @@
         const updatePlan = () => {
             if(isRecipe) return;
             const inputS = div.querySelector('.searchable-container input');
-            const pId = inputS ? inputS.dataset.selectedId : null; 
-            const qty = parseFloat(qtyInput.value);
+            const pId = inputS ? inputS.dataset.selectedId : null; const qty = parseFloat(qtyInput.value);
             if(pId && qty > 0) {
                 const { plan, isSufficient } = getFIFOPlan(pId, qty);
                 div.dataset.productId = pId; div.dataset.plan = JSON.stringify(plan);
-                planDisplay.innerHTML = isSufficient ? '<i class="fa-solid fa-check mr-1"></i> Lotes Alocados: ' + plan.map(x => `<strong>${x.batchCode}</strong>(${x.quantity.toFixed(2)})`).join(', ') : '<i class="fa-solid fa-triangle-exclamation mr-1"></i> ALERTA: Físico Insuficiente ou Bloqueado!';
+                planDisplay.innerHTML = isSufficient ? '<i class="fa-solid fa-check mr-1"></i> Lotes: ' + plan.map(x => `<strong>${x.batchCode}</strong>(${x.quantity.toFixed(2)})`).join(', ') : '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Físico Insuficiente!';
                 planDisplay.className = isSufficient ? 'plan-display text-ios-green' : 'plan-display text-ios-red';
                 if(isSufficient) show(editBtn); else hide(editBtn);
-            } else { planDisplay.innerText = 'Aguardando produto e qtd...'; hide(editBtn); }
+            } else { planDisplay.innerText = 'Aguardando item/qtd...'; hide(editBtn); }
         };
-
         createSearchableSelect(div.querySelector('.searchable-container'), localInventory, 'Buscar item...', item => { updatePlan(); });
         qtyInput.addEventListener('input', updatePlan); div.querySelector('.remove-ing').addEventListener('click', () => div.remove());
 
@@ -1515,7 +1507,7 @@
         await refreshData(); hide(id('recipe-modal')); hide(id('loading-overlay'));
     });
 
-    // --- SELETOR MANUAL DE LOTES ---
+    // --- SELETOR DE LOTES E OP ---
     document.addEventListener('click', e => {
         const btn = e.target.closest('.open-batch-selector');
         if(btn) {
@@ -1566,8 +1558,8 @@
     addEvt('picking-scanner', 'keypress', e => {
         if(e.key === 'Enter') {
             const code = e.target.value.trim(); if(!code) return;
-            const p = localInventory.find(i => i.barcode === code || i.code === code);
-            if (!p) { showNotif('Produto não encontrado no sistema!', true); } 
+            const p = localInventory.find(i => String(i.barcode) === code || String(i.code) === code);
+            if (!p) { showNotif('Produto não encontrado!', true); } 
             else {
                 const row = document.querySelector(`#picking-checklist-body tr[data-pid="${p.id}"]`);
                 if (row) {
@@ -1612,7 +1604,7 @@
                     <div class="flex flex-wrap items-center gap-4">
                         ${lineStatusHTML}
                         ${hasExtrasPending.length > 0 ? `<button class="btn-secondary py-2 px-4 shadow text-xs border-ios-red/50 text-ios-red btn-print-extras hover:bg-ios-red/10" data-line="${line}"><i class="fa-solid fa-print mr-2"></i>Folha Extras</button>` : ''}
-                        ${!allConcluido ? `<button class="btn-primary py-2 px-4 shadow-lg shadow-ios-blue/20 btn-open-line-picking" data-line="${line}" data-opids='${opIdsStr}'><i class="fa-solid fa-dolly mr-2"></i>Separar Linha Completa</button>` : ''}
+                        ${!allConcluido ? `<button class="btn-primary py-2 px-4 shadow-lg shadow-ios-blue/20 btn-open-line-picking" data-line="${line}" data-opids='${opIdsStr}'><i class="fa-solid fa-dolly mr-2"></i>Separar Linha</button>` : ''}
                     </div>
                 </div>
                 <div class="p-4 bg-ios-bg grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 border-t border-ios-border/50">
@@ -1625,7 +1617,7 @@
                             <div class="${op.isExtra ? 'pl-2' : ''}">
                                 <span class="font-bold text-white">${op.recipeName}</span> <span class="text-ios-blue">(${op.multiplier}x)</span>
                                 ${op.isExtra ? '<span class="badge bg-ios-red text-white text-[9px] ml-1">EXTRA</span>' : ''}<br>
-                                <span class="text-[10px] text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>Data: <strong class="text-gray-300">${new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong> | OP-${String(op.id).substring(0,6)}</span>
+                                <span class="text-[10px] text-ios-textMuted"><i class="fa-regular fa-calendar mr-1"></i>Data: <strong class="text-gray-300">${new Date(op.date+'T00:00:00').toLocaleDateString('pt-BR')}</strong></span>
                             </div><div class="ml-2">${timerHtml}</div>
                         </div>`;
                     }).join('')}
@@ -1641,18 +1633,19 @@
 
     function printExtras(lineName) {
         const ops = localProductionOrders.filter(o => o.recipeCategory === lineName && o.status === 'pendente' && o.isExtra === true && o.picking?.status !== 'concluido');
-        if(!ops.length) return showNotif('Nenhuma OP Extra pendente para imprimir.', true);
-
-        const agg = {};
-        ops.forEach(op => { op.ingredients.forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = 0; agg[ing.productId] += ing.adjustedQuantity; }); });
-
+        if(!ops.length) return showNotif('Nenhuma OP Extra.', true);
+        const agg = {}; ops.forEach(op => { op.ingredients.forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = 0; agg[ing.productId] += ing.adjustedQuantity; }); });
         const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFontSize(20); doc.setTextColor(255, 69, 58); doc.text(`Folha de Separação: EXTRAS / URGENTES`, 14, 20);
-        doc.setFontSize(12); doc.setTextColor(50, 50, 55); doc.text(`Setor: ${lineName.toUpperCase()}`, 14, 28);
-        doc.setLineWidth(0.5); doc.line(14, 38, 196, 38);
-        const tableData = Object.keys(agg).map(pidStr => { return [localInventory.find(p => p.id == pidStr)?.name || 'Desconhecido', agg[pidStr].toFixed(4)]; });
-        doc.autoTable({ startY: 45, head: [['Insumo a Separar', 'Qtd Total']], body: tableData, theme: 'striped', headStyles: { fillColor: [255, 69, 58], textColor: [255, 255, 255] } });
-        doc.save(`Separacao_Extras_${lineName.replace(/\s+/g,'_')}.pdf`); showNotif('Folha gerada!');
+        doc.setFontSize(20); doc.text(`Extras: ${lineName}`, 14, 20); doc.setLineWidth(0.5); doc.line(14, 30, 196, 30);
+        const tableData = Object.keys(agg).map(pidStr => [localInventory.find(p => p.id == pidStr)?.name || '?', agg[pidStr].toFixed(4)]);
+        doc.autoTable({ startY: 35, head: [['Insumo', 'Qtd']], body: tableData }); doc.save(`Extras_${lineName}.pdf`); showNotif('Folha gerada!');
+    }
+
+    function getAggregatedIngredients(opIds) {
+        const ops = localProductionOrders.filter(op => opIds.includes(op.id));
+        const agg = {};
+        ops.forEach(op => { op.ingredients.forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = { productId: ing.productId, adjustedQuantity: 0 }; agg[ing.productId].adjustedQuantity += ing.adjustedQuantity; }); });
+        return Object.values(agg);
     }
 
     function openGroupedPickingModal(lineName, opIds) {
@@ -1676,12 +1669,10 @@
             if(id('picking-responsible')) id('picking-responsible').focus();
         }
 
-        const agg = {};
-        ops.forEach(op => { op.ingredients.forEach(ing => { if (!agg[ing.productId]) agg[ing.productId] = { productId: ing.productId, adjustedQuantity: 0 }; agg[ing.productId].adjustedQuantity += ing.adjustedQuantity; }); });
-        
+        const agg = getAggregatedIngredients(opIds);
         const checklistBody = id('picking-checklist-body');
         if(checklistBody) {
-            checklistBody.innerHTML = Object.values(agg).map((ing) => {
+            checklistBody.innerHTML = agg.map((ing) => {
                 const product = localInventory.find(p => p.id == ing.productId);
                 const needed = ing.adjustedQuantity; let totalPicked = 0;
                 ops.forEach(op => { if(op.picking?.pickedItems && op.picking.pickedItems[ing.productId]) totalPicked += op.picking.pickedItems[ing.productId]; });
@@ -1706,7 +1697,7 @@
 
     addEvt('btn-start-picking', 'click', async () => {
         const resp = id('picking-responsible') ? id('picking-responsible').value.trim() : '';
-        if(!resp) return showNotif('Informe o nome do Estoquista para iniciar.', true);
+        if(!resp) return showNotif('Informe o nome para iniciar.', true);
         const now = Date.now(); show(id('loading-overlay'));
         for(let opId of activePickingOpIds) {
             let op = localProductionOrders.find(x => x.id == opId);
@@ -2021,6 +2012,7 @@
                     const name = getVal('Nome do Produto'); const code = String(getVal('Código')).trim(); const supplier = getVal('Fornecedor');
                     const batchCodeRaw = getVal('Lote'); const batchCode = (!batchCodeRaw || batchCodeRaw === 'N/A') ? 'LT-' + crypto.randomUUID().substring(0,6).toUpperCase() : String(batchCodeRaw).trim();
                     const batchQty = parseFloat(getVal('Quantidade do Lote')) || parseFloat(getVal('Quantidade Física')) || 0;
+                    const location = getVal('Local') || getVal('Endereço') || getVal('Rua') || '';
 
                     if(!name || batchQty <= 0) continue;
 
@@ -2043,7 +2035,7 @@
                     }
                     
                     p.totalQuantity = (p.totalQuantity || 0) + batchQty; await DB.update('inventory', p);
-                    await DB.add('batches', { productId: p.id, code: batchCode, quantity: batchQty, expiryDate: expiry, isReleased: (p.code !== '8110') });
+                    await DB.add('batches', { productId: p.id, code: batchCode, location: location.toUpperCase(), quantity: batchQty, expiryDate: expiry, isReleased: (p.code !== '8110') });
                     await DB.add('history', { productId: p.id, batchCode: batchCode, type: 'entrada', quantity: batchQty, date: new Date().toISOString().split('T')[0], reason: `Importação Planilha` });
                 }
 
